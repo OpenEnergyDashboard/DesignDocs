@@ -598,7 +598,7 @@ Note one way to edit meter data is to allow someone to download the needed meter
 1. There is a long standing issue that OED shows kW on line, bar and compare graphs. Line should be kW as it is an instantaneous reading (but issue that is actually an average) but bar and compare really are kWh. This should be fixed up, esp. as OED understands and can store these different units. Finding a general solution would be nice.
 2. We have wanted to allow scaling (at least +/- but general linear would be nice) when a meter is combined into a group. This might fit in with this work. (issue #[161](https://github.com/OpenEnergyDashboard/OED/issues/161))
 3. Energy usage in buildings varies by size, number of occupants and the weather conditions. To allow sites to better understand how their energy usage compared to expectations and across buildings, we will allow the data presented to be normalized for these considerations. This requires normalizing data based on values in the database (except for weather where the data often comes from a weather service and hooking this up for some systems is part of this work). This is more important now that we have map graphics. \
- Here are [some ideas/plans from 2018 GSoC](https://docs.google.com/document/d/1K8v0EeO8VmyHQ5ByueEEA6yML2HSFghl6vwHrijzzRA/edit?usp=sharing) \
+ Here are [some ideas/plans from 2018 GSoC](./GSoc/normalize.md) \
  Here are some other ideas for normalizing:
     1. Sq feet or cubic feet
         1. Can vary with time
@@ -607,11 +607,11 @@ Note one way to edit meter data is to allow someone to download the needed meter
     3. Weather: degree heat/cooling days, sunny/shady, wind
         3. Old work to get national weather service data
         4. [http://www.degreedays.net/](http://www.degreedays.net/) for degree days in CSV to correct data for weather, normalize data on 68 degree day is 0 for normal \
- Here are [some ideas/plans from 2018 GSoC](https://docs.google.com/document/d/11vibVX2bx5MsGf3N22RcTdQ8Wi6zyX2TifeXIyUoMhA/edit?usp=sharing)
+ Here are [some ideas/plans from 2018 GSoC](./GSoc/admin.md)
 
 ## DB generalize info
 
-1. [Energy Star DB Schemas](https://drive.google.com/file/d/1GDb1J_2Th_YW7tjSXoMzR-bR-3UdJdtY/view?usp=sharing) show how they do it and we should review.
+1. [Energy Star DB Schemas](./otherSources/EnergyDatabaseStarSchema.pdf) show how they do it and we should review.
 2. Here are some older ideas on what might go into DB
     1. Meters
         1. Unit
@@ -641,12 +641,13 @@ Thirdly, energy to cost conversions would be better if we can keep it as simple 
 ## Information resources
 
 * [conversionFactors.xlsx](./conversionFactors.xlsx) has a list of ways to relate one resource unit to another with the conversions. We may want to preload OED with some/all of these. They are separated by resource type/compatibility.
+* An [older doc](./1711DBGeneralize.docx) with resource generalization thoughts including a number of details that may be valuable.
 * [Anthony Database Resource Generalization Thoughts.odt](./AnthonyDatabaseResourceGeneralizationThoughts.odt) has thoughts on doing this and code that needs to be changed. A lot was already integrated into this document.
 * [https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties](https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties) has lots of conversion information
 * The [info from other sources folder](./otherSources/) has stuff found that might be useful, including:
   * [APPA key metrics poster](./otherSources/APPAKeyMetrics.jpg) with info on what they think are essential information
   * [Central building analysis with graphs](./otherSources/CentralBuildingProfiles.xlsx)
-  * [Macalester energy analysis spreadsheet](./otherSources/Macalester_202015_2016_Campus_Energy_Rpt_Wkbk.xlsx)
+  * [Macalester energy analysis spreadsheet](./otherSources/Macalester_2015_2016_Campus_Energy_Rpt_Wkbk.xlsx)
   * [Macalester electric analysis spreadsheet](./otherSources/Macalester_Aggregated_Elec_Totals.xlsx)
   * [Getting energy on chilled water](./otherSources/HowToCalculateBTU_sOnCHWSystem.pdf)
   * [Steam flow info](./otherSources/steam_flow_measurement.pdf)
