@@ -31,6 +31,24 @@ This is a rough overview. Details are below.
     4. Graphics (display data to the user)
 3. Come up with implementation plan & give work to multiple developers
 
+## math.js thoughts
+
+* [general documentation](https://mathjs.org/docs/index.html), [unit documentation](https://mathjs.org/docs/datatypes/units.html) & [unit examples](https://mathjs.org/examples/units.js.html)
+* [serialization](https://mathjs.org/docs/core/serialization.html) should allow to store in DB
+* baseName for custom units may help in only allowing conversions between desired units. unit.equalBase(unit) tells if two units have the same baseName.
+* see [standard unit info and bases](https://mathjs.org/docs/datatypes/units.html#reference).
+* unit.toSI() gives the equivalent SI unit. Not sure how works with custom units.
+* The print/format methods might be useful for displaying info to user
+
+## Items to think about
+
+* How can we stop undesirable chained conversions and ones that should only go one way?
+* There is volume and liquid volume.
+* How/can we relate certain custom units to underlying general units (will baseName help?). It would be nice if the system automatically converted between the different standard types such as kg, metric ton, lbs.:
+  * gallon gasoline to liquid volume units
+  * mass of CO2 to mass units
+  * cubic meters of natural gas to volume
+
 ## Examples
 
 Here are some examples that show the range of possibilities and ones that might be tricky. Others are elsewhere in the document.
@@ -565,6 +583,7 @@ Steve proposes to test the packages in the following sequence:
 6. See about a chained conversion. Enter new unit of 100 watt bulb = 0.1 kWh. Now convert 3 BTU to 100 watt bulb. 3 BTU is 2843.45 Megajoules = 10236.42 kWh = 102364.23 100 watt bulb. This assumes that the package can do reverse conversions (gave Megajoule to kWh above); if not, need to give reverse and note. If that works, see if can take 102364.23 100 watt bulb into BTU (3 BTU).
 7. Another chained conversion. Enter 4 new units: 1 kWh = 0.11 US$, 1 BTU = 13 CAN$, 1 US$ = 0.87 Euro and 1 CAN$ = 1.2 Euro. Ask to convert 123 kWh and 3 BTU into Euro. 123 kWh = 13.53 US$ = 11.77 Euro and 3 BTU = 39 CAN$ = 46.80 Euro for a total of 58.57 Euro. Getting the final Euro probably assumes arithmetic is allowed (per test above).
 8. Example of multiple paths & what happens if package really smart. Also, how stop some conversions.
+9. See [CO2 conversions](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) to do example to CO2.
 
 ## Groups
 
