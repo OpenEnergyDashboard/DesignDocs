@@ -34,14 +34,16 @@ The current Obvius URL request has the following parameters:
 
 The new CSV system will have related and additional URL request parameters (this list includes meter ones too):
 
-*   password (no default value, request ignored if not present or error response if wrong)
-    *   Authenticates the user to make a request
+*   email (no default value, request (cURL) ignored if not present or error response if wrong)
+    *   Authenticates the user to make a request (used in conjunction with password)
+*   password (no default value, request (cURL) ignored if not present or error response if wrong)
+    *   Authenticates the user to make a request (used in conjunction with email)
     *   Maybe we should have a user name too so can have multiple users?
-*   mode (no default value, error response if invalid) (done)
+*   modeName (no default value, error response if invalid) (done)
     *   This tells the type of request being made. These include:
         *   meters: meter information that is normally only sent once before the first readings or if there is a change in meters
         *   readings: readings information/data that is sent each time new readings are uploaded
-*   meter (no default value, error response if mode is not readings)
+*   meterName (no default value, error response if mode is not readings)
     *   This specifies the OED meter name that the data is for in the CSV and is only used if the mode is readings. OED now has two names for meters: the internal one and the display one. Can we use one of these as the meter name for this? Do we need another value? The internal name should be unique but might be used less (by default, both names are the same).
         *   Note: we could have another column in the CSV with the meter name and then a site could upload multiple meter readings at a time. While this could have advantages, it has the negatives that the CSV file is larger (more likely to have transit and acquiring issues) and we sometimes reject meter data if there is an issue and this would make it harder to do if multiple meters are in a single file. Thus, we are going to require the site to send requests for a single meter. This differs from Obvius that sends multiple meter data in a single CSV. If we decide we want that we could layer a route to accept a CSV with multiple meters and then separate to put through this system.
     *   Note you cannot change a meter between cumulative and not. This is not just for CSV but in general. The possible work around would be to create a new meter with the new attribute and then create a group that sums the two meters to get all the values.
@@ -70,12 +72,12 @@ This is a viable option, and would make solving the cumulative reading problem a
     *   Note: see timesort above on stream issue.
 *   cumulativeReset (default value false)
     *   Note the pipeline automatically resets if cumulative value becomes less since some systems reset at a given time or when the value is too large. If true, we allow resets that mean that if a value is found that is smaller than a reset is assumed. If false, a smaller value is treated as an error for that reading. See below on what times of day the reset can occur.
-*   cumulativeresetstart (default 0:00:00, e.g., the start of the day)
+*   cumulativeResetStart (default 0:00:00, e.g., the start of the day)
     *   The earliest time of day that a reset can occur. This used to be just before midnight but is now completely under user control. This only applies if cumulativereset is true.
-*   cumulativeresetend (default 23:59:59, e.g., the end of the day)
+*   cumulativeResetEnd (default 23:59:59, e.g., the end of the day)
     *   The latest time of day that a reset can occur. This used to be just after midnight but is now completely under user control. This only applies if cumulativereset is true. Note the defaults mean a reset can occur at any time of the day.
         *   How deal if around midnight given this description. Maybe if negative then it goes back into the previous day. Probably going to have boolean for DB so decide if same or different?
-*   refreshreadings (default false)
+*   refreshReadings (default false)
     *   If true then after the new CSV data is processed, OED updates the daily readings so any new values can be graphed. This will do nothing if data is only added to the current day. It should be done if data is added to previous days or for more than one day if you want to see the new data before an automated refresh happens (normally each night if the site is set up in the usual way). If false, then no refresh is done.
 *   duplication (default value of 1)
     *   The idea here is that we had one site where the same date/time reading/value was provided multiple times in a row in the CSV. The pipeline code deals with this where the value tells how many times the reading is duplicated. A value of 1 means no duplication, 2 means each reading shows up twice in a row in the CSV, etc. In essence, OED is deduping data.
@@ -87,7 +89,7 @@ This is a viable option, and would make solving the cumulative reading problem a
         *   Positive is the reading length of time to use. If any reading does not match this length a warning is issued (should reading(s) be rejected?). If you only have one timestamp then use this to calculate the other one.
         *   Negative. The value does not matter. This indicates the readings can have variable lengths and OED should not warn about this case.
     *   This should be integrated into the discussion below about cumulative and gap so it does what is said.
-*   lengthvariation
+*   lengthVariation
     *   +/- time allowed on length to consider within allowed length.
 *   createMeter (default value of true?) (done)
     *   This only applies to readings. With parameter value of true then a meter that does not yet exist but is specified in the meter parameter would be created to store the new readings. The meter will not be set to either acquire data automatically or be displayable. The admin would need to do that. Doing this guarantees that reading values will be stored but it could create a new meter that is not desired. A parameter value of false means the meter is not created and the provided readings are dropped. We need to log/warn if we either create a meter or drop the readings.
