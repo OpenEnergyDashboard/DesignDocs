@@ -2,13 +2,11 @@
 
 **Please use care in editing the document so the history stays intact and nothing bad is done to it. Having said that, this is a living document that you can edit.**
 
-This is a working document (as of Nov 2020 but includes previous work/ideas) that gives ideas on how to generalize OED resources from electricity to any type (hopefully).
+This is a working document (started Nov 2020 but includes previous work/ideas) that gives ideas on how to generalize OED resources from electricity to any type (hopefully).
 
 ## Todo
 
-- Incorporate [Davin's ideas](https://drive.google.com/file/d/1pQtz6Fjxm3xm9P4eSDqAU2_dlFs6_ujS/view)
-- Review/incorporate [Davin's notes](https://docs.google.com/document/d/1ws1wiZHpJMZ2_ktrIjcFfy0qG52cvV447j8oA57CgDA/edit)
-- Need to decide if want/can use [UnitMath](https://github.com/ericman314/UnitMath/tree/v1#readme) vs [mathjs](https://mathjs.org/)- If unsure if UnitMath is ready yet, are the calls the same so a switch would be easily later (or for testing/development)?
+- mathjs vs UnitMath [see below](#mathjs-vs-unitmath)
 
 ## Overview
 
@@ -25,7 +23,7 @@ Note that even though we are the Open Energy Dashboard, this generalization will
 
 The GitHub issues #[211](https://github.com/OpenEnergyDashboard/OED/issues/211), #[214](https://github.com/OpenEnergyDashboard/OED/issues/214) & #[164](https://github.com/OpenEnergyDashboard/OED/issues/164) relate to units/generalization. Displaying by cost is related to issue #[61](https://github.com/OpenEnergyDashboard/OED/issues/61). This may also relate to the request to negate meters (issue #[161](https://github.com/OpenEnergyDashboard/OED/issues/161)) as this is a special case of a linear transformation. It is planned that completion (at least to a reasonable degree) of this work will be OED release 1.0 as a fully functional dashboard. Issue #[139](https://github.com/OpenEnergyDashboard/OED/issues/139) on adding notes to items has some relationship to this.
 
-## Likely steps
+## Likely steps - needs update (todo)
 
 This is a rough overview. Details are below.
 
@@ -37,10 +35,26 @@ This is a rough overview. Details are below.
     4. Graphics (display data to the user)
 3. Come up with implementation plan & give work to multiple developers
 
+## mathjs-vs-unitmath
+
+- Need to decide if want/can use [UnitMath](https://github.com/ericman314/UnitMath/tree/v1#readme) vs [mathjs](https://mathjs.org/). The driver is that UnitMath is much smaller bundle and does not have a lot of features we do not need.
+  - The seem to have similar types of arithmetic functions but use different names and syntax in many cases. UnitMath uses chained functions. Thus, switching from one to the other will take a modest level of effort.
+  - Upcoming [release 1](https://github.com/ericman314/UnitMath/tree/v1#readme) uses different syntax from the current one for creating units. It seems very general but more complex than mathjs.
+  - unit.definitions() lets you get all the unit definitions so similar to serialization in mathjs.
+  - mathjs has documentation on provided units and constants. UnitMath may have them but need to see using function call above.
+  - mathjs seems more mature at this time but UnitMath is nice and coming along.
+  - The [user-defined section of UnitMath](https://github.com/ericman314/UnitMath#user-defined-units) makes me think that we could store a configuration of the system (i.e. all the user-defined units) as a json object in a file or in the db. The following process could be effective:
+    - Download the unit package UnitMath (500 kb) for the react-app
+    - When the app loads, serve the json object/configuration from the database/json file.
+    - Conversions happen on the client-side only
+
+I would like input from others on this choice. **This needs to happen soon (todo)**
+
 ## math.js thoughts
 
 After analysis of a number of open source unit packages, OED decided to use math.js.
 
+- Davin's original mathjs test code from April-May 2021 is at [their fork in mathPackages branch in src/server/unitPackages/](https://github.com/lindavin/OED/tree/mathPackages/src/server/unitPackages). To execute the file, cd into the directory and run `npx mocha testing.js (at least the name seems out of date) This does a lot of [examples 1-7](#examples).
 - [general documentation](https://mathjs.org/docs/index.html), [unit documentation](https://mathjs.org/docs/datatypes/units.html) & [unit examples](https://mathjs.org/examples/units.js.html)
 - [serialization](https://mathjs.org/docs/core/serialization.html) should allow to store in DB
 - baseName for custom units may help in only allowing conversions between desired units. unit.equalBase(unit) tells if two units have the same baseName.
@@ -51,13 +65,25 @@ After analysis of a number of open source unit packages, OED decided to use math
 ### Items to think about relating to math.js
 
 - How can we stop undesirable chained conversions and ones that should only go one way?
+  - See starting at line 159 in testingMathJS.js in [Davin's fork in mathPackages branch in src/server/unitPackages/](https://github.com/lindavin/OED/tree/mathPackages/src/server/unitPackages) for an example of an issue and some work to get around it.
+  - If we think about units as nodes on a graph and dimensions as clusters, and conversions as paths between nodes, then we could eliminate “weird conversions” by enforcing the rule that “any path with endpoints in different clusters must have length one”.
+  - Here is what Davin wrote about some chained conversion considerations: [chainConversionsThoughts.pdf](chainConversionsThoughts.pdf)
+- A potential strategy to minimize bundle size while keeping things on the client-side as much as possible using mathjs:
+  - Use custom bundling to instantiate the unit system
+  - Send the system as a object to the client-side (browser)
+  - Store the system object in the redux store. It will contain methods for unit conversions, a list of all possible
+  - Note using UnitMath eliminates this issue as it is a much smaller bundle.
+- Mathjs serialization and storing that in the database will have issues when two admins try to save new units around the same time. One user may overwrite the changes of the other user. UnitMath does it with json objects so we could look into postgres allowing direct mutate json: https://www.freecodecamp.org/news/how-to-update-objects-inside-jsonb-arrays-with-postgresql-5c4e03be256a/. Davin created this image of the potential process:
+
+![image of the potential process](jsonUpdate.png "image of the potential process")
+
 - There is volume and liquid volume.
 - How/can we relate certain custom units to underlying general units (will baseName help?). It would be nice if the system automatically converted between the different standard types such as kg, metric ton, lbs.:
   - gallon gasoline to liquid volume units
   - mass of CO2 to mass units
   - cubic meters of natural gas to volume
 
-## Examples
+## examples
 
 Here are some examples that show the range of possibilities and ones that might be tricky. Others are elsewhere in the document.
 
@@ -162,11 +188,6 @@ A systematic way to add new inputs and edit these values needs to be developed. 
 
 Note one way to edit meter data is to allow someone to download the needed meter readings as a CSV file, edit values desired for change, and then upload the CSV file.
 
-## Questions
-
-1. Meters currently store their meter type as 1 of 2 enums (now three with obvius). If we’re generalizing resources, users might be adding a lot of different types of meters. Do we want to let users register their own meter types? Does the meter type in the database actually do anything other than get stored right now? What’s actually the difference between Mamac and Metasys meters in the code (we really should check that we are receiving data for the correct meter type when it arrives)?
-2. All readings in the database are kept in a single readings table. Do we want to store all  reading types in this table or would there be any benefit in separating the different resources’ readings into multiple tables? When users add new resource types, do we automatically add a new table for it?
-
 ## Related changes to consider in design
 
 1. There is a long standing issue that OED shows kW on line, bar and compare graphs. Line should be kW as it is an instantaneous reading (but issue that is actually an average) but bar and compare really are kWh. This should be fixed up, esp. as OED understands and can store these different units. Finding a general solution would be nice.
@@ -225,6 +246,20 @@ Thirdly, energy to cost conversions would be better if we can keep it as simple 
   - [Macalester electric analysis spreadsheet](./otherSources/Macalester_Aggregated_Elec_Totals.xlsx)
   - [Getting energy on chilled water](./otherSources/HowToCalculateBTU_sOnCHWSystem.pdf)
   - [Steam flow info](./otherSources/steam_flow_measurement.pdf)
+
+## Historical
+
+### Meter types
+
+Meters currently store their meter type as 1 of 2 enums (now three with obvius). If we’re generalizing resources, users might be adding a lot of different types of meters. Do we want to let users register their own meter types? Does the meter type in the database actually do anything other than get stored right now? What’s actually the difference between Mamac and Metasys meters in the code (we really should check that we are receiving data for the correct meter type when it arrives)?
+
+- OED has now added the other type for meters that OED does not acquire data from and are unknown to OED. For now, we are not going to have user defined meters expect to add types as OED knows how to acquire data from a specific meter type.
+
+### Multiple readings tables
+
+All readings in the database are kept in a single readings table. Do we want to store all  reading types in this table or would there be any benefit in separating the different resources’ readings into multiple tables? When users add new resource types, do we automatically add a new table for it?
+
+- OED seems fast enough to get readings when there are lots of them. Also, with the ability to combine various resource types into a single group/grapth, it is less clear that separating them out is a good idea. At least for now we are not going to pursue this.
 
 ## Analysis of unit packages - Historical
 
