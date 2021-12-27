@@ -4,14 +4,20 @@
 
 This is a working document (as of Nov 2020 but includes previous work/ideas) that gives ideas on how to generalize OED resources from electricity to any type (hopefully).
 
+## Todo
+
+- Incorporate [Davin's ideas](https://drive.google.com/file/d/1pQtz6Fjxm3xm9P4eSDqAU2_dlFs6_ujS/view)
+- Review/incorporate [Davin's notes](https://docs.google.com/document/d/1ws1wiZHpJMZ2_ktrIjcFfy0qG52cvV447j8oA57CgDA/edit)
+- Need to decide if want/can use [UnitMath](https://github.com/ericman314/UnitMath/tree/v1#readme) vs [mathjs](https://mathjs.org/)- If unsure if UnitMath is ready yet, are the calls the same so a switch would be easily later (or for testing/development)?
+
 ## Overview
 
 OED started by working with electrical data as a proof of concept and to support the resource requested the most. With that complete, OED is generalizing to support any resource such as natural gas, water, steam, recycling, temperature, etc. Instead of addressing these as individual cases, OED is being modified to store information about compatible resources (energy, power, volume, temperature, etc.) and how to convert between them. This will allow OED to address several feature requests with this single change including:
 
-* Allow arbitrary resource units (natural gas, energy, power, etc.).
-* Allow sites to choose the unit for graphical display where the most common request is for English vs. metric units.
-* Allow OED to display usage in units not associated with resource consumption such as CO2, equivalent miles of driving a car, etc., which may be more natural to some users and allow for common sustainability units to be used.
-* Allow OED sites to add new units to the system that are not automatically supplied with OED
+- Allow arbitrary resource units (natural gas, energy, power, etc.).
+- Allow sites to choose the unit for graphical display where the most common request is for English vs. metric units.
+- Allow OED to display usage in units not associated with resource consumption such as CO2, cost, equivalent miles of driving a car, etc., which may be more natural to some users and allow for common sustainability units to be used.
+- Allow OED sites to add new units to the system that are not automatically supplied with OED
 
 The idea behind the system is that all compatible resources can be converted from one to the other via a linear transformation. For example, 1 BTU is 2.93x10-4 KWh. While most conversions are multiplicative factors, temperature is the one notable exception where Fahrenheit = 1.8 * Celsius + 32.
 
@@ -33,21 +39,23 @@ This is a rough overview. Details are below.
 
 ## math.js thoughts
 
-* [general documentation](https://mathjs.org/docs/index.html), [unit documentation](https://mathjs.org/docs/datatypes/units.html) & [unit examples](https://mathjs.org/examples/units.js.html)
-* [serialization](https://mathjs.org/docs/core/serialization.html) should allow to store in DB
-* baseName for custom units may help in only allowing conversions between desired units. unit.equalBase(unit) tells if two units have the same baseName.
-* see [standard unit info and bases](https://mathjs.org/docs/datatypes/units.html#reference).
-* unit.toSI() gives the equivalent SI unit. Not sure how works with custom units.
-* The print/format methods might be useful for displaying info to user
+After analysis of a number of open source unit packages, OED decided to use math.js.
 
-## Items to think about
+- [general documentation](https://mathjs.org/docs/index.html), [unit documentation](https://mathjs.org/docs/datatypes/units.html) & [unit examples](https://mathjs.org/examples/units.js.html)
+- [serialization](https://mathjs.org/docs/core/serialization.html) should allow to store in DB
+- baseName for custom units may help in only allowing conversions between desired units. unit.equalBase(unit) tells if two units have the same baseName.
+- see [standard unit info and bases](https://mathjs.org/docs/datatypes/units.html#reference).
+- unit.toSI() gives the equivalent SI unit. Not sure how works with custom units.
+- The print/format methods might be useful for displaying info to user
 
-* How can we stop undesirable chained conversions and ones that should only go one way?
-* There is volume and liquid volume.
-* How/can we relate certain custom units to underlying general units (will baseName help?). It would be nice if the system automatically converted between the different standard types such as kg, metric ton, lbs.:
-  * gallon gasoline to liquid volume units
-  * mass of CO2 to mass units
-  * cubic meters of natural gas to volume
+### Items to think about relating to math.js
+
+- How can we stop undesirable chained conversions and ones that should only go one way?
+- There is volume and liquid volume.
+- How/can we relate certain custom units to underlying general units (will baseName help?). It would be nice if the system automatically converted between the different standard types such as kg, metric ton, lbs.:
+  - gallon gasoline to liquid volume units
+  - mass of CO2 to mass units
+  - cubic meters of natural gas to volume
 
 ## Examples
 
@@ -106,69 +114,173 @@ Some transformations and values can likely vary with time. A clear example is th
 
 This is a non-trivial problem that has been addressed by others. We should look at how other resource dashboards deal with this (don’t have a good list here). We should also look at software for unit transformations.  This should be software that we cannot directly incorporate but has nice features and software that we could directly use (need to be careful about open source license). For each, we need to track:
 
-* What is its main features of interest
-  * Do they have custom units (we want this)
-  * How do they store unit info
-  * What type of conversions can they do
-* Can it be used directly in OED
-* What is its software license (even if not open source)
-* If it is underconsideration, what is the quality of the project (software, documentation, ongoing development, support, etc.)
+- What is its main features of interest
+  - Do they have custom units (we want this)
+  - How do they store unit info
+  - What type of conversions can they do
+- Can it be used directly in OED
+- What is its software license (even if not open source)
+- If it is under consideration, what is the quality of the project (software, documentation, ongoing development, support, etc.)
 
 Here are some URLs with some possible packages to look at. It is far from complete:
 
+## Testing of unit packages
+
+Steve proposes to test the packages in the following sequence:
+
+1. Test basic multiplicative unit conversion of provided unit. If there is a unit conversion provided (such as meters to feet) then try that. For example, take 13 meters and convert to feet and then reverse to try 13 feet to meters. Note I did not use 1 so we know that it is really working correctly. It can be any unit it has.
+2. Test linear conversion. Convert degrees fahrenheit to celsius and reverse. If not provided then use 9/5 * C + 32 = F.
+3. Check new unit with multiplicative (all remaining are multiplicative). This assumes that the package does not have energy units. If so, see if get the same result and need to test one where not provided (could be the same but made up names for the units). 1 Megajoule = 0.001055056 BTU and 1 Megajoule = 3.6 kWh. Try converting each of these after enter these two conversions:
+    1. 3 BTU into 2843.45 Megajoules
+    2. 123 kWh into 34.17 Megajoules
+4. See if can convert 34.17 Megajoule into 123 kWh to see if automatically does reverse given entered kWh into Megajoules above.
+5. See if allows arithmetic on result so can ask 3 BTU + 123 kWh to see if it can give 2877.62 Megajoules.
+6. See about a chained conversion. Enter new unit of 100 watt bulb = 0.1 kWh. Now convert 3 BTU to 100 watt bulb. 3 BTU is 2843.45 Megajoules = 10236.42 kWh = 102364.23 100 watt bulb. This assumes that the package can do reverse conversions (gave Megajoule to kWh above); if not, need to give reverse and note. If that works, see if can take 102364.23 100 watt bulb into BTU (3 BTU).
+7. Another chained conversion. Enter 4 new units: 1 kWh = 0.11 US$, 1 BTU = 13 CAN$, 1 US$ = 0.87 Euro and 1 CAN$ = 1.2 Euro. Ask to convert 123 kWh and 3 BTU into Euro. 123 kWh = 13.53 US$ = 11.77 Euro and 3 BTU = 39 CAN$ = 46.80 Euro for a total of 58.57 Euro. Getting the final Euro probably assumes arithmetic is allowed (per test above).
+8. Example of multiple paths & what happens if package really smart. Also, how stop some conversions.
+9. See [CO2 conversions](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) to do example to CO2.
+
+## Groups
+
+Groups are what make this all interesting (because they aggregate values) but also add complications, many of which are noted above. We need to figure out the implementation, esp. when you have a group of groups. Also, we create a materialized view for aggregated daily readings for each meter to make OED faster. Should we do anything like that for groups, esp. given unit transformations?
+
+We could use groups to decide in advance what unit is desired on aggregation. For example, you could have a group of all residence halls where it is the total energy and another that is cost. This would likely mean we need a better interface for groups and users would need access if this was the only way to choose. The tradeoff of this vs a units on demand system is unclear from the user, efficiency & implementation standpoint. Also, do groups have a unit similarly to meters? This may depend on whether they are static or dynamic in units used.
+
+## Internal storage
+
+OED may store SI (metric) units. A few people want us to store the raw meter value in that unit. However, the conversion should be very accurate and not introduce any significant error. We could choose to do arbitrary units for each meter but then we would need to convert before we aggregate whereas we can do the conversion afterward if they are all in the same unit. We still need to do conversions for units that are compatible but not the same unit such as kWh and BTU. This (see example #1 above) and (see example #2 above) show this. The final implementation will depend on other design choices.
+
+## Graphical display
+
+When we aggregate meters through a group, we may have the final result in a unit that is not desired by the user (see example #5 above). Thus, we are going to need to transform each data point back into the user desired unit. We need to decide where to do this conversion but it may well be fastest via the DB using SQL. Also, we need to know the unit that the user wants. This probably means the admin can set a default unit for each type (as they do with a default chart type, etc.). It may make sense for a site to choose between English, metric, British where all displayed results default to the default unit type for that region chosen by the admin. It would be good if the user can override this and change the graph display unit. For example, they might want to aggregate as energy, cost, etc. in another unit equivalent. If so, would we go back to the DB to redo all the work or do it in the user browser via JS?
+
+How will we display meters/groups that have different units but are compatible. For example, you graph meters where some are BTU and some are kWh. Another (see example #7 above) is to show gas or electrical usage with temperature (or degree heating/cooling for each day which is a transformation of temperature) since one would expect usage for heating and cooling to be impacted by temperature. Some options are: disallow, display in specified default/given units that is compatible for all items in graph, show multiple scales, others. Another related complication is what if you want to graph items that do not have compatible units. The options overlap above but you cannot show in a compatible unit for all. Whatever we choose, we need to be sure the units are clear on any graphical display.
+
+## Admin panel
+
+A systematic way to add new inputs and edit these values needs to be developed. This will include individual values in text boxes as well as a robust CSV drop capability. This should allow for the needed entries in the admin panel now and in the future.
+
+Note one way to edit meter data is to allow someone to download the needed meter readings as a CSV file, edit values desired for change, and then upload the CSV file.
+
+## Questions
+
+1. Meters currently store their meter type as 1 of 2 enums (now three with obvius). If we’re generalizing resources, users might be adding a lot of different types of meters. Do we want to let users register their own meter types? Does the meter type in the database actually do anything other than get stored right now? What’s actually the difference between Mamac and Metasys meters in the code (we really should check that we are receiving data for the correct meter type when it arrives)?
+2. All readings in the database are kept in a single readings table. Do we want to store all  reading types in this table or would there be any benefit in separating the different resources’ readings into multiple tables? When users add new resource types, do we automatically add a new table for it?
+
+## Related changes to consider in design
+
+1. There is a long standing issue that OED shows kW on line, bar and compare graphs. Line should be kW as it is an instantaneous reading (but issue that is actually an average) but bar and compare really are kWh. This should be fixed up, esp. as OED understands and can store these different units. Finding a general solution would be nice.
+2. We have wanted to allow scaling (at least +/- but general linear would be nice) when a meter is combined into a group. This might fit in with this work. (issue #[161](https://github.com/OpenEnergyDashboard/OED/issues/161))
+3. Energy usage in buildings varies by size, number of occupants and the weather conditions. To allow sites to better understand how their energy usage compared to expectations and across buildings, we will allow the data presented to be normalized for these considerations. This requires normalizing data based on values in the database (except for weather where the data often comes from a weather service and hooking this up for some systems is part of this work). This is more important now that we have map graphics. \
+ Here are [some ideas/plans from 2018 GSoC](./GSoc/normalize.md) \
+ Here are some other ideas for normalizing:
+    1. Sq feet or cubic feet
+        1. Can vary with time
+    2. people in building
+        2. Will vary with time
+    3. Weather: degree heat/cooling days, sunny/shady, wind
+        3. Old work to get national weather service data
+        4. [http://www.degreedays.net/](http://www.degreedays.net/) for degree days in CSV to correct data for weather, normalize data on 68 degree day is 0 for normal \
+ Here are [some ideas/plans from 2018 GSoC](./GSoc/admin.md)
+
+## DB generalize info
+
+1. [Energy Star DB Schemas](./otherSources/EnergyDatabaseStarSchema.pdf) show how they do it and we should review.
+2. Here are some older ideas on what might go into DB
+    1. Meters
+        1. Unit
+        2. Note
+        3. Frequency to read
+        4. GIS coordinates
+        5. Consumption vs. generation
+            1. When do this need to fix graphs/compare so make sense. Now you use less if you generate less which seems backward since reverse of production.
+        6. Draw related to meter - can vary with time
+            1. no. people and/or no. people FTE
+            2. Sq. feet - should we allow sq. m?
+        7. Do we have to worry about reactive power, apparent power, power factor, Volt-amperes?
+        8. Do we want to allow generalization to garbage and recycling by having pounds/Kg units?
+
+### Items to remember
+
+1. For testing, esp. steam that is harder, we might be able to use: Macalester College has (2) accessible Steam condensate at: [http://bigelowcond.meters.macalester.edu/start.html](http://bigelowcond.meters.macalester.edu/start.html) & [http://gddcondreturn.meters.macalester.edu](http://gddcondreturn.meters.macalester.edu)
+2. See [https://github.com/jamielepito/OED/tree/api-tests/src/server/sql/group](https://github.com/jamielepito/OED/tree/api-tests/src/server/sql/group) for building work that was historical but may be useful to look at.
+3. Some thoughts from Wadood in an 201128 email:
+
+So I have gone over the document and obviously it raises some very important questions. I personally think that storing data in a single standard unit (SI/metric maybe) will be better as it will be easier to use that data in the code. Maybe we can put conversion algorithms/code in the 'pipeline' so that it is easier for us when coding.
+
+Secondly, as far as changes to the DB go, I think maybe we can use multiple tables to store various types of energy sources but with a uniform SI unit. This will also have the additional benefit of the ability to group and store various types of meters separately according to their respective energy sources.
+
+Thirdly, energy to cost conversions would be better if we can keep it as simple as we can. One step conversion would be more convenient than chained conversions and will require less time. As you have mentioned in the document, cost and other quantities can vary with time, in order to accommodate that my idea is to see what postgresql has to offer by default (for example postgresql giving us all the time zones). The other thing would be that the admin can change the quantities periodically so that the final output data and any relevant conversions give the up-to-date result.
+
+## Information resources
+
+- [conversionFactors.xlsx](./conversionFactors.xlsx) has a list of ways to relate one resource unit to another with the conversions. We may want to preload OED with some/all of these. They are separated by resource type/compatibility.
+- An [older doc](./1711DBGeneralize.docx) with resource generalization thoughts including a number of details that may be valuable.
+- [Anthony Database Resource Generalization Thoughts.odt](./AnthonyDatabaseResourceGeneralizationThoughts.odt) has thoughts on doing this and code that needs to be changed. A lot was already integrated into this document.
+- [https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties](https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties) has lots of conversion information
+- The [info from other sources folder](./otherSources/) has stuff found that might be useful, including:
+  - [APPA key metrics poster](./otherSources/APPAKeyMetrics.jpg) with info on what they think are essential information
+  - [Central building analysis with graphs](./otherSources/CentralBuildingProfiles.xlsx)
+  - [Macalester energy analysis spreadsheet](./otherSources/Macalester_2015_2016_Campus_Energy_Rpt_Wkbk.xlsx)
+  - [Macalester electric analysis spreadsheet](./otherSources/Macalester_Aggregated_Elec_Totals.xlsx)
+  - [Getting energy on chilled water](./otherSources/HowToCalculateBTU_sOnCHWSystem.pdf)
+  - [Steam flow info](./otherSources/steam_flow_measurement.pdf)
+
+## Analysis of unit packages - Historical
+
 ## Short list/Promising
 
-* [https://mathjs.org/docs/datatypes/units.html](https://mathjs.org/docs/datatypes/units.html)
-  * Wadood looked at & liked
-  * Steve added some info and concurs
-  * On short list
-* [https://www.npmjs.com/package/js-quantities](https://www.npmjs.com/package/js-quantities)
-  * Wadood looked at & liked
-  * Steve looked at & concurs but concerned about upkeep and what exactly it can convert
-  * On short list
-* [https://www.npmjs.com/package/unit-system](https://www.npmjs.com/package/unit-system)
-  * Wadood looked at; unsure why not marked at liked
-  * Steve looked at and was encouraged but concerned that not maintained & did not find a license.
-  * On short list
+- [https://mathjs.org/docs/datatypes/units.html](https://mathjs.org/docs/datatypes/units.html)
+  - Wadood looked at & liked
+  - Steve added some info and concurs
+  - On short list
+- [https://www.npmjs.com/package/js-quantities](https://www.npmjs.com/package/js-quantities)
+  - Wadood looked at & liked
+  - Steve looked at & concurs but concerned about upkeep and what exactly it can convert
+  - On short list
+- [https://www.npmjs.com/package/unit-system](https://www.npmjs.com/package/unit-system)
+  - Wadood looked at; unsure why not marked at liked
+  - Steve looked at and was encouraged but concerned that not maintained & did not find a license.
+  - On short list
 
 ## Possible
 
-* [https://www.npmjs.com/package/uom](https://www.npmjs.com/package/uom)
-  * Wadood looked at
-  * Steve looked at. Seems possible but unsure and also uncertain about maintenance. Could look at but wait.
-  * High on possible list.
-* [https://www.gnu.org/software/units/manual/units.html#Interactive-Use](https://www.gnu.org/software/units/manual/units.html#Interactive-Use)
-  * Steve looked at & looked pretty good. However had some concerns about using it
-  * On possible list
-* [https://www.npmjs.com/package/@speleotica/unitized](https://www.npmjs.com/package/@speleotica/unitized)  
-  * Wadood looked at
-  * Steve looked at. Might be fine but only 1 person with limited use.
-  * On possible list.
-* [https://sourceforge.net/projects/jconvert/](https://sourceforge.net/projects/jconvert/)
-  * Wadood looked at & liked
-  * Steve looked at and was concerned in Java, not used much, no recent activity. Did not carefully check out features.
-  * On possible list
-* [https://www.npmjs.com/package/@allisonshaw/js-quantities](https://www.npmjs.com/package/@allisonshaw/js-quantities)  
-  * Wadood looked at
-  * Steve looked at and has concerns about upkeep, etc.
-  * On possible list
+- [https://www.npmjs.com/package/uom](https://www.npmjs.com/package/uom)
+  - Wadood looked at
+  - Steve looked at. Seems possible but unsure and also uncertain about maintenance. Could look at but wait.
+  - High on possible list.
+- [https://www.gnu.org/software/units/manual/units.html#Interactive-Use](https://www.gnu.org/software/units/manual/units.html#Interactive-Use)
+  - Steve looked at & looked pretty good. However had some concerns about using it
+  - On possible list
+- [https://www.npmjs.com/package/@speleotica/unitized](https://www.npmjs.com/package/@speleotica/unitized)  
+  - Wadood looked at
+  - Steve looked at. Might be fine but only 1 person with limited use.
+  - On possible list.
+- [https://sourceforge.net/projects/jconvert/](https://sourceforge.net/projects/jconvert/)
+  - Wadood looked at & liked
+  - Steve looked at and was concerned in Java, not used much, no recent activity. Did not carefully check out features.
+  - On possible list
+- [https://www.npmjs.com/package/@allisonshaw/js-quantities](https://www.npmjs.com/package/@allisonshaw/js-quantities)  
+  - Wadood looked at
+  - Steve looked at and has concerns about upkeep, etc.
+  - On possible list
 
 ### Unlikely (based on Wadood looking at)
 
-* [https://sourceforge.net/projects/unit-converter/reviews](https://sourceforge.net/projects/unit-converter/reviews)
-  * Wadood looked at
-* [https://sourceforge.net/projects/tbunitconverter/](https://sourceforge.net/projects/tbunitconverter/)
-  * Wadood looked at
-* [https://sourceforge.net/projects/unit/](https://sourceforge.net/projects/unit/)
-  * Wadood looked at
-* [https://sourceforge.net/projects/lnrsoftunitconv/](https://sourceforge.net/projects/lnrsoftunitconv/)
-  * Wadood looked at
-* [https://www.unitconverters.net/](https://www.unitconverters.net/)
-  * Wadood looked at
-* [https://proglogic.com/code/javascript/calculator/lengthconverter.php](https://proglogic.com/code/javascript/calculator/lengthconverter.php)
-  * Wadood looked at
-* [https://github.com/ben-ng/convert-units](https://github.com/ben-ng/convert-units)
-  * Wadood looked at
+- [https://sourceforge.net/projects/unit-converter/reviews](https://sourceforge.net/projects/unit-converter/reviews)
+  - Wadood looked at
+- [https://sourceforge.net/projects/tbunitconverter/](https://sourceforge.net/projects/tbunitconverter/)
+  - Wadood looked at
+- [https://sourceforge.net/projects/unit/](https://sourceforge.net/projects/unit/)
+  - Wadood looked at
+- [https://sourceforge.net/projects/lnrsoftunitconv/](https://sourceforge.net/projects/lnrsoftunitconv/)
+  - Wadood looked at
+- [https://www.unitconverters.net/](https://www.unitconverters.net/)
+  - Wadood looked at
+- [https://proglogic.com/code/javascript/calculator/lengthconverter.php](https://proglogic.com/code/javascript/calculator/lengthconverter.php)
+  - Wadood looked at
+- [https://github.com/ben-ng/convert-units](https://github.com/ben-ng/convert-units)
+  - Wadood looked at
 
 ### Notes on packages (By Wadood Alam; sorted by Steve)
 
@@ -236,7 +348,7 @@ Okay level of downloads (15k/week) \
 
     **I personally like this one, has good documentation and explanation**
 
-### [https://www.npmjs.com/package/unit-system](https://www.npmjs.com/package/unit-system) 
+### [https://www.npmjs.com/package/unit-system](https://www.npmjs.com/package/unit-system)
 
 1. What is its main features of interest
     1. Do they have custom units (we want this)
@@ -267,7 +379,7 @@ Steve could not find the license
 
 ### Possible
 
-### [https://www.npmjs.com/package/uom](https://www.npmjs.com/package/uom) 
+### [https://www.npmjs.com/package/uom](https://www.npmjs.com/package/uom)
 
 1. What is its main features of interest
     1. Do they have custom units (we want this)
@@ -290,7 +402,7 @@ Steve could not find the license
 
     ⇒ MIT
 
-    **This looks like a decent package. It is relatively new and has good documentation etc. But might require some edits for chained conversions maybe… **
+    **This looks like a decent package. It is relatively new and has good documentation etc. But might require some edits for chained conversions maybe…**
 
 Notes: \
 Moderate level of usage \
@@ -568,105 +680,3 @@ Only 1 version ever published, last work was 2+ years ago, mostly done by 1 pers
 3. What is its software license (even if not open source)
 
     ⇒ Open source maybe.not sure. Very vague
-
-## Testing of unit packages
-
-Steve proposes to test the packages in the following sequence:
-
-1. Test basic multiplicative unit conversion of provided unit. If there is a unit conversion provided (such as meters to feet) then try that. For example, take 13 meters and convert to feet and then reverse to try 13 feet to meters. Note I did not use 1 so we know that it is really working correctly. It can be any unit it has.
-2. Test linear conversion. Convert degrees fahrenheit to celsius and reverse. If not provided then use 9/5 * C + 32 = F.
-3. Check new unit with multiplicative (all remaining are multiplicative). This assumes that the package does not have energy units. If so, see if get the same result and need to test one where not provided (could be the same but made up names for the units). 1 Megajoule = 0.001055056 BTU and 1 Megajoule = 3.6 kWh. Try converting each of these after enter these two conversions:
-    1. 3 BTU into 2843.45 Megajoules
-    2. 123 kWh into 34.17 Megajoules
-4. See if can convert 34.17 Megajoule into 123 kWh to see if automatically does reverse given entered kWh into Megajoules above.
-5. See if allows arithmetic on result so can ask 3 BTU + 123 kWh to see if it can give 2877.62 Megajoules.
-6. See about a chained conversion. Enter new unit of 100 watt bulb = 0.1 kWh. Now convert 3 BTU to 100 watt bulb. 3 BTU is 2843.45 Megajoules = 10236.42 kWh = 102364.23 100 watt bulb. This assumes that the package can do reverse conversions (gave Megajoule to kWh above); if not, need to give reverse and note. If that works, see if can take 102364.23 100 watt bulb into BTU (3 BTU).
-7. Another chained conversion. Enter 4 new units: 1 kWh = 0.11 US$, 1 BTU = 13 CAN$, 1 US$ = 0.87 Euro and 1 CAN$ = 1.2 Euro. Ask to convert 123 kWh and 3 BTU into Euro. 123 kWh = 13.53 US$ = 11.77 Euro and 3 BTU = 39 CAN$ = 46.80 Euro for a total of 58.57 Euro. Getting the final Euro probably assumes arithmetic is allowed (per test above).
-8. Example of multiple paths & what happens if package really smart. Also, how stop some conversions.
-9. See [CO2 conversions](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) to do example to CO2.
-
-## Groups
-
-Groups are what make this all interesting (because they aggregate values) but also add complications, many of which are noted above. We need to figure out the implementation, esp. when you have a group of groups. Also, we create a materialized view for aggregated daily readings for each meter to make OED faster. Should we do anything like that for groups, esp. given unit transformations?
-
-We could use groups to decide in advance what unit is desired on aggregation. For example, you could have a group of all residence halls where it is the total energy and another that is cost. This would likely mean we need a better interface for groups and users would need access if this was the only way to choose. The tradeoff of this vs a units on demand system is unclear from the user, efficiency & implementation standpoint. Also, do groups have a unit similarly to meters? This may depend on whether they are static or dynamic in units used.
-
-## Internal storage
-
-OED may store SI (metric) units. A few people want us to store the raw meter value in that unit. However, the conversion should be very accurate and not introduce any significant error. We could choose to do arbitrary units for each meter but then we would need to convert before we aggregate whereas we can do the conversion afterward if they are all in the same unit. We still need to do conversions for units that are compatible but not the same unit such as kWh and BTU. This (see example #1 above) and (see example #2 above) show this. The final implementation will depend on other design choices.
-
-## Graphical display
-
-When we aggregate meters through a group, we may have the final result in a unit that is not desired by the user (see example #5 above). Thus, we are going to need to transform each data point back into the user desired unit. We need to decide where to do this conversion but it may well be fastest via the DB using SQL. Also, we need to know the unit that the user wants. This probably means the admin can set a default unit for each type (as they do with a default chart type, etc.). It may make sense for a site to choose between English, metric, British where all displayed results default to the default unit type for that region chosen by the admin. It would be good if the user can override this and change the graph display unit. For example, they might want to aggregate as energy, cost, etc. in another unit equivalent. If so, would we go back to the DB to redo all the work or do it in the user browser via JS?
-
-How will we display meters/groups that have different units but are compatible. For example, you graph meters where some are BTU and some are kWh. Another (see example #7 above) is to show gas or electrical usage with temperature (or degree heating/cooling for each day which is a transformation of temperature) since one would expect usage for heating and cooling to be impacted by temperature. Some options are: disallow, display in specified default/given units that is compatible for all items in graph, show multiple scales, others. Another related complication is what if you want to graph items that do not have compatible units. The options overlap above but you cannot show in a compatible unit for all. Whatever we choose, we need to be sure the units are clear on any graphical display.
-
-## Admin panel
-
-A systematic way to add new inputs and edit these values needs to be developed. This will include individual values in text boxes as well as a robust CSV drop capability. This should allow for the needed entries in the admin panel now and in the future.
-
-Note one way to edit meter data is to allow someone to download the needed meter readings as a CSV file, edit values desired for change, and then upload the CSV file.
-
-## Questions
-
-1. Meters currently store their meter type as 1 of 2 enums (now three with obvius). If we’re generalizing resources, users might be adding a lot of different types of meters. Do we want to let users register their own meter types? Does the meter type in the database actually do anything other than get stored right now? What’s actually the difference between Mamac and Metasys meters in the code (we really should check that we are receiving data for the correct meter type when it arrives)?
-2. All readings in the database are kept in a single readings table. Do we want to store all  reading types in this table or would there be any benefit in separating the different resources’ readings into multiple tables? When users add new resource types, do we automatically add a new table for it?
-
-## Related changes to consider in design
-
-1. There is a long standing issue that OED shows kW on line, bar and compare graphs. Line should be kW as it is an instantaneous reading (but issue that is actually an average) but bar and compare really are kWh. This should be fixed up, esp. as OED understands and can store these different units. Finding a general solution would be nice.
-2. We have wanted to allow scaling (at least +/- but general linear would be nice) when a meter is combined into a group. This might fit in with this work. (issue #[161](https://github.com/OpenEnergyDashboard/OED/issues/161))
-3. Energy usage in buildings varies by size, number of occupants and the weather conditions. To allow sites to better understand how their energy usage compared to expectations and across buildings, we will allow the data presented to be normalized for these considerations. This requires normalizing data based on values in the database (except for weather where the data often comes from a weather service and hooking this up for some systems is part of this work). This is more important now that we have map graphics. \
- Here are [some ideas/plans from 2018 GSoC](./GSoc/normalize.md) \
- Here are some other ideas for normalizing:
-    1. Sq feet or cubic feet
-        1. Can vary with time
-    2. people in building
-        2. Will vary with time
-    3. Weather: degree heat/cooling days, sunny/shady, wind
-        3. Old work to get national weather service data
-        4. [http://www.degreedays.net/](http://www.degreedays.net/) for degree days in CSV to correct data for weather, normalize data on 68 degree day is 0 for normal \
- Here are [some ideas/plans from 2018 GSoC](./GSoc/admin.md)
-
-## DB generalize info
-
-1. [Energy Star DB Schemas](./otherSources/EnergyDatabaseStarSchema.pdf) show how they do it and we should review.
-2. Here are some older ideas on what might go into DB
-    1. Meters
-        1. Unit
-        2. Note
-        3. Frequency to read
-        4. GIS coordinates
-        5. Consumption vs. generation
-            1. When do this need to fix graphs/compare so make sense. Now you use less if you generate less which seems backward since reverse of production.
-        6. Draw related to meter - can vary with time
-            1. no. people and/or no. people FTE
-            2. Sq. feet - should we allow sq. m?
-        7. Do we have to worry about reactive power, apparent power, power factor, Volt-amperes?
-        8. Do we want to allow generalization to garbage and recycling by having pounds/Kg units?
-
-### Items to remember
-
-1. For testing, esp. steam that is harder, we might be able to use: Macalester College has (2) accessible Steam condensate at: [http://bigelowcond.meters.macalester.edu/start.html](http://bigelowcond.meters.macalester.edu/start.html) & [http://gddcondreturn.meters.macalester.edu](http://gddcondreturn.meters.macalester.edu)
-2. See [https://github.com/jamielepito/OED/tree/api-tests/src/server/sql/group](https://github.com/jamielepito/OED/tree/api-tests/src/server/sql/group) for building work that was historical but may be useful to look at.
-3. Some thoughts from Wadood in an 201128 email:
-
-So I have gone over the document and obviously it raises some very important questions. I personally think that storing data in a single standard unit (SI/metric maybe) will be better as it will be easier to use that data in the code. Maybe we can put conversion algorithms/code in the 'pipeline' so that it is easier for us when coding.
-
-Secondly, as far as changes to the DB go, I think maybe we can use multiple tables to store various types of energy sources but with a uniform SI unit. This will also have the additional benefit of the ability to group and store various types of meters separately according to their respective energy sources.
-
-Thirdly, energy to cost conversions would be better if we can keep it as simple as we can. One step conversion would be more convenient than chained conversions and will require less time. As you have mentioned in the document, cost and other quantities can vary with time, in order to accommodate that my idea is to see what postgresql has to offer by default (for example postgresql giving us all the time zones). The other thing would be that the admin can change the quantities periodically so that the final output data and any relevant conversions give the up-to-date result.
-
-## Information resources
-
-* [conversionFactors.xlsx](./conversionFactors.xlsx) has a list of ways to relate one resource unit to another with the conversions. We may want to preload OED with some/all of these. They are separated by resource type/compatibility.
-* An [older doc](./1711DBGeneralize.docx) with resource generalization thoughts including a number of details that may be valuable.
-* [Anthony Database Resource Generalization Thoughts.odt](./AnthonyDatabaseResourceGeneralizationThoughts.odt) has thoughts on doing this and code that needs to be changed. A lot was already integrated into this document.
-* [https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties](https://www5.eere.energy.gov/manufacturing/tech_deployment/amo_steam_tool/#Properties) has lots of conversion information
-* The [info from other sources folder](./otherSources/) has stuff found that might be useful, including:
-  * [APPA key metrics poster](./otherSources/APPAKeyMetrics.jpg) with info on what they think are essential information
-  * [Central building analysis with graphs](./otherSources/CentralBuildingProfiles.xlsx)
-  * [Macalester energy analysis spreadsheet](./otherSources/Macalester_2015_2016_Campus_Energy_Rpt_Wkbk.xlsx)
-  * [Macalester electric analysis spreadsheet](./otherSources/Macalester_Aggregated_Elec_Totals.xlsx)
-  * [Getting energy on chilled water](./otherSources/HowToCalculateBTU_sOnCHWSystem.pdf)
-  * [Steam flow info](./otherSources/steam_flow_measurement.pdf)
