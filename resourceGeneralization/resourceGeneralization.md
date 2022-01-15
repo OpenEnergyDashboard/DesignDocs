@@ -8,7 +8,6 @@ This is a very large document that can be intimidating. Developers can review th
 
 **Please use care in editing the document so the ideas stays intact until a final decision is made and nothing bad is done to the document. Having said that, this is a living document that you can edit.**
 
-
 This is a working document (started Nov 2020 but includes previous work/ideas) that gives ideas and details on how to generalize OED resources from electricity to most types. The previous document when we thought we would use a unit conversion package is [available](unitPackageIdeas.md) but is now obsolete.
 
 Note: The equations in this document should render in Visual Studio Markdown Preview window. They are in LaTex format. Unfortunately, you have to use a URL and cannot use $ on GitHub (yes, it works in Visual Studio). This is how it is done in this document but note there is no background set so if you use dark mode they are basically invisible. I'm sorry to say you need to turn that off to see the equations. Also note that a heading must be lowercase and words separated by - to allow links so this is used throughout this document.
@@ -457,7 +456,7 @@ For most OED conversions, intercept = 0 so the process is simplified. For exampl
 2. Add the conversion of MJ → BTU
 
     1. The conversions table has an entry for source_id = 4 and destination_id of 5 which is (947.8, 0).
-    2. updatedConversion gives (947.8 \* 38.46, 947.8 \* 0 + 0) = (3.64e4, 0)
+    2. updatedConversion gives (947.8 * 38.46, 947.8 * 0 + 0) = (3.64e4, 0)
 
 Now lets do one with an intercept. The conversion of temperature C → F is (1.8, 32). Just for testing, lets make up a temperature unit for C → Z is (2, -111). If you start with 212 F that becomes 100 C. The 100 C becomes 89Z. Doing it with the code gives:
 
@@ -934,7 +933,7 @@ Whenever either value is changed then it needs to be stored into the meter table
 - update groups that contain this meter if editing
   - TODO probably similar to analysis of editing a group member but need to figure get pseudocode done
 
-A change in a meter's graphhic unit will likely change the graphable meters and groups. While it could be handled in real-time, this is only for admins and these changes are not likely to be done very often. Thus, the admin will be told that they need to reload OED to see the change. A user will see the change the next time they reload and that delay is fine.
+A change in a meter's graphic unit will likely change the graphable meters and groups. While it could be handled in real-time, this is only for admins and these changes are not likely to be done very often. Thus, the admin will be told that they need to reload OED to see the change. A user will see the change the next time they reload and that delay is fine.
 
 A feature that would be desirable is to list all compatible units for the meter as is suggested for groups. As with groups, this isn't strictly necessary as a similar workaround will get the needed information. This would be viewable by any user and not just admins.
 
@@ -1159,6 +1158,7 @@ When reading data is exported, it needs to contain the unit associated with it. 
 ### chartlink
 
 The chart link that appears on each graphic page needs to be enhanced to include the unit of graphic display.
+
 ### multiple-edits
 
 OED has never protected against two different admin pages simultaneously changing the same item or items that could be in conflict. Some conflicts are relatively benign such as both changing a preference where the last one would stay. Some might cause an internal error, such as deleting a group that another page tries to access but probably would not hurt OED in the long-term. Some, not analyzed, might cause OED issues in what is in the database. The chance of this happening now seems greater given the added complexities of units. For now, admins will be warned not to do this to avoid potential issues. How easy a good fix will be and if it is needed is left for the future.
@@ -1247,7 +1247,7 @@ This is a very incomplete list that was created to show it could be done:
 - [Graphlib](https://github.com/dagrejs/graphlib/wiki/API-Reference) is interesting but no longer maintained.
 - [ngraph](https://github.com/anvaka/ngraph) seems okay and still has developers
 - [@datastructures-js/graph](https://www.npmjs.com/package/@datastructures-js/graph) is interesting but a single person
-- [js-graph-algoriths](https://www.npmjs.com/package/js-graph-algorithms) is fine but one person and not updated in many years
+- [js-graph-algorithms](https://www.npmjs.com/package/js-graph-algorithms) is fine but one person and not updated in many years
 
 ### postgresql
 
@@ -1337,4 +1337,4 @@ Here are some other ideas for normalizing:
 
 ## old-conversion-code
 
-The [zip of GitHub clone on conversion branch](old-conversion-branch.zip) has work for 4-5 years ago on starting the code for conversions. It isn't likely to be useful but might help with some setup if we roll our own converstions.
+The [zip of GitHub clone on conversion branch](old-conversion-branch.zip) has work for 4-5 years ago on starting the code for conversions. It isn't likely to be useful but might help with some setup if we roll our own conversions.
