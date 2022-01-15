@@ -1,23 +1,10 @@
 # oed-resource-generalization
 
-# Warning
-
-**This is far from done and it isn't consistent. However, the old version is so far out of date with current thinking that this one is being shared. Many edits are expected in the near future.??**
-
-# ??TODO DO NOW
-
-- fix up all ?? items
-- See code Z on notes for needing to add units renamed from path in graph and adding to all units to consider. Think through.
-- check when should loop over units with unit_index != -1 (in C<sub>ij</sub>) and when all/unit ones with issue that ones derived from graph conversions and name changes
-- if default graphic units is fk then how deal with no unit. The functions with type?? relate because unsure if string or id.
-- change unit so has unit_represents which is enum of quantity, flow or raw. Applies to unit_type of meter and indicates the type of data for dealing with in database.
-- when add OED defined units, put in notes so site can tell. All to note if user defined when created.
-- add how deal with autocreated meters for unit and apply to MAMAC and Obvius.
+This is a very large document that can be intimidating. Developers can review the earlier part and then, in general, read the other section(s) that apply directly to what they are trying to do. There are undoubtedly omissions and mistakes in this document so it is expected and appreciated if you asked questions and suggest changes.
 
 ## items-that-need-to-be-addressed
 
 - See all the places with a TODO and address.
-- Go through document to specify all the functions needed from database based on algorithms.
 
 **Please use care in editing the document so the ideas stays intact until a final decision is made and nothing bad is done to the document. Having said that, this is a living document that you can edit.**
 
@@ -577,7 +564,7 @@ All of these ideas are in the following pseudocode:
       }
     }
 
-    // Gives the unit name when dealing with a suffix created unit.??xxxxxxx
+    // Gives the unit name when dealing with a suffix created unit.
 
     // Set the unit_index.
     // Get all units rows of displayable meters (not none) from the database
@@ -696,7 +683,7 @@ When does C<sub>ik</sub> and P<sub>ik</sub> need to be calculated? They need to 
 
 It is not expected that these will happen very often and it will only happen to an admin who is working on units/conversions. Users will delay seeing the unit changes until the reload OED into the web browser. For a regular user that is not an issue. An admin needs to reload OED in the web browser to see the changes for graphing.
 
-The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units)
+The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units). (As a historical note, there were discussions of where to do the unit transformation early on: client or server. Given the current design it made most sense to do it on the server. While that could change, it isn't likely.)
 
 ## default_graphic_unit
 
@@ -706,13 +693,17 @@ The admin can make the default graphic unit be an unit that is compatible with t
 
 ## database-changes-for-units
 
+TODO Go through document to specify all the functions needed from database based on algorithms.
+
 - need unit_type as enum of values unit, meter
 - need displayable_type as enum of value all, admin, none
+- need unit_represent_type as enum of quantity, flow, raw
 - new table named units that has columns:
   - integer id that auto increments and is primary key
   - string name that is unique (name of unit for identification)
   - string identifier that is unique (display name of unit, often similar/same as name)
-  - unit_type type_of_unit
+  - unit_represent_type unit_represent tells how the data is fetched for readings. It is only really needed for the meter type.
+  - unit_type type_of_unit tells if this is a unit or a meter type
   - integer unit_index that is unique and is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
   - displayable_type displayable (whether it can be seen/used for graphing by anyone, admin or nobody)
@@ -727,7 +718,7 @@ The admin can make the default graphic unit be an unit that is compatible with t
   - string note that holds comments by the admin or OED inserted
 - meters table needs the following new column:
   - unit_id that is foreign key to id in units table. We need to be sure that the type_of_unit for the supplied unit_id is meter. This is the unit that the meter receives data in and is the one pointed to by the meter in the graph.
-  - integer default_graphic_unit not NULL that is foreign key to id in units table.
+  - integer default_graphic_unit not NULL that is foreign key to id in units table. Note, unlike a group, this must have a unit that is real.
   - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
 - groups table needs new column:
   - integer default_graphic_unit that is foreign key to id in units table and null if no unit.
@@ -735,7 +726,7 @@ The admin can make the default graphic unit be an unit that is compatible with t
 - see [database readings changes](#how-oed-should-calculate-readings-displayed-in-line-graphics) for other database changes.
 - src/server/sql/reading/create_compressed_reading_views.sql has compressed_group_readings_2 & compressed_bar_group_readings_2 that appear to first get all the meter ids and then sum the result of querying over all the meters to get the readings to display. Since we need, in general, to now apply different unit transformations to the different meters in a group these will need to be changed. (Let's create new functions with better names and leave these for now during the conversion.)
   - TODO figure out an efficient way to do this
-- Need to load all the predefined OED units and conversions in those tables  where some ideas where:
+- Need to load all the predefined OED units and conversions in those tables. The note for each should be set to indicate it was preloaded by OED. The examples have some and other ideas are:
   - Energy units: kWh, BTU, therm (100,000 BTUs), cubic feet of natural gas, cubic meters of natural gas, gallon of gasoline (?) [see list of conversions](conversionFactors.xlsx)
   - Volume (not equivalent to power): liters, gallons, cubic feet, Mcf (thousands of cubic feet), Ccc (hundreds of cubic feet)
   - Power: kW, BTU/hr
@@ -777,7 +768,8 @@ Meter exists but needs to be changed for new columns.
 
 ### group
 
-Group exists but needs to be changed for new columns.
+- Group exists but needs to be changed for new columns.
+- Whenever the default_graphic_unit is stored/fetched, the "no unit" value of -99 must be switched with null to avoid a foreign key violation. This mean that when fetching, null is changed to -99. When storing, -99 is changed to null.
 
 ## oed-page-changes
 
@@ -785,7 +777,7 @@ What follows are the changes needed on specific OED web pages.
 
 ### new-units-menu
 
-Each graphics page (line, bar, compare, map) will have a dropdown menu that shows the graphic units for graphing (and "no unit"). It will probably go right below the groups: and meters: dropdown menus and have a similar look with title and then the menu. This dropdown has some similarities to the map dropdown for meters/groups that are filtered based on the selected map. The default menu value is "no unit" when the page is first loaded and this is set before the algorithm below is run so there is already a selected unit. Since the algorithms use an id to identify all values, the entry "no unit" will be encoded with -99 since the id should always be negative. Using the value -99 makes it stand out more. Note the meters/groups menus must be updated to the compatible units as [described](#changes-to-meters-groups-dropdown-menus). Also note that if the current unit is "no unit" then once the first meter/group is selected then its default graphic unit becomes the default graphic unit for the selected meter/group. If "no unit" is selected by the user then all meters and groups are deselected since none could have been selected with this choice. Note this is an easy way to restart the graphing process. It would be good to warn the user if "no unit" is selected but there are selected meters/groups so they can either continue or cancel to avoid accidentally removing all meters/groups. A graphic unit is defined as follows:
+Each graphics page (line, bar, compare, map) will have a dropdown menu that shows the graphic units for graphing (and "no unit"). It will probably go right below the groups: and meters: dropdown menus and have a similar look with title and then the menu. This dropdown has some similarities to the map dropdown for meters/groups that are filtered based on the selected map. The default menu value is "no unit" when the page is first loaded and this is set before the algorithm below is run so there is already a selected unit. Since the algorithms use an id to identify all values, the entry "no unit" will be encoded with -99 since the id should always be positive for real units. Using the value -99 makes it stand out more. Note the meters/groups menus must be updated to the compatible units as [described](#changes-to-meters-groups-dropdown-menus). Also note that if the current unit is "no unit" then once the first meter/group is selected then its default graphic unit becomes the default graphic unit for the selected meter/group. If "no unit" is selected by the user then all meters and groups are deselected since none could have been selected with this choice. Note this is an easy way to restart the graphing process. It would be good to warn the user if "no unit" is selected but there are selected meters/groups so they can either continue or cancel to avoid accidentally removing all meters/groups. A graphic unit is defined as follows:
 
 1. Only units in the units table that are of type unit (so not meter) can be a graphic unit.
 2. Only units displayable to this user are displayed. Always if displayable is all, only user admin if displayable is admin and never if displayable is none.
@@ -859,7 +851,7 @@ The following pseudocode will create the graphic unit menu (see [determining-com
 
 The possible meters/groups in the dropdown menu will be in two potential states that relate to the units menu [discussed above](#new-units-menu).
 
-1. If the meter/group is [compatible](#determining-units-that-are-compatible-with-a-meter-or-group) with the graphic unit then it is in the usual dropdown font. Note when you first go to the graphics page the graphic unit is set to "no unit" and this means that every meter/group is compatible. Just listing them all is much faster than checking each one and is done in the pseudocode below.
+1. If the meter/group is [compatible](#determining-units-that-are-compatible-with-a-meter-or-group) with the graphic unit then it is in the usual dropdown font. Note when you first go to the graphics page the graphic unit is set to "no unit" (-99) and this means that every meter/group is compatible. Just listing them all is much faster than checking each one and is done in the pseudocode below.
 2. Otherwise (not compatible) the meter/group is shown in grayed out font. This is the same look as the map page where meters/groups that cannot be graphed on the selected map are grayed out. Choosing one of these would mean either changing the graphic unit or it would not show up. We don't want either of these to happen.
 
 This does not change the current situation that hides some meters/groups if they are not displayable to a user. All meters/groups for case 1 are displayed first and then the ones for case 2 where the items in each set are in alphabetically sorted order. (As separate work not part of resource generalization, we should probably make maps sort this way too.)
@@ -870,7 +862,7 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
     Set compatibleMeters = {}
     // meters that cannot graph.
     Set incompatibleMeters = {}
-    if (graphicUnit = no unit (-99)) {
+    if (graphicUnit = no unit) {
       // If there is no graphic unit then no meters/groups are displayed and you can display all meters.
       //  Also, if not admin, then meters not displayable are not viewable.
       // admin can see all.
@@ -952,7 +944,7 @@ The group page needs to have the [default_graphic_unit](#default_graphic_unit) a
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithMeters(metersInGroup(group_id))
 
-and "no unit" is also added (with id -99). When this needs to happen is described below.
+and "no unit" is also added (with id -99). When this needs to happen is described below. Note that "no unit" for the default graphic unit will be stored as null in the database.
 
 As long as this page is being updated, it will be modified so non-admins can only see displayable groups.  This partly addresses [issue #414](https://github.com/OpenEnergyDashboard/OED/issues/414) where the other part is address in [group graphic menus](#changes-to-meters-groups-dropdown-menus).
 
@@ -983,7 +975,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     // Get the currentGroup's compatible units.
     Set currentUnits = unitsCompatibleWithMeters(metersInGroup(gid))
     // Current group's default graphic unit
-    type?? currentDefaultGraphicUnit = gid.default_graphic_unit
+    integer currentDefaultGraphicUnit = gid.default_graphic_unit
     // Now check each meter
     for each meter M {
       // Get the case involved
@@ -1006,7 +998,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     // Returns the state (see groupCase function) for meter or group provided by id and
     // otherUnits where type is either meter or group
     // TODO see if OED already has set symbols for meter and group.
-    function integer compatibleChanges(Set otherUnits, integer id, String type, type?? defaultGraphicUnit) {
+    function integer compatibleChanges(Set otherUnits, integer id, String type, integer defaultGraphicUnit) {
       // Determine the compatible units for meter or group represented by id
       Set newUnits = compatibleUnits(id, type)
       // Determine case
@@ -1014,7 +1006,6 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
       return case
     }
 
-    TODO might be able to use this in other places.
     // Finds all compatible units for this id based on if meter or group. See compatibleChanges for parameter.
     function Set compatibleUnits(integer id, String type) {
       if (type = "meter") {
@@ -1030,7 +1021,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     // Returns case covered above as 1, 21, 22 or 3 for cases 1, 2.1, 2.2 or 3.
     // currentUnits should be the units already in group
     // newUnits should be the units that will be added
-    function integer groupCase(Set currentUnits, Set newUnits, type?? defaultGraphicUnit) {
+    function integer groupCase(Set currentUnits, Set newUnits, integer defaultGraphicUnit) {
       // The compatible units of a set of meters or groups is the intersection of the compatible units for each.
       // Thus, we can get the units that will go away with:
       Set lostUnits = currentUnits ∩ newUnits
@@ -1127,9 +1118,8 @@ A feature that would be desirable is to list all the compatible units for a grou
 
 ### new-admin-unit-page
 
-OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) and a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
+OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) except unit_index that is not show and a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
 
-TODO?? the unit_id is off since they are now split between rows and columns in Cik
 OED allows admins to add a new unit. An "add unit" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a unit. The id and unit_index will not be set by the admin but filled in by OED later. A "save" button would put the changes into the database. If a unit is added then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). The default values are:
 
 - suffix is an empty string ("")
@@ -1173,6 +1163,17 @@ The chart link that appears on each graphic page needs to be enhanced to include
 
 OED has never protected against two different admin pages simultaneously changing the same item or items that could be in conflict. Some conflicts are relatively benign such as both changing a preference where the last one would stay. Some might cause an internal error, such as deleting a group that another page tries to access but probably would not hurt OED in the long-term. Some, not analyzed, might cause OED issues in what is in the database. The chance of this happening now seems greater given the added complexities of units. For now, admins will be warned not to do this to avoid potential issues. How easy a good fix will be and if it is needed is left for the future.
 
+## other-code-changes
+
+### autocreated-meters
+
+MAAMC and Obvius meters can be automatically created. The code needs to be updated so the unit associated with the meter can be added as part of creating the meter. Note it will be rejected if there is not appropriate unit.
+
+### graphs
+
+The y-axis label on all graphics need to show the unit and not kW or kWh. Mostly that will be the unit identifier associated with the graphic unit.
+
+TODO We need to think how we are going to label the two types given we are only given one in the units table.
 ## other-database-considerations
 
 ### unit-display
@@ -1181,11 +1182,9 @@ Currently OED uses kW on line graphics and kWh on bar and compare, and kWh/day (
 
 At this point OED needs to support three types of units for readings:
 
-1. Quantity that represent something physical and can be consumed. In OED these are energy (kWh, BTU, ...), volume, mass, etc. Note a number of other units used fall into this including CO2 as mass, money, gasoline (volume), etc. This is how the code and DB code gets readings and that will continue to work for units other than kWh that currently done.
-2. Rates that are typically quantity/time. In OED these are power (watt, ...), gallons/min, etc. OED needs to change how it gets readings for this to work (see below).
-3. Quantities that are not consumable and do not have a rate of usage associated with them. The only one at this time is temperature. Unlike the other two, it does not make sense to sum these to get a total quantity. For example, summing temperatures (not for finding the average) does not really make sense. Thus, these can only be shown on a line graph where the unit is the original quantity but often averaged. It will get the line value in the same way as rates.
-
-TODO units need to be labeled so OED can tell which of these 3 it is dealing with.
+1. Quantity that represent something physical and can be consumed. In OED these are energy (kWh, BTU, ...), volume, mass, etc. Note a number of other units used fall into this including CO2 as mass, money, gasoline (volume), etc. This is how the code and DB code gets readings and that will continue to work for units other than kWh that currently done. This has unit_represent in the units table in the database of quantity.
+2. Rates that are typically quantity/time. In OED these are power (watt, ...), gallons/min, etc. OED needs to change how it gets readings for this to work (see below). This has unit_represent in the units table in the database of flow.
+3. Quantities that are not consumable and do not have a rate of usage associated with them. The only one at this time is temperature. Unlike the other two, it does not make sense to sum these to get a total quantity. For example, summing temperatures (not for finding the average) does not really make sense. Thus, these can only be shown on a line graph where the unit is the original quantity but often averaged. It will get the line value in the same way as rates. This has unit_represent in the units table in the database of raw.
 
 ### how-oed-should-calculate-readings-displayed-in-line-graphics
 
@@ -1225,21 +1224,11 @@ TODO An analysis of the current code has not yet been made. It is hoped that it 
 
 ### meter-graphic-values
 
-The database function discussed above also has logic for determining the time frame for each point based on the total date ranges to be graphed. Thus, the x-axis values are part of this function and do not change based on the unit being graphed. The y-axis values depend on the unit being graphed. For meters this is a single unit calculation that transforms the meter from the meter's unit to the display unit chosen by the user. The known transformation could be passed as a new parameter to the database function and the transformation could be applied in the select statement. In general, one value would be needed per meter. An alternative would be to do the transformation after the data is gotten from the database. Note that this also allows the y-axis values to be recalculated without going to the database when the graphic unit is changed.
+The database function discussed above also has logic for determining the time frame for each point based on the total date ranges to be graphed. Thus, the x-axis values are part of this function and do not change based on the unit being graphed. The y-axis values depend on the unit being graphed. For meters this is a single unit calculation that transforms the meter from the meter's unit to the display unit chosen by the user. The known transformation could be passed as a new parameter to the database function and the transformation could be applied in the select statement. In general, one value would be needed per meter. An alternative would be to do the transformation after the data is gotten from the database. Note that this also allows the y-axis values to be recalculated without going to the database when the graphic unit is changed. At this time, all these calculating will be done on the server. Thus, the data requested by the client and the information returned by the server will be virtually the same as it already is but the client needs to tell the server the desired graphic unit.
 
 ### group-graphic-values
 
-Since groups have multiple underlying meters, in general, you need to apply different unit transformations to each  meter in the group. To do this within the database would mean providing all unit transformations for every underlying meter. The practicality of doing this so the database function can easily choose the needed transformation for each meter is not known. A more complex way would be to separate the underlying meters into groups where each group has meters with the same unit. Then the transformation is the same within each group so they could easily be done together within the database. The returned sum from each unit group would then be summed together to get the final y-axis graphic value. Since the y-axis graphic points are the sum of the transformed values for each meter it is not possible to take y-axis values from one unit and transform them into y-axis value in another unit unless all the unit group y-axis values are saved. The question of server vs. client side is also related and discussed next.
-
-### server-side-vs-client-side-calculations
-
-The current design makes decisions about units by using the C<sub>ik</sub> array. This array needs to be available on the client side due to how often it is accessed and the fact it rarely changes. It is less clear where it should be created. The same is true for the graph. It is also unclear where the transformations for meter and groups will happen to get the graphic unit.
-
-The client-side could do the needed transformations for the y-axis graphic values without much extra work. If the client-side already has the needed y-axis values in Redux state then it could do the transformation needed without going to the server. This is easy for meters. As discussed above in the group graphics values section, a group cannot, in general, be transformed this way without knowing the y-axis values for each underlying meter. This can be done by going to the database in the same way as the original request. An alternative would be to get each meter of the group (or the sum of all the ones with the same unit) and cache them in Redux on the client side. This may significantly increase the data that must be transferred with each initial group request but reduces future requests. The initial request is increased by at least the number of different meter graphic unit types that aren't already known along with the underlying meters in the group and future requests are reduced by one set of y-axis points (and the database time and network latency).
-
-Given the choices above, it is open to whether meters y-axis values should be done on the client-side or the server-side. The server-side is simpler from a software standpoint since it would be the same as an initial request to the server. However, it is likely to be slower. This is because the number of points is currently set to be < 1000 for each line so it is not much work (and the other graphics are even faster). The initial software could always go to the server as done for groups and a future optimization could do the transformation on the client-side when possible. However, given groups go to the server, the speedup may not be as great as expected when groups are also graphed so this seems lower priority. It might be part of consideration of doing groups on the client-side if the speed up is deemed necessary.
-
-TODO figure out how we want to do this and then update for meters and groups above. The discussion is a bit muddled given all the changes that have been made in the way calculations are done.
+Since groups have multiple underlying meters, in general, OED needs to apply different unit transformations to each meter in the group. To do this within the database would mean providing all unit transformations for every underlying meter. The practicality of doing this so the database function can easily choose the needed transformation for each meter is not known. A more complex way would be to separate the underlying meters into groups where each group has meters with the same unit. Then the transformation is the same within each group so they could easily be done together within the database. The returned sum from each unit group would then be summed together to get the final y-axis graphic value. Since the y-axis graphic points are the sum of the transformed values for each meter it is not possible to take y-axis values from one unit and transform them into y-axis value in another unit unless all the unit group y-axis values are saved. No matter what is selected, the server will be doing this work and the end result is similar to meters in that the server/client interaction will not change much.
 
 ## implementation-plan
 
@@ -1266,16 +1255,6 @@ PostgreSQL graph packages have some appeal but it isn't clear that they are read
 
 - [AGE](https://age.apache.org/) is very interesting but may not yet be ready for usage
 - [AgensGraph](https://wiki.postgresql.org/wiki/AgensGraph) is what AGE is based on but it is older and seems to be a fork of Postgres but unsure.
-
-### unit-display-questions
-
-- How will units be identified for which of the three types of units they are?
-- How will the unit label for the y-axis be associated with the unit? Most line graphs will be unit/time such as liters/day, money/day, etc. and represent the rate of usage.
-- How will user defined units fit in?
-
-TODO The code should have some basics of this description of how readings are turned into graphics points for the line graphic. It should also have a link to the document that holds this (this document if not moved).
-
-??TODO update, esp. given the changes for how units and menus are calculated
 
 ## testing
 
