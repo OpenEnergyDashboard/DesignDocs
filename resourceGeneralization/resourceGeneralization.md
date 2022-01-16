@@ -1232,7 +1232,56 @@ Since groups have multiple underlying meters, in general, OED needs to apply dif
 
 ## implementation-plan
 
-TODO
+The implementation of the resource generalization many independent pieces of varying importance. The following graphic (hopefully) shows the main dependencies in this effort. A group of tasks are indicated by the rectangular boxes. An arrow from a rectangle to another indicates it must be completed in some way before the other item. The different type/color arrows indicate different types of dependencies as the legend describes. Tasks higher in the figure either need to be done to get other tasks done and/or are of higher priority. The link for an item is into a section of this document. The plan is to use this graphic to understand the items in the [resource generalization project board](https://github.com/orgs/OpenEnergyDashboard/projects/1/views/1) which tries to have tasks to do sooner higher on the list. The image is shown next where the [PDF](implementingDependencies.pdf) includes the links.
+
+![graphic of interdependencies of tasks](implementingDependencies.png "image of sample conversions")
+
+The following list has most of the tasks in the graphic. It sometimes has a more complete list of the needed work. It is mostly historical for helping to create the graphic.
+
+- Analyze & choose graph package (in progress by Don)
+- Implement compatible units functions in [determining-compatible-units](#graphic of interdependencies of tasks)
+  - compatibleUnits
+  - unitsCompatibleWithUnit
+  - unitFromPRow, unitFromPColumn
+  - metersInGroup
+- Create graph from units & conversions DB tables in [creating-graph](#creating-graph)
+- Implement conversion functions in [determining-conversions](#determining-conversions)
+  - conversionValues
+  - invertConversion
+  - updatedConversion
+  - pathConversion
+- Create unit with suffix functions/code later in [determining-conversions](#determining-conversions)
+  - after graph of simplified example and adjacent code
+  - Cik code
+- [database-changes-for-units](#database-changes-for-units) section
+  - create all new DB tables
+  - create DB migrations
+  - figure out how to get readings
+  - create standard units for input into OED
+- [other-database-considerations](#other-database-considerations) section
+  - new SQL function to get rate data in [how-oed-should-calculate-readings-displayed-in-line-graphics](#how-oed-should-calculate-readings-displayed-in-line-graphics)
+  - new SQL function(s) to get meter graphic readings in [meter-graphic-values](#meter-graphic-values) (design decisions need to be made)
+  - new SQL function(s) to get group graphic readings in [meter-graphic-values](#meter-graphic-values) (design decisions need to be made)
+  - analyze bar/compare/map graphics for any needed changes in [bar-compare-map-graphic-values](#bar-compare-map-graphic-values)
+- Create models to interface to DB changes in [model-changes-for-units](#model-changes-for-units)
+- Web page changes under [oed-page-changes](#oed-page-changes)
+  - units menu [new-units-menu](#new-units-menu)
+  - meters & groups menus [changes-to-meters-groups-dropdown-menus](#changes-to-meters-groups-dropdown-menus)
+  - meter viewing page [meter-viewing-page](#meter-viewing-page)
+  - group viewing page [group-viewing-pages](#group-viewing-pages) (complex)
+  - admin unit page [new-admin-unit-page](#new-admin-unit-page)
+  - admin conversion page [new-admin-conversion-page](#new-admin-conversion-page)
+  - csv upload page [csv-upload-page](#csv-upload-page)
+  - export feature [export](#export) (needs design)
+  - chart link feature [chartlink](#chartlink)
+- auto created meters [autocreated-meters](#autocreated-meters) (needs some more details)
+- y-axis label in [graphs](#graphs)
+- testing
+  - Create data and tests for the simplified examples in text (some automated and some for developers for coding tests)
+  - automated input of example units and conversions (use models)
+  - test conversions including temperature in [determining-conversions](#determining-conversions)
+  - test Cij/Pik creation in [determining-conversions](#determining-conversions)
+  - design and implement tests for each function/code in text
 
 ## possible-ways-to-store-unit-graph
 
