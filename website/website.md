@@ -8,19 +8,23 @@
   * cd to the directory with the websiteSetup.sh script. This is often in your clone of the DevDocs repo in the website/ directory. It is assumed that the oedData/ directory is a subdirectory of this directory and it has all the CSV data files for the website.
   * Run the script with: ./websiteSetup.sh
   * If all goes well you will get 7 SUCCESS notices as:\
-&lt;h1>SUCCESS&lt;/h1>Successfully inserted the meters.&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>&lt;h1>SUCCESS&lt;/h1>&lt;h2>It looks like the insert of the readings was a success.&lt;/h2>
+&lt;h1&gt;SUCCESS&lt;/h1&gt;Successfully inserted the meters.&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;
   * Note this CSV file sets the GPS values so they work for the map below:
-    * Meter 7: (84, 419) GPS (40.00419, -87.99916) which is Play Place
-    * Meter 8: (250, 270) GPS (40.0027, -87.9975) which is Theater
+    * (M)eter 7: (84, 419) GPS (40.00419, -87.99916) which is Play Place
+    * (M)eter 8: (250, 270) GPS (40.0027, -87.9975) which is Theater
   * You can verify the meters on the meter page in OED if you want.
 * Create desired groups. Note all group names do not have the G in front as the script will fix this up.
   * Go to the groups page as an admin.
-  * Create “roup 1 & 2” that has eter 1 & 2 in it. Give it GPS coordinates  40.00202, -87.99915 so it will be in the middle of Cafeteria. This was (85, 202) on the calibration coordinates.
-  * Create “roup 7 & 8” that has eter 7, 8 in it.
-  * Create a new group named “roup 1 & 2 & 7 & 8” that contains eter 1, 2 and roup 7 & 8.
+  * Create “roup 1 & 2” that has eter 1, eter 2 in it. Give it GPS coordinates  40.00202, -87.99915 so it will be in the middle of Cafeteria. This was (85, 202) on the calibration coordinates.
+  * Create “roup 7 & 8” that has eter 7, eter 8 in it.
+  * Create a new group named “roup 1 & 2 & 7 & 8” that contains eter 1, eter 2 and roup 7 & 8.
 * Run script to set the desired meter and group ids. This is done so that they always have the same id which means the same color each time this is done. The meters go from 10012-10019 and groups go from 10012-10014. This also puts the M in front of meter name/identifier and G in front of group name. See script for why use these ids.
   * In a terminal, cd to the main OED directory.
-  * cat &lt;path to script>/websiteData.sql | docker compose exec database psql -U oed
+  * docker exec -i &lt;DB container name&gt; psql -U oed &lt; &lt;path to script&gt;/websiteData.sql
+    * &lt;DB container name&gt; found by going to the start of the console output where you install/ran OED and getting the database container name. The line will be:\
+Container &lt;mydir&gt;-database-1  Created\
+where &lt;mydir&gt; is usually the directory name where you have OED running.
+    * &lt;path to script&gt; is the Linux path to where the script is and normally in your devDoc directory that is normally the same place as what you did above for the websiteSetup.sh script.??update online and names above
   * The expected output is shown below since it is many lines.
   * Note that this changes the meter and group info and readings so you need to do the following:
     * Prepare the readings for viewing by doing this in the terminal in main OED directory: docker compose exec web npm run refreshReadingViews
@@ -40,10 +44,11 @@
     * Get the time shift
       * select date_trunc('hour', clock_timestamp() at time zone 'cst') - max(end_timestamp) as shift from readings where meter_id = (select id from meters where name = 'Meter 7');
       * use cdt if appropriate
-    * Now shift the readings by this amount (both start and end timestamp where you will shift all readings in the 2 new meters). Replace the '504 days 21:00:00 with whatever you got for the shift above. Note you have to do it in 2 places in the following command. So do:
+    * Now shift the readings by this amount (both start and end timestamp where you will shift all readings in the 2 new meters). Replace the '509 days 10:00:00 with whatever you got for the shift above. Note you have to do it in 2 places in the following command. So do:
       * update readings set start_timestamp = start_timestamp + interval '509 days 10:00:00', end_timestamp = end_timestamp + interval '509 days 10:00:00' where meter_id in (select id from meters where name in ('Meter 7', 'Meter 8'));
         * 4368 rows
-      * (in other terminal in OED main directory): docker compose exec web npm run refreshReadingViews
+      * You can leave the Postgres console: \q
+      * (in other terminal in OED main directory): docker compose exec web npm run refreshAllReadingViews
   * You can repeat these steps in the future to get back to the latest time but you may get error about overlapping start_timestamp. The easiest way around this is the delete all the reading with: \
 delete from readings where meter_id in (select id from meters where name in ('Meter 7', 'Meter 8')); \
 and then start again from above to add values and then do the shift.
@@ -60,7 +65,14 @@ longitude = -88 + x * 10<sup>-5</sup> \
       * Note (40.00035, -87.99900) would be perfect but want a little error to show for example. \
 After 3 points had error: x: 1.202%, y: 0.25% so save the DB.
   * Now see on map page. Click Show & Save map edits to get Display Enabled.
-  * If you map Meter 7 & 8 they should be right on these two buildings since GPS set in CSV file that uploaded. Group 1 & 2 should be on another building.
+  * If you map Meter 7 & Meter 8 they should be right on these two buildings since GPS set in CSV file that uploaded. Group 1 & 2 should be on another building.
+  * You can also use the HappyPlace30Deg.png for a rotated map where it could be named Happy Place 30 Deg. The angle to use is 30. The GPS values are the same but the coordinates on the map are different (but you click on the same logical location on the map):
+    * top, right corner of swimming pool: (291, 386) GPS to enter: 40.00461, -87.99723
+    * top, left corner of Cafeteria (49, 331) GPS to enter: 40.00238, -87.99966
+    * bottom, left corder of Housing (15, 174) GPS to enter: 40.00034, -87.99901
+      * Note (40.00035, -87.99900) would be perfect but want a little error to show for example. \
+After 3 points had error: x: 0.566%, y: 0.429% so save the DB.
+    * The circles should show at the same place on buildings as with the zero degree map.
   * See the map page on how the calibration discussion was created.
 
 ### Restarting
@@ -215,7 +227,7 @@ Note I trimmed the time to stop on Dec. 28 so the last bar was virtually full. O
 
 ## Uses of meters/readings
 
-* Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter> is step function data.
+* Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter&gt; is step function data.
   * Meter A-C are modest values that can be used together.
   * Meter D is deliberately larger values to show issue of how others values become hard to see.
   * Meters C-D demonstrate what happens when you have missing intervals of values. Deliberately chose to only have time missing at start/end because OED draws a line over the missing time if it is in the middle of the graph. (Maybe we will do something about that some day ;-)
