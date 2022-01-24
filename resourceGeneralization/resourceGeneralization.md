@@ -12,6 +12,10 @@ This is a working document (started Nov 2020 but includes previous work/ideas) t
 
 Note: The equations in this document should render in Visual Studio Markdown Preview window. They are in LaTex format. Unfortunately, you have to use a URL and cannot use $ on GitHub (yes, it works in Visual Studio). This is how it is done in this document but note there is no background set so if you use dark mode they are basically invisible. I'm sorry to say you need to turn that off to see the equations. Also note that a heading must be lowercase and words separated by - to allow links so this is used throughout this document.
 
+# important-note-for-developers
+
+## **All work on resource generalization will be done from the resourceGeneralization branch. You should branch from resourceGeneralization and do pull requests back to the branch on the main OED repository. This is done to avoid the changes impacting other developers during the extensive work that will be done. A message was posted to the Developer Discussion Area about this.**
+
 ## overview
 
 OED started by working with electrical data as a proof of concept and to support the resource requested the most. With that complete, OED is generalizing to support most resource types such as natural gas, water, steam (see limitations below), recycling, temperature, etc. Instead of addressing these as individual cases, OED is being modified to store information about compatible resources (energy, power, volume, temperature, etc.) and how to convert between them. This will allow OED to address several feature requests with this single change including:
@@ -1287,7 +1291,7 @@ The following list has most of the tasks in the graphic. It sometimes has a more
 
 ### JavaScript-npm-packages
 
-TODO Right now we are planning to use a JS package. They are being reviewed and which one we will use is an urgent question.
+Right now we are planning to use a JS package. They are being reviewed and which one we will use is an urgent question.
 
 Once a package is determined, we need to see how to create the graph to be sure what we store in unit and conversion tables is all that is needed. We also need to figure out what algorithm(s) within the graph package will be used to create the needed paths to create C<sub>ik</sub>.
 
