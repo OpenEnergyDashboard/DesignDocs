@@ -174,6 +174,7 @@ We note that parts of this example will not be how OED ultimately works. You wil
 
     // Takes a set of meter ids and returns the set of compatible unit ids.
     function Set unitsCompatibleWithMeters(Set meters) {
+      // This function needs a database connection conn either passed or gotten here.
       // The first meter processed is different since intersection with empty set is empty.
       boolean first = true
       // Holds current set of compatible units
@@ -181,7 +182,7 @@ We note that parts of this example will not be how OED ultimately works. You wil
       // Loop over all meters
       for each meter M in meters {
         // Get row in P_ik associated with this meter
-        integer m = unit_index of M
+        integer m = Unit.getUnitId(M, conn) // or in Redux state
         // Set of compatible units with this meter.
         Set meterUnits = unitsCompatibleWithUnit(M.unit_id)
         // meterUnits how has all compatible units.
@@ -221,7 +222,9 @@ We note that parts of this example will not be how OED ultimately works. You wil
     function integer unitFromPRow(integer row) {
       // Code could find entry in units database table that holds row in unit_index.
       // Since we will be working a lot with units, probably should put in Redux state.
-      // TODO Work out this detail to decide if server will send the mapping or what.
+      // Work out this detail to decide if server will send the mapping or client gets the
+      // needed DB values.
+      // The database call would be Unit.getByUnitIndexMeter(row, conn) where need to get or pass conn
       // This assume row(unit) is this value.
       return row(unit)
     }
@@ -230,9 +233,10 @@ We note that parts of this example will not be how OED ultimately works. You wil
     function integer unitFromPColumn(integer column) {
       // Code could find entry in units database table that holds column in unit_index.
       // Since we will be working a lot with units, probably should put in Redux state.
-      // TODO Work out this detail to decide if server will send the mapping or what.
-      // This assume column(unit) is this value and the actual code will be different.
-      return column(unit)
+      // Work out this detail to decide if server will send the mapping or client gets the
+      // needed DB values. 
+     // The database call would be Unit.getByUnitIndexUnit(row, column) where need to get or pass conn
+    return column(unit)
     }
 
 The compatible units of a group can be determined by the above function by determining all the child meters recursively and creating a set of the unique meters. Start with this function:
@@ -240,9 +244,8 @@ The compatible units of a group can be determined by the above function by deter
     // Returns the set of meters ids associated with the group_id used 
     // by the OED software and in the database for the group.
     function Set metersInGroup(integer group_id) {
-      // The group model src/server/models/Groups.js has function
-      // getDeepGroupsByGroupID that will get all these ids
-      meters = Get all child meters for group_id
+      // This function needs a database connection conn either passed or gotten here.
+      meters = Group.getDeepMetersByGroupID(group_id, conn)
       // Make the ids into a set. Not needed if already a set.
       Set metersSet = meters as a set
       return metersSet
@@ -358,28 +361,29 @@ Lets say you want to know the conversion from source vertex a to destination ver
     // return the slope & intercept for the conversion from sourceUnit
     // to destinationUnit and suffix of the destination unit for it.
     function structure conversionValues(integer sourceUnit, integer destinationUnit) {
+      // This function needs a database connection conn either passed or gotten here.
       // Values to return
       double slope, intercept
       string suffix
       // See if there is a conversion from source to destination.
-      desiredConversion = request row from database for table conversions with source_id = sourceUnit and destination_id = destinationUnit
+      Conversion desiredConversion = Conversion.getBySourceDestination(sourceUnit, destinationUnit, conn)
       // Need to do actual pgp code to look at row.
       if (desiredConversions is empty) {
         // Did not find it. Since conversion should exist, it must be the other way around and bidirectional.
-        Conversion desiredConversion = request row from database for table conversion with source_id = destinationUnit and destination_id = sourceUnit
+        Conversion desiredConversion = Conversion.getBySourceDestination(destinationUnit, sourceUnit, conn)
         if (desiredConversion is empty or desiredConversion.bidirectional = false) {
           // This should never happen. It should have been in the table one way or the other.
           generate error to log and throw error to stop process.
         }
         // We need to invert the conversion since it needs to go the other way from how stored.
-        {slope, intercept} = invertConversion(slope, intercept)
+        {slope, intercept} = invertConversion(desiredConversion.slope, desiredConversion.intercept)
         // Since we inverted the conversion, we use the suffix from the destination.
-        suffix = suffix from database table units where id = sourceUnit
+        suffix = Unit.getByID(sourceUnit, conn).suffix
       } else {
         // We found it in the desired order.
         slope = desiredConversion.slope
         intercept = desiredConversion.intercept
-        suffix = suffix from database table units where id = destinationUnit
+        suffix = Unit.getByID(destinationUnit, conn).suffix
       }
       // Note this is not a set but three items put into one object
       return {slope, intercept, suffix}
@@ -520,9 +524,10 @@ The conversions changed by this process are (the rest remain the same):
 
 All of these ideas are in the following pseudocode:
 
+    // Need to create of get passed a database conn.
     // Create the needed units for ones created by units with a suffix.
     // Get all units that have a suffix
-    suffixUnits = get all rows in database table units that have a suffix != ''
+    suffixUnits = Unit.getSuffix(conn)
     // Check each unit out
     for each suffixUnits S {
       // Use the graph to determine all the reachable units from this suffix unit S.
@@ -533,63 +538,92 @@ All of these ideas are in the following pseudocode:
       for each paths P {
         // Get the final vertex on this path and then get id & name for that unit
         destination = final vertex's destination on P
-        // Not change if graph gives the id of the unit.
+        // If graph gives the id of the unit then this is unneeded
         destinationId = get the database id of unit that is associated with destination from the graph
+        // Same for first vertex on path
+        source = first vertex on P
+        sourceId = get the database id of unit that is associated with source
         // Find the conversion from the start to end of path.
         {slope, intercept, suffix} = pathConversion(path)
         // The name of the needed unit is the last unit name on the path + " of " and the suffix of start of path.
         String unitName = destinationId.name + " of " + suffix of source of first vertex in path
         // See if this unit already exists. Would if this was done before where this path existed.
-        unit = get unit from database table units where name is unitName and type_of_unit is suffix
-        if (unit does not exist) {
-          // Add this as a new units where: name and identifier is unitName, type_of_unit is suffix,
+        Unit neededSuffixUnit = Unit.getByName(unitName, conn)
+        if (neededSuffixUnit does not exist) {
+          // Add this as a new units where: name and identifier is unitName, type_of_unit is Unit.type.suffix,
           // displayable and primary is the same as destination.
           // Note the admin can later change identifier, displayable and primary to something else
           // since OED does not recreate the unit if it exists so those changes will stay.
-          add unitName to units table in database with values unitName, unitName, suffix, , "", displayable of destination, primary of destination
+          Unit newUnit = new Unit(undefined, unitName, unitName, unused, Unit.type.suffix, -1, "", <displayable of destination>, <primary of destination>, "suffix unit created by OED")
+          newUnit.insert(conn)
           // We now need to add the conversion for the new unit.
           // The suffix should be the suffix of the first vertex in the path as was used above unless there are
           // two suffix units on the path. We are not doing that at this time.
           // We could check this to be sure the code is working as expected.
           // Create the conversion from the prefix unit to this new unit.
-          source = first vertex on P
-          sourceId = get the database id of unit that is associated with source
-          add to conversions table with values sourceId, destinationId, false, slope, intercept, "created by OED for unit with prefix"
+          Conversion newConversion = new Conversion(sourceId, destinationId, false, slope, intercept, "created by OED for unit with prefix")
+          newConversion.insert(conn)
+          // Add this conversion to the graph
+          use the graph software to add vertex associated with neededSuffixUnit
+          use the graph software to add an edge from S to neededSuffixUnit
+        } else {
+          // Verify that the conversion has not changed.
+          Conversion currentConversion = getBySourceDestination(sourceId, destinationId, conn)
+          if (currentConversion.slope != slope or currentConversion.intercept != intercept) {
+            // While unlikely, the conversion changed so update
+            currentConversion.slope = slope
+            currentConversion.intercept = intercept
+            currentConversion.update(conn)
+          }
         }
       }
-      // Hide the suffix unit since we added the units based on it.
-      S.displayable = none
-      // Remove the edge from S to the next vertex since it is no longer needed as the units above will
-      // have the needed edges (conversions). There is probably only one edge but remove them all just in case.
-      suffixConversions = get all the rows in conversions database table where source_id is S
-      for each row in suffixConversions R {
-        delete row R from the conversions table
+      // Hide the suffix unit since we added the units based on it if not previously done
+      if (S.displayable != Displayable.type.none) {
+        S.displayable = Displayable.type.none
+        // Put updated suffix unit into database
+        S.update(conn)
+      }
+      // Remove the edge from S to the next vertex that existed before the new units were added
+      // since it is no longer needed as the units above will
+      // have the needed edges (conversions). The created units have the type_of_unit be suffix so don't
+      // delete those. There is probably only one edge but remove them all just in case.
+      for each paths P {
+        secondVertex = second version on path P
+        secondVertexID = get the database id of unit that is associated with secondVertex from the graph
+        Units unit = Unit.getByID(secondVertexID, conn)
+        if (unit.typeOfUnit = Unit.type.suffix) {
+          // It is possible that the vertex was removed from another path so need to deal with that case.
+          // How depends on what the graph software does.
+          use graph software to remove edge from first vertex on path to second vertex on path
+        }
       }
     }
 
     // Gives the unit name when dealing with a suffix created unit.
 
     // Set the unit_index.
-    // Get all units rows of displayable meters (not none) from the database
-    meters = get all rows in the units database table that have type_of_unit = meter and displayable != none
+    // Get all units rows of displayable meters to somebody (admin covers all) from the database
+    meters = Unit.getVisibleMeter(Displayable.type.admin, conn)
     // The current row index
     integer row = 0
     // Loop over all meters
-    for each meter M in meters {
+    for each meters M {
       // Give the meters in Cij the row indices in order seen
       M.unit_index = row
-      update M in units database table for the new value
+      // Update database for this unit
+      M.update(conn)
       row++
     }
-    // Get all units rows of displayable unit (not none) from the database
-    units = get all rows in the units database table that have type_of_unit = unit and displayable != none
+    // Get all units rows of displayable to somebody (admin covers all) and unit_type of Unit.type.unit or Unit.type.suffix from the database
+    units = getVisibleUnitOrSuffix(Displayable.type.admin, conn)
     // The current column index
     integer column = 0
     // Loop over all units
     for each unit U in units {
       // Give the units in Cij the column indices in order seen
       U.unit_index = column
-      update U in units database table for the new value
+      // Update database for this unit
+      U.update(conn)
       column++
     }
 
@@ -597,29 +631,37 @@ The following pseudocode will create the C<sub>ik</sub> array:
 
     // This code creates Cik from scratch. For now, OED will always do this on any change.
 
-    // Get the vertices associated with the sources (meters) and destinations (units) that can be displayed.
-    sources = all rows in the database table units that have type_of_unit of meter and displayable != none
-    destinations = all rows in the database table units that have type_of_unit of unit and displayable != none
+    // need a database conn object.
+    // Get the vertices associated with the sources (meters) and destinations (units) that can be displayed to some user.
+    sources = Unit.getVisibleMeter(Displayabletype.admin, conn)
+    destinations = Unit.getVisibleUnitOrSuffix(Displayable.type.admin, conn)
     // Size of each of these.
     integer numSources = size of sources
     integer numDestinations = size of destinations
     // Create an array to hold the values. Each entry will have double slope, double intercept and string suffix.
     c = new array[numSources, numDestinations]
-    // Loop over all the rows/sources
-    // The row index in Cik. Start with first one and increase each loop iteration.
+    // Set the row index in Cik. Start with first one and increase each loop iteration.
     integer row = 0
     for each sources S {
       // Store the row index in the units table entry
-      modify database entry where id = S so unit_index is row
-      // The column index in Cik. Start at first one for each row.
-      integer column = 0
-      // Loop over all columns/destinations
-      // What follows assumes that each time you iterate over sources destinations, the items are visited
-      // in the same order. If not, the code needs to assign column indexes or control order so same on each iteration.
+      S.unitIndex = row
+      S.update(conn)
+      // Next source means next row
+      row++
+    }
+    // Set the column index in Cik. Start at first one and increase each loop iteration.
+    integer column = 0
+    // Loop over all columns/destinations
+    for each destination D {
+      // Store the column index in the units table entry
+      D.unitIndex = column
+      D.update(conn)
+      // Next destination means next column
+      column++
+    }
+    // Loop over all the rows/sources
+    for each sources S {
       for each destination D {
-        // Store the column index in the units table entry. Note this operation is repeated each time through the
-        // loop and recalculates the same value.
-        modify database entry where id = D so unit_index is column
         // The exact details of this depends on the package used
         // Use the graph to determine the shortest path from vertex S to vertex D.
         // If the graph can return all paths from a given source then the D loop would likely change.
@@ -628,20 +670,16 @@ The following pseudocode will create the C<sub>ik</sub> array:
         path = graph algorithm for path from S to D
         if (path is empty/does not exist) {
           // This entry tells there is no path
-          C[row][column] = {NaN, NaN, ""}
+          C[S.unitIndex][D.unitIndex] = {NaN, NaN, ""}
         } else {
           {slope, intercept, suffix} = pathConversion(path)
           // All suffix units were dealt with above so all units with suffix have displayable of none.
           // This means this path has a suffix of "" (empty) so it does not matter.
           // The name of any unit associated with a prefix was already set correctly.
           // Thus, we can just use the destination identifier as the unit name.
-          cTemp[row,column] = {slope, intercept, D.identifier}
+          cTemp[S.unitIndex][D.unitIndex] = {slope, intercept, D.identifier}
         }
-        // Next destination means next column
-        column++
       }
-      // Next source means next row
-      row++
     }
 
 Note in the actual code we may want to create types for {slope, intercept} and {slope, intercept, suffix} since they are used a lot.
@@ -696,22 +734,21 @@ The admin can make the default graphic unit be an unit that is compatible with t
 
 ## database-changes-for-units
 
-TODO Go through document to specify all the functions needed from database based on algorithms.
-
-- need unit_type as enum of values unit, meter
+- need unit_type as enum of values unit, meter, suffix
 - need displayable_type as enum of value all, admin, none
-- need unit_represent_type as enum of quantity, flow, raw
+- need unit_represent_type as enum of quantity, flow, raw, unused (unused for when it is a unit type)
 - new table named units that has columns:
   - integer id that auto increments and is primary key
   - string name that is unique (name of unit for identification)
   - string identifier that is unique (display name of unit, often similar/same as name)
   - unit_represent_type unit_represent tells how the data is fetched for readings. It is only really needed for the meter type.
-  - unit_type type_of_unit tells if this is a unit or a meter type
-  - integer unit_index that is unique and is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
+  - unit_type type_of_unit tells if this is a unit, meter or suffix type
+  - integer unit_index is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
   - displayable_type displayable (whether it can be seen/used for graphing by anyone, admin or nobody)
   - boolean primary (If this unit is always displayed. If not, the it is secondary and the user needs to ask to see. To be used in a future enhancement.)
   - string note that holds comments by the admin or OED inserted
+  - note type_of_unit and unit_index are unique in combination
 - new table named conversions. The primary key is the source_units_id, destination_units_id. Need to make sure the source_units_id is not the same as destination_id in any row to avoid self conversion. (See src/server/sql/group/create_groups_tables.sql for using "CHECK (source_units_id != destination_units_id parent_id") It has columns:
   - source_id that is foreign key of id in units table
   - destination_id that is foreign key of id in units table
@@ -746,33 +783,44 @@ TODO Go through document to specify all the functions needed from database based
 
 ## model-changes-for-units
 
-The models in src/server/models need to be updated for the database changes and for places where subsets of the data is needed from the database for the pseudocode proposed in this document. Every model code will have a constructor, createTable, mapRow, insert and getAll as exist in current models. Changes for specific database changes are:
+Note that we really want to use Redux state when getting database values. This specifies how to get the values if not yet in Reudx.
 
-TODO finish this
+The models in src/server/models need to be updated for the database changes and for places where subsets of the data is needed from the database for the pseudocode proposed in this document. Every model code will have a constructor, createTable, mapRow, insert, delete and getAll as exist in current models. Each new function needs to be added to the SQL code in addition to the model. Changes for specific database changes are:
 
 ### unit
 
 Unit is a new model. Functions needed:
 
-- createUnitTypesEnum for the new enum needed.
-- getDisplayable for if unit displayable
-- getTypeMeter for if unit is of type meter
-- getTypeUnit for if unit is of type unit
-
-There needs to be an equivalent enum/structure for unit_type. It will be named UnitType. If on client side so similarly to src/client/app/types/items.ts and any others like it. If on server side the similar to src/server/models/Meter.js.
+- create Unit.type, Displayable.type & UnitRepresent.type enums for the new enum needed. If on client side so similarly to src/client/app/types/items.ts and any others like it. If on server side the similar to src/server/models/Meter.js.
+- getVisibleMeter(DisplayableTypesEnum user, conn): return all units of type_of_unit meter that are visible to user. If user is all then displayable of all; if user is admin then displayable of all or admin.
+- getVisibleUnitOrSuffix(DisplayableTypesEnum user, conn): return all units of type_of_unit Unit.type.unit or Unit.type.suffix that are visible to user. If user is all then displayable of all; if user is admin then displayable of all or admin.
+- getTypeMeter(conn): return all units where type = meter
+- getTypeUnit(conn): return all units where type = unit
+- getByID(integer id, conn): for given unit id return the associated unit object
+- getByName(string name, conn): for given unit name return the associated unit object. Return special value if does not exist.
+- getByUnitIndexMeter(integer unitIndex, conn): given a unit_index of a Unit.type.meter, return the associated unit id.
+- getByUnitIndexUnit(integer unitIndex, conn): given a unit_index of a Unit.type.unit, return the associated unit id. Must return special value if conversion does not exist - need to decide.
+- getSuffix(conn): return all units where suffix != ''
+- unitObject.update(conn): updates all other values for the id where all values are provided by the unitObject
 
 ### conversion
 
-conversion is a new model.
+Conversion is a new model.
+
+- getBySourceDestination(integer source, integer destination, conn): returns the conversion object associated with given source and destination.
+- conversionObject.update(conn): updates all other values for the source and destination where all values are provided by the conversionObject
+- delete(integer source, integer destination, conn): removes this conversion from the database
 
 ### meter
 
 Meter exists but needs to be changed for new columns.
+getUnitId(id, conn): for the meter id provided, return the unit_id meaning the row/column index in C<sub>ik</sub>/P<sub>ik</sub>. To do this the unit_id for the desired meter is used to reference the units table and the entry's unit_index is returned.
 
 ### group
 
 - Group exists but needs to be changed for new columns.
 - Whenever the default_graphic_unit is stored/fetched, the "no unit" value of -99 must be switched with null to avoid a foreign key violation. This mean that when fetching, null is changed to -99. When storing, -99 is changed to null.
+- getDisplayable(conn): returns all groups that are displayable
 
 ## oed-page-changes
 
@@ -791,14 +839,16 @@ Each time the graphic unit is changed the y-axis graphic values need to change. 
 
 The following pseudocode will create the graphic unit menu (see [determining-compatible-units](#determining-compatible-units) for functions). As usual, all meters, groups and units use their id for the value.
 
+    // need database conn
     // Holds all units that are compatible with selected meters/groups
     Set compatibleUnits = {}
     // Holds all units that are not compatible with selected meters/groups
     Set incompatibleUnits = {}
     if (the currently selected unit is no unit (-99)) {
       // Every unit is okay/compatible in this case so skip the work needed below.
-      // Can only show unit types (not meters) and only displayable ones
-      compatibleUnits = all units where type_of_unit is unit and (displayable is all or admin if user is admin => not none)
+      // Can only show unit types (not meters) and only displayable ones.
+      // <current user type> is either all (not logged in as admin) or admin
+      compatibleUnits = Unit.getVisibleUnitOrSuffix(<current user type>, conn)
     } else {
       // Some meter or group is selected
       // Holds the units compatible with the meters/groups selected.
@@ -835,7 +885,7 @@ The following pseudocode will create the graphic unit menu (see [determining-com
       // Loop over all units (they must be of type unit - case 1)
       for each unit U in units where type_of_unit is unit {
         // Control displayable ones (case 2)
-        if (U.displayable is all or admin if user is admin) {
+        if ((U.displayable is all) or (U.displayable is admin if user is admin)) {
           if (U is in units) {
             // Should show as compatible (case 3)
             compatibleUnits += U
@@ -861,6 +911,9 @@ This does not change the current situation that hides some meters/groups if they
 
 As [discussed above](#new-units-menu), both the meters and groups dropdown menus must be updated whenever the graphic unit is updated. The algorithm for updating the meter menu is:
 
+    // need database conn
+    // All meters
+    allMeters = Meter.getDisplayable(conn) if not admin otherwise getAll(conn)
     // meters that can graph
     Set compatibleMeters = {}
     // meters that cannot graph.
@@ -869,10 +922,10 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
       // If there is no graphic unit then no meters/groups are displayed and you can display all meters.
       //  Also, if not admin, then meters not displayable are not viewable.
       // admin can see all.
-      compatibleMeters = all meters that user/admin can see.
+      compatibleMeters = allMeters
     } else {
       // If displayable is false then only admin.
-      for each meter M in OED that is displayable to user {
+      for each allMeters M  {
         // {M} means turn M into a set.
         Set units = unitsCompatibleWithMeters({M})
         if (graphicUnit is in units) {
@@ -890,6 +943,16 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
 
 The algorithm for groups is similar where doing displayable for groups partly addresses [issue #414](https://github.com/OpenEnergyDashboard/OED/issues/414) where the other part is addressed in [group viewing page](#group-viewing-pages):
 
+    // need database conn
+    // Get all the groups that this user can see.
+    Group visibleGroups
+    if (admin) {
+      // Can see all groups
+      visibleGroups = Group.getAll(conn)
+    } else {
+      // regular user or not logged in so only displayable ones
+      visibleGroups = Group.getDisplayable(conn)
+    }
     // groups that can graph
     Set compatibleGroups = {}
     // groups that cannot graph.
@@ -897,7 +960,7 @@ The algorithm for groups is similar where doing displayable for groups partly ad
     if (graphicUnit = no unit (-99)) {
       // If there is no graphic unit then no meters/groups are displayed and you can display all groups
       // that have a default graphic unit that user can see (if displayable is false then only admin)
-      for each group G that is displayable to user in OED {
+      for each visibleGroup G {
         if (G's default_graphic_unit = no unit) {
           // If the graphic unit is no unit and group has no default graphic unit then cannot graph
           incompatibleGroups += G
@@ -905,8 +968,7 @@ The algorithm for groups is similar where doing displayable for groups partly ad
           compatibleGroups += G
         }
     } else {
-      // If not admin, then groups not displayable are not viewable. admin can see all.
-      for each group G in OED where G is displayable to this user {
+      for each visibleGroups G {
         // Get the meters associated with this group.
         Set meters = metersInGroup(G)
         // Get compatible units for all these meters
