@@ -1061,9 +1061,8 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     }
 
     // Returns the state (see groupCase function) for meter or group provided by id and
-    // otherUnits where type is either meter or group
-    // TODO see if OED already has set symbols for meter and group.
-    function integer compatibleChanges(Set otherUnits, integer id, String type, integer defaultGraphicUnit) {
+    // otherUnits where type is either DataTypeMeter or DataType.Group
+    function integer compatibleChanges(Set otherUnits, integer id, DataType type, integer defaultGraphicUnit) {
       // Determine the compatible units for meter or group represented by id
       Set newUnits = compatibleUnits(id, type)
       // Determine case
@@ -1072,8 +1071,8 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     }
 
     // Finds all compatible units for this id based on if meter or group. See compatibleChanges for parameter.
-    function Set compatibleUnits(integer id, String type) {
-      if (type = "meter") {
+    function Set compatibleUnits(integer id, DataType type) {
+      if (type = DataType.Meter) {
         newUnits = unitsCompatibleWithUnit(id.unit_id)
       } else {
         // It's a group
@@ -1239,7 +1238,6 @@ MAAMC and Obvius meters can be automatically created. The code needs to be updat
 
 The y-axis label on all graphics need to show the unit and not kW or kWh. Mostly that will be the unit identifier associated with the graphic unit.
 
-TODO We need to think how we are going to label the two types given we are only given one in the units table.
 ## other-database-considerations
 
 ### unit-display
@@ -1373,21 +1371,33 @@ PostgreSQL graph packages have some appeal but it isn't clear that they are read
 
 ## testing
 
-TODO possible tests to consider - outdated and should be made up to date with examples
+This is a first shot. There will be more tests to run and think about.
 
-1. Test basic multiplicative unit conversion of provided unit. If there is a unit conversion provided (such as meters to feet) then try that. For example, take 13 meters and convert to feet and then reverse to try 13 feet to meters. Note I did not use 1 so we know that it is really working correctly. It can be any unit it has.
-2. Test linear conversion. Convert degrees fahrenheit to celsius and reverse. If not provided then use 9/5 * C + 32 = F.
-3. Check new unit with multiplicative (all remaining are multiplicative). This assumes that the package does not have energy units. If so, see if get the same result and need to test one where not provided (could be the same but made up names for the units). 1 Megajoule = 0.001055056 BTU and 1 Megajoule = 3.6 kWh. Try converting each of these after enter these two conversions:
-    1. 3 BTU into 2843.45 Megajoules
-    2. 123 kWh into 34.17 Megajoules
-4. See if can convert 34.17 Megajoule into 123 kWh to see if automatically does reverse given entered kWh into Megajoules above.
-5. See if allows arithmetic on result so can ask 3 BTU + 123 kWh to see if it can give 2877.62 Megajoules.
-6. See about a chained conversion. Enter new unit of 100 watt bulb = 0.1 kWh. Now convert 3 BTU to 100 watt bulb. 3 BTU is 2843.45 Megajoules = 10236.42 kWh = 102364.23 100 watt bulb. This assumes that the package can do reverse conversions (gave Megajoule to kWh above); if not, need to give reverse and note. If that works, see if can take 102364.23 100 watt bulb into BTU (3 BTU).
-7. Another chained conversion. Enter 4 new units: 1 kWh = 0.11 US$, 1 BTU = 13 CAN$, 1 US$ = 0.87 Euro and 1 CAN$ = 1.2 Euro. Ask to convert 123 kWh and 3 BTU into Euro. 123 kWh = 13.53 US$ = 11.77 Euro and 3 BTU = 39 CAN$ = 46.80 Euro for a total of 58.57 Euro. Getting the final Euro probably assumes arithmetic is allowed (per test above).
-8. Example of multiple paths & what happens if package really smart. Also, how stop some conversions.
-9. See [CO2 conversions](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) to do example to CO2.
+### tests while developing
 
-include temperature since has intercept != 0
+1. The simplified example in [graph creation](#creating-graph) should have its units and conversions entered into the database. For the first shot the values should be directly entered via the models. The code/script should be placed in repo for others to use.
+2. These values can be used to do the following tests
+    - Verifying the values are correct in the database units and conversions tables.
+    - Creating the graph via the graph software by getting values from the database.
+    - Verify that the graph, units and conversions tables are properly updated for the suffix CO2 unit. If it works the first time then redo to make sure it does not cause an issue.
+    - Verify the C<sub>ik</sub> and P<sub>ik</sub> tables are properly created with these values. This will be an indirect test of a number of the pseudocode examples. They can be tested individually if there is an issue or if ready early.
+3. Create sample data based on the current test data that represents different units. This can probably be the same data but labeled for different units. This means getting meters and readings changed. Try to have 2 meters for each unique type in the examples from step 1. Load this data into the database as done with the test data. The code/script should be placed in repo for others to use. Ultimately when CSV upload is modified it can be done that way.
+4. Create interesting groups based on the meters. See the examples for ideas. See devDocs/website/websiteSetup.sh and websiteData.sql for how it creates meters/groups.
+5. The new test data can be used in the following tests:
+    - Check unitsCompatibleWithMeters. Try called functions if there are issues. The example have some cases that should be checked. Write up description of test cases as they can be used for checking if menus work correctly.
+6. Test all the new menus by trying cases and write up what tested. This includes both the graphing ones and the ones for admin groups, etc.
+7. Test the graphing of all types when ready.
+8. We need to have rate data and examples to test. It will be similar to the examples in the text but the units are different and disjoint in the graph. Also test that rate and quantity units don't mix improperly.
+9. We will need to test the later features developed as we do them: export, chart links, etc.
+
+### Mocha/Chai tests
+
+There are likely similar types of testing done in other parts of OED that can serve as templates for this testing.
+
+1. Each new function of pseudocode needs to be tested for regular and unusual cases. It would be best if done before the code is merged into OED.
+    - We need to include some temperature examples such as those in [determining-conversions](#determining-conversions).
+2. Each function in the models needs to be tested. Hopefully done when models created.
+3. The new routes need to be tested for good and bad values.
 
 ## issues-to-consider
 
