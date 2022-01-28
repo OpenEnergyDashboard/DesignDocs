@@ -554,7 +554,7 @@ All of these ideas are in the following pseudocode:
           // displayable and primary is the same as destination.
           // Note the admin can later change identifier, displayable and primary to something else
           // since OED does not recreate the unit if it exists so those changes will stay.
-          Unit newUnit = new Unit(undefined, unitName, unitName, unused, Unit.type.suffix, -1, "", <displayable of destination>, <primary of destination>, "suffix unit created by OED")
+          Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <primary of destination>, "suffix unit created by OED")
           newUnit.insert(conn)
           // We now need to add the conversion for the new unit.
           // The suffix should be the suffix of the first vertex in the path as was used above unless there are
@@ -736,12 +736,13 @@ The admin can make the default graphic unit be an unit that is compatible with t
 
 - need unit_type as enum of values unit, meter, suffix
 - need displayable_type as enum of value all, admin, none
-- need unit_represent_type as enum of quantity, flow, raw, unused (unused for when it is a unit type)
+- need unit_represent_type as enum of quantity, flow, raw, unused (unused for when it is a unit_type is not meter)
 - new table named units that has columns:
   - integer id that auto increments and is primary key
   - string name that is unique (name of unit for identification)
   - string identifier that is unique (display name of unit, often similar/same as name)
   - unit_represent_type unit_represent tells how the data is fetched for readings. It is only really needed for the meter type.
+  - integer sec_in_rate gives how many seconds there are in the unit associated with flow (rate) units. The default value is 3600 which represents per hour. This only really applies for flow and raw but is available for all unit types.
   - unit_type type_of_unit tells if this is a unit, meter or suffix type
   - integer unit_index is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
@@ -899,6 +900,21 @@ The following pseudocode will create the graphic unit menu (see [determining-com
     // Ready to display unit.
     Add each compatibleUnit C add name C.identifier to unit menu in alphabetically sorted order in regular font for case 3
     Add each incompatibleUnit I add name I.identifier to unit menu in alphabetically sorted order as grayed out and not selectable for case 4
+
+### new-graphic-rate-menu
+
+This menu only applies to the line graphic. Currently, OED always graphs kW which is effectively kWh/hour. OED will now return to the client Quantity/hour for any line graphic. For example, it might be liters/hour, kg of CO2/hour, etc. The user might want to display the rate in another unit, e.g., liters/minute. To allow this, there will be a new menu on the line graphic page below the new units menu with the name "graphic rate". It will be a dropdown menu (it could be click options similar to the length of bars on the bar graphic page if people think that is better) with the following entries:
+
+| user choice |     value associated     |
+| :---------: | :----------------------: |
+| per second  |           1/3600         |
+| per minute  |           1/60           |
+| per hour    |           1              |
+| per day     |           24             |
+
+The default value will be per hour and selected when the menu is first shown.
+
+Each time the graphic rate is set, the values on the line graphic must be recalculated. The values from the database (in Redux state) are per hour. Each reading must be multiplied by the value associate with the user choice. For example, if the reading in the Redux state is 5 quantity/hour and the graphic rate is per day then the graphic value becomes 5 quantity/hour * 24 hour/day = 0120 quantity/day. The same factor is applied to every readings from every meter and group that is being graphed. Note that the server is not contacted as part of this process since the meter/group was already selected so its values are in the Redux state (but the usual check will be made via Redux to verify this).
 
 ### changes-to-meters-groups-dropdown-menus
 
@@ -1182,13 +1198,27 @@ A feature that would be desirable is to list all the compatible units for a grou
 
 ### new-admin-unit-page
 
-OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) except unit_index that is not show and a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
+OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) except unit_index that is not show and a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot change id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
 
 OED allows admins to add a new unit. An "add unit" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a unit. The id and unit_index will not be set by the admin but filled in by OED later. A "save" button would put the changes into the database. If a unit is added then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). The default values are:
 
 - suffix is an empty string ("")
 - displayable is all
 - primary is true
+- sec_in_rate is 3600
+
+The column for sec_in_rate should take any integer value that is > 0. If possible, it would be nice if it could also take the following words that are converted to an integer:
+
+| input word | value stored in database |
+| :--------: | :----------------------: |
+|   second   |           1              |
+|   minute   |           60             |
+|   hour     |           3600           |
+|   day      |           86400          |
+
+If another way such as clicks for these four choices and an area to enter a value (similar to bar lengths but that has a slider) then that is okay too.
+
+The admin should be clearly told that the identifier of a unit should be the quantity associated with the unit. For a unit of unit_represent_type of quantity that makes sense. For flow it might be less obvious. For example, a rate of liter/hour has an identifier of liter. Note the name could be liter/hour. The same is true for raw but that seems more intuitive.
 
 ### new-admin-conversion-page
 
@@ -1232,7 +1262,7 @@ OED has never protected against two different admin pages simultaneously changin
 
 ### autocreated-meters
 
-MAAMC and Obvius meters can be automatically created. The code needs to be updated so the unit associated with the meter can be added as part of creating the meter. Note it will be rejected if there is not appropriate unit.
+MAMAC and Obvius meters can be automatically created. The code needs to be updated so the unit associated with the meter can be added as part of creating the meter. Note it will be rejected if there is not appropriate unit.
 
 ### graphs
 
@@ -1242,17 +1272,23 @@ The y-axis label on all graphics need to show the unit and not kW or kWh. Mostly
 
 ### unit-display
 
-Currently OED uses kW on line graphics and kWh on bar and compare, and kWh/day (really kWh per day) on map graphics. As such, the line graphic is a rate, the bar and compare graphic is usage and the map is usage (likely to relabel and change what map displays in other work). With the ability to do lots of units, the kWh becomes the y-axis unit stored in C<sub>ik</sub> for the conversion used to get the graphic values. Since all meters/groups are graphed with the same value, it can be the y-axis value for any of the conversions used. It is not believed (and hoped) that conversions taking different paths could have different values.
+Currently OED uses kW on line graphics and kWh on bar and compare, and kWh/day on map graphics. As such, the line graphic is a rate, the bar and compare graphic is usage and the map is usage/time and a kind of rate. With the ability to do lots of units, y-axis label needs to be more general. However, since all meters/groups are graphed with the same value, it can be the y-axis value for any of the conversions used.
 
 At this point OED needs to support three types of units for readings:
 
 1. Quantity that represent something physical and can be consumed. In OED these are energy (kWh, BTU, ...), volume, mass, etc. Note a number of other units used fall into this including CO2 as mass, money, gasoline (volume), etc. This is how the code and DB code gets readings and that will continue to work for units other than kWh that currently done. This has unit_represent in the units table in the database of quantity.
-2. Rates that are typically quantity/time. In OED these are power (watt, ...), gallons/min, etc. OED needs to change how it gets readings for this to work (see below). This has unit_represent in the units table in the database of flow.
-3. Quantities that are not consumable and do not have a rate of usage associated with them. The only one at this time is temperature. Unlike the other two, it does not make sense to sum these to get a total quantity. For example, summing temperatures (not for finding the average) does not really make sense. Thus, these can only be shown on a line graph where the unit is the original quantity but often averaged. It will get the line value in the same way as rates. This has unit_represent in the units table in the database of raw.
+2. Rates that are typically quantity/time. In OED these are power (watt, ...), gallons/min, etc. OED needs to change how it gets readings for this to work (see below). This has unit_represent in the units table in the database of flow. The admin help page needs to tell them to make the identifier be the quantity with the rate unit. For example, liter/min has the identifier of liter.
+3. Quantities that are not consumable and do not have a rate of usage associated with them. The only one at this time is temperature. Unlike the other two, it does not make sense to sum these to get a total quantity. For example, summing temperatures (except for finding the average) does not really make sense. Thus, these can only be shown on a line graph where the unit is the original quantity but often averaged. Thus, the y-axis label is the unit identifier. It will get the line value in the same way as rates. This has unit_represent in the units table in the database of raw.
+
+The first two cases (quantity and rate) are labeled the same way (case three was discussed above):
+
+- For a line graphic, the y-axis label will be "<graphic unit identifier>/<graphic rate value>". For example the quantity of liter asked to graph at a rate of minute would have a y-axis label of liter/minute. A rate using liter/day would still be labeled the same as its identifier should be the same and the software will convert the rate to liter/minute. Note that kWh will be labeled kWh/hour rather than kW. This is not usual and we could make a special case for this if we want. Not sure if others have this same idea but none known at this time.
+- For a bar or compare graphic, the y-axis label will be  "<graphic unit identifier>" as these are quantities.
+- For the map graphic, it will replace the kWh with the "<graphic unit identifier>". Thus, a liter unit might have "liter/day", "liter/week", etc. based on the user choice for length of time for each circle on the map graphic page. As such it looks similar to the line case.
 
 ### how-oed-should-calculate-readings-displayed-in-line-graphics
 
-compressed_group_readings_2 in src/server/sql/reading/create_compressed_reading_views.sql returns the desired points for graphing readings for the meters selected for the first case above (physical units that are consumed). It uses the following formula (done cleverly in Postgres SQL):
+compressed_readings_2 in src/server/sql/reading/create_compressed_reading_views.sql returns the desired points for graphing readings for the meters selected for the first case above (physical units that are consumed). It uses the values in daily_readings and hourly_readings materialized views. These use the following formula (done cleverly in Postgres SQL):
 
 <img src="https://render.githubusercontent.com/render/math?math=\frac{\sum_\rm{all\ readings\ in\ desired\ time\ frame\ of\ point} \left(\frac\rm{readings\ value}\rm{reading\ length\ in\ hours} \times \rm{number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_\rm{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left(\rm{time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}">
 
@@ -1276,7 +1312,11 @@ Now let's discuss the second case of rates. The formula for case one can be simp
 
 <img src="https://render.githubusercontent.com/render/math?math=\frac{\sum_\rm{all\ readings\ in\ desired\ time\ frame\ of\ each\ point} \left(\rm{readings\ value}\times \rm{number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_\rm{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left(\rm{time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}">
 
-The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{J/sec} \times \rm{sec}}\rm{sec} = \rm{J/sec}"> which is a rate just as in the first case. Note this will work for any rate unit.
+The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{J/sec} \times \rm{sec}}\rm{sec} = \rm{J/sec}"> which is a rate just as in the first case. Note this will work for any rate unit but OED needs to know the rate unit (per hour, per minute, etc.) so it can properly label and calculate values. See [new-graphic-rate-menu](#new-graphic-rate-menu) for how this will be done. Note OED will store the values of rates in the original rate from the meter in the database. This means the raw data will be in meter units. When rates are sent to the client, they will always be converted to a quantity/hour. If the user wants to graph in a different rate unit then that conversion will be done on the client side. Thus, the only change is in what is returned for reading points for rates and not what is stored in the readings, daily_readings nor hourly_readings table from the formula above. Each unit for a meter will have a sec_in_rate that that gives how many seconds are in the unit as explained in [database-changes-for-units](#database-changes-for-units). The value stored in each database table for rates is Quantity / unit time. The value returned by the table is converted to the standard rate unit of 1 hour by:
+
+<img src="https://render.githubusercontent.com/render/math?math=\rm{Quantity/unit\ time} \times \frac{3600\ (sec/hour)}{sec\_in\_rate\ (sec/unit\ time)}">
+
+If you work out the units you get Quantity/hour. This means the reading is multiplied by the second term before being returned.
 
 Finally, let's consider case 3 of something like temperature. In this case you want to graph to average value. If you look at the formula for rates, it is just calculating the average over the time frame. That is why it starts with readings with a rate (such as J/sec) and finishes with a rate (such as J/sec). Thus, this case can use the same formula as case two.
 
@@ -1284,7 +1324,13 @@ See [unit table changes](#database_changes_for_units) for other database changes
 
 ### bar-compare-map-graphic-values
 
-TODO An analysis of the current code has not yet been made. It is hoped that it will work as expected if lines are changed but that is not known since they may not use those database functions.
+Units of raw type cannot be graphed this way.
+
+All quantity units are stored as per hour in the daily and hourly readings tables so they should all act the same as the current code. The raw readings are converted by compressed_readings_2 so they are also okay.
+
+Rate quantities return the value as rate/hour. However, the current code in src/server/sql/reading/create_compressed_reading_views.sql for compressed_barchart_readings_2 and compressed_barchart_group_readings_2 assume a rate/hour and this may not be the case rates. The conversion is the same as described in [how-oed-should-calculate-readings-displayed-in-line-graphics](#how-oed-should-calculate-readings-displayed-in-line-graphics).
+
+Maps and comparison graphics need to be analyzed to see if they properly use the readings for all types.
 
 ### meter-graphic-values
 
@@ -1381,7 +1427,7 @@ This is a first shot. There will be more tests to run and think about.
     - Creating the graph via the graph software by getting values from the database.
     - Verify that the graph, units and conversions tables are properly updated for the suffix CO2 unit. If it works the first time then redo to make sure it does not cause an issue.
     - Verify the C<sub>ik</sub> and P<sub>ik</sub> tables are properly created with these values. This will be an indirect test of a number of the pseudocode examples. They can be tested individually if there is an issue or if ready early.
-3. Create sample data based on the current test data that represents different units. This can probably be the same data but labeled for different units. This means getting meters and readings changed. Try to have 2 meters for each unique type in the examples from step 1. Load this data into the database as done with the test data. The code/script should be placed in repo for others to use. Ultimately when CSV upload is modified it can be done that way.
+3. Create sample data based on the current test data that represents different units. This can probably be the same data but labeled for different units. Another useful set of values would be step functions as is used in some of the website graphs. The value can be  chosen to be the desired daily value * # days the reading spans so the daily average comes out to the desired value. If this is an easy value (such as an integer) then the final value after transformation is easy. Either way, this means getting meters and readings changed. Try to have 2 meters for each unique type in the examples from step 1. Load this data into the database as done with the test data. The code/script should be placed in repo for others to use. Ultimately when CSV upload is modified it can be done that way.
 4. Create interesting groups based on the meters. See the examples for ideas. See devDocs/website/websiteSetup.sh and websiteData.sql for how it creates meters/groups.
 5. The new test data can be used in the following tests:
     - Check unitsCompatibleWithMeters. Try called functions if there are issues. The example have some cases that should be checked. Write up description of test cases as they can be used for checking if menus work correctly.
