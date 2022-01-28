@@ -1316,7 +1316,7 @@ The units of each reading for electricity is watts which is power. Note watts ar
 
 <img src="https://render.githubusercontent.com/render/math?math=\rm{Quantity/unit\ time} \times \frac{3600\ (sec/hour)}{sec\_in\_rate\ (sec/unit\ time)}">
 
-If you work out the units you get Quantity/hour. This means the reading is multiplied by the second term before being returned.
+If you work out the units you get Quantity/hour. This means the reading is multiplied by the second term before being returned. Note if quantities have sec_in_rate set to 3600 then this conversion has no effect as desired.
 
 Finally, let's consider case 3 of something like temperature. In this case you want to graph to average value. If you look at the formula for rates, it is just calculating the average over the time frame. That is why it starts with readings with a rate (such as J/sec) and finishes with a rate (such as J/sec). Thus, this case can use the same formula as case two.
 
