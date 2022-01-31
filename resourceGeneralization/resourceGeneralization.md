@@ -16,6 +16,63 @@ Note: The equations in this document should render in Visual Studio Markdown Pre
 
 ## **All work on resource generalization will be done from the resourceGeneralization branch. You should branch from resourceGeneralization and do pull requests back to the branch on the main OED repository. This is done to avoid the changes impacting other developers during the extensive work that will be done. A message was posted to the Developer Discussion Area about this.**
 
+## table-of-contents
+
+- [overview](#overview)
+- [units-and-conversions-overview](#units-and-conversions-overview)
+- [sample-conversions](#sample-conversions)
+- [examples](#examples)
+- [notation](#notation)
+- [determining-units-that-are-compatible-with-a-meter-or-group](#determining-units-that-are-compatible-with-a-meter-or-group)
+- [supporting-structure-for-units](#supporting-structure-for-units)
+- [determining-compatible-units](#determining-compatible-units)
+- [graph-details](#graph-details)
+  - [vertices](#vertices)
+  - [edges](#edges)
+  - [creating-graph](#creating-graph)
+  - [determining-conversions](#determining-conversions)
+- [default_graphic_unit](#default_graphic_unit)
+- [database-changes-for-units](#database-changes-for-units)
+- [model-changes-for-units](#model-changes-for-units)
+  - [unit](#unit)
+  - [conversion](#conversion)
+  - [meter](#meter)
+  - [group](#group)
+- [oed-page-changes](#oed-page-changes)
+  - [new-units-menu](#new-units-menu)
+  - [new-graphic-rate-menu](#new-graphic-rate-menu)
+  - [changes-to-meters-groups-dropdown-menus](#changes-to-meters-groups-dropdown-menus)
+  - [meter-viewing-page](#meter-viewing-page)
+  - [group-viewing-pages](#group-viewing-pages)
+  - [new-admin-unit-page](#new-admin-unit-page)
+  - [new-admin-conversion-page](#new-admin-conversion-page)
+  - [csv-upload-page](#csv-upload-page)
+  - [export](#export)
+  - [chartlink](#chartlink)
+  - [multiple-edits](#multiple-edits)
+- [other-code-changes](#other-code-changes)
+  - [autocreated-meters](#autocreated-meters)
+  - [graphs](#graphs)
+- [other-database-considerations](#other-database-considerations)
+  - [unit-display](#unit-display)
+  - [how-oed-should-calculate-readings-displayed-in-line-graphics](#how-oed-should-calculate-readings-displayed-in-line-graphics)
+  - [bar-compare-map-graphic-values](#bar-compare-map-graphic-values)
+  - [meter-graphic-values](#meter-graphic-values)
+  - [group-graphic-values](#group-graphic-values)
+- [implementation-plan](#implementation-plan)
+- [possible-ways-to-store-unit-graph](#possible-ways-to-store-unit-graph)
+  - [JavaScript-npm-packages](#JavaScript-npm-packages)
+  - [postgresql](#postgresql)
+- [testing](#testing)
+  - [tests-while-developing](#tests-while-developing)
+  - [mocha-chai-tests](#mocha-chai-tests)
+- [issues-to-consider](#issues-to-consider)
+  - [unusual-units](#unusual-units)
+- [Potential-future-enhancements](#Potential-future-enhancements)
+- [db-generalize-info](#db-generalize-info)
+- [information-resources](#information-resources)
+## old-conversion-code
+
 ## overview
 
 OED started by working with electrical data as a proof of concept and to support the resource requested the most. With that complete, OED is generalizing to support most resource types such as natural gas, water, steam (see limitations below), recycling, temperature, etc. Instead of addressing these as individual cases, OED is being modified to store information about compatible resources (energy, power, volume, temperature, etc.) and how to convert between them. This will allow OED to address several feature requests with this single change including:
@@ -1419,7 +1476,7 @@ PostgreSQL graph packages have some appeal but it isn't clear that they are read
 
 This is a first shot. There will be more tests to run and think about.
 
-### tests while developing
+### tests-while-developing
 
 1. The simplified example in [graph creation](#creating-graph) should have its units and conversions entered into the database. For the first shot the values should be directly entered via the models. The code/script should be placed in repo for others to use.
 2. These values can be used to do the following tests
@@ -1436,7 +1493,7 @@ This is a first shot. There will be more tests to run and think about.
 8. We need to have rate data and examples to test. It will be similar to the examples in the text but the units are different and disjoint in the graph. Also test that rate and quantity units don't mix improperly.
 9. We will need to test the later features developed as we do them: export, chart links, etc.
 
-### Mocha/Chai tests
+### mocha-chai-tests
 
 There are likely similar types of testing done in other parts of OED that can serve as templates for this testing.
 
