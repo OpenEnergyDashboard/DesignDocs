@@ -78,7 +78,7 @@ Note: The equations in this document should render in Visual Studio Markdown Pre
 OED started by working with electrical data as a proof of concept and to support the resource requested the most. With that complete, OED is generalizing to support most resource types such as natural gas, water, steam (see limitations below), recycling, temperature, etc. Instead of addressing these as individual cases, OED is being modified to store information about compatible resources (energy, power, volume, temperature, etc.) and how to convert between them. This will allow OED to address several feature requests with this single change including:
 
 - Allow most resource units (natural gas, energy, power, etc.).
-- Allow sites to choose the unit for graphical display where the most common request is for English vs. metric units.
+- Allow sites to choose the unit for graphical display where the most common requests were for English vs. metric units.
 - Allow OED to display usage in units not associated with resource consumption such as CO2, cost, equivalent miles of driving a car, etc., which may be more natural to some users and allow for common sustainability units to be used.
 - Allow OED sites to add new units to the system that are not automatically supplied with OED including local monetary unit.
 
@@ -94,19 +94,19 @@ The heart of the system is allowing for conversions between compatible units. Co
 
 While most conversions are multiplicative factors, temperature is a linear transformation. Thus, we will use linear transformations/conversions (ax + b or the same slope * x + intercept) in OED. This document will refer to the multiplicative factor as the slope and the additive factor as the intercept as is done for linear equations in mathematics. Almost all the conversions of interest have intercept = 0. We will need to think about whether we should optimize the case of intercept = 0 or if it does not make any practical difference when readings are converted.
 
-To simplify what conversions must be input by an admin, we will allow what we call chained conversions. This means that you have conversions from a → b and b → c and the user wants to get a → c. With chained conversions, OED will be able to figure out a → c from the other two. Without this the admin would be required to input a direct, one-step transformation for any desired conversion. With chained conversions the system may figure out allowed conversions that admins were not thinking of and allow them as options; [Example](#examples) #9 shows this. An advantage of chained conversions is it is much simpler to store meters in their original units because they can automatically be converted to other compatible units for grouping or display. It also allows one to specify kg ⟷ lbs ⟷ short ton, etc. one time and then reuse for all mass units that are linked to any one of these. (This document uses a double-ended arrow when the conversion can go both ways.)
+To simplify what conversions must be input by an admin, we will allow what we call chained conversions. This means that you have conversions from a → b and b → c and the user wants to get a → c. With chained conversions, OED will be able to figure out a → c from the other two. Without this the admin would be required to input a direct, one-step transformation for any desired conversion. With chained conversions the system may figure out allowed conversions that admins were not thinking of and allow them as options; [Example](#examples) #9 shows this. An advantage of chained conversions is it is much simpler to store meters in their original units because they can automatically be converted to other compatible units for grouping or display. It also allows one to specify kg ⟷ lb ⟷ short ton, etc. one time and then reuse for all mass units that are linked to any one of these. (This document uses a double-ended arrow (⟷) when the conversion can go both ways.)
 
-Users will want to define their own units. For example, they need to enter the cost of kWh, BTU, water, etc since it varies by site. They will also want to define display units such as CO2 (we will likely supply this one) and energy usage equivalent to driving a car, pizza deliveries, etc. We don’t know everything people will want so we should allow them to enter new ones.
+Users will want to define their own units and conversions. For example, they need to enter the cost of kWh, BTU, water, etc. since it varies by site. They will also want to define display units such as CO2 (we will likely supply this one) and energy usage equivalent to driving a car, pizza deliveries, etc. We don’t know everything people will want so we should allow them to enter new ones.
 
 ## sample-conversions
 
-As discussed in more detail in the [compatibility section](#determining-units-that-are-compatible-with-a-meter-or-group), the problem of determining compatible units is the same as seeing if a path exists from the starting to the desired (or ending) unit. The following graphic shows a graph with units where the allowed conversions are are the edges:
+As discussed in more detail in the [compatibility section](#determining-units-that-are-compatible-with-a-meter-or-group), the problem of determining compatible units is the same as seeing if a path exists from the starting to the desired (or ending) unit. The following graphic shows a graph with units where the allowed conversions are the edges:
 
 ![image of sample conversions](sampleConversions.png "image of sample conversions")
 
 Notation in figure: W is Watts, kWh is kilo-watt-hour, BTU is British Thermal Unit, MJ is megajoules. The black rectangles are meters, the orange ovals are basic units and the blue ovals are units that are different. Note the two types of units are the same in terms of the graph but shown in different colors to indicate that the linking is different. More details are [elsewhere](#vertices).
 
-The double-ended arrow to/from MJ and BTU indicates that you can convert from MJ to BTU and BTU to MJ. The single dashed orange arrows indicate the unit of a meter, e.g., Electric utility to kWh means the meter is reporting to OED in kWh. The single solid black arrow from Trash to kg CO2 indicates you can only convert from Trash to CO2 (there is a standard conversion for CO2 from Trash). If the arrow went the other way then you could take CO2 and create trash which is not allowed. An example of a chained conversion is taking the Trash meter that collects in kg and displaying it in Short ton. You would do the sequence of conversions of Trash → kg → lbs → Short ton meaning first you convert the Trash meter reading to kg then kg to lbs and then the lbs to Short ton. You could also do Trash → kg → Metric ton → Short ton. The result would be the same and OED will arbitrary choose which one to use since the path length is the same.
+The double-ended arrow to/from MJ and BTU indicates that you can convert from MJ to BTU and BTU to MJ. The single dashed orange arrows indicate the unit of a meter, e.g., Electric utility to kWh means the meter is reporting to OED in kWh. The single solid black arrow from Trash to kg CO2 indicates you can only convert from Trash to CO2 (there is a standard conversion for CO2 from Trash). If the arrow went the other way then you could take CO2 and create trash which is not allowed. An example of a chained conversion is taking the Trash meter that collects in kg and displaying it in Short ton. You would do the sequence of conversions of Trash → kg → lb → Short ton meaning first you convert the Trash meter reading to kg then kg to lb and then the lb to Short ton. You could also do Trash → kg → Metric ton → Short ton. The result would be the same and OED will arbitrary choose which one to use since the path length is the same.
 
 It may seem strange in the example just done that you first do the Trash → kg conversion. This conversion is actually the identity conversion (slope = 1, intercept = 0) so it does not change the values and this is normally the case. That is part of the reason the arrow is dotted and orange. The need for meters is shown by having Electric utility and Electric solar meters. When you are working with energy, you first convert to kWh as shown and this is similar to the conversion of Trash to kg. Note, that both Electric utility and Electric solar have conversions to US dollar and they are different lines so produce different values. This makes sense because the cost of creating electricity is different for these two sources. This is one example of why meters are decoupled from the unit they collect in. Note that two different electric meters that both measure kWh coming from the utility can both use the Electric utility unit since the conversion to US dollar is the same for both.
 
@@ -115,8 +115,8 @@ There are units for cubic meters of gas and cubic meters (M<sup>3</sup>). While 
 There are three meters for Natural Gas that receive data in three different units:
 
 1) cubic meters of gas that measures the amount of gas for energy
-2) BTU that also measure energy
-3) US dollar to measure cost.
+2) BTU meters that also measure energy
+3) US dollar meters to measure cost.
 
 This was done to show the generality of the system. For the first unit type, a site may have a meter to measure the quantity of gas consumed (Natural Gas in cubic meters). For the second unit type, a site might have a different meter on a different line to measure the quantity of Natural Gas in BTU. Both the Natural Gas in cubic meters and BTU record energy. This shows a site can have meters that measure in different units for the same type of item (natural gas here). This setup allows recording the original values in a simple way so special software is not needed to convert meter data to required OED units that are the same for all meters of the same type (energy here). It also means that meter data exported from OED will be the original meter data values. For the third unit type, the site may also manually load in cost data for the natural gas (Natural Gas in US dollar). This would be the actual cost from the utility and not a set cost (such as the conversion of Natural Gal in cubic meters to US dollar). The former is likely to be more accurate and may include fixed costs. Note the conversions given still allow the other two Natural Gas meters for energy to be converted to cost at a fixed rate. Though it might not be common at a site, the one in BTU converts to Euro and the one in cubic meters converts to US dollar. Though it is likely the cost for both types of meters would lead to the same overall cost for a given quantity of gas, this is not required. Since another conversion from US dollar ⟷ Euro is given, you can combine these two as either US dollar or Euro using chained conversions.
 
@@ -126,9 +126,9 @@ Note sites may want to convert money between units but it is noted that this wil
 
 Here are some examples that show how conversions can and cannot happen with the given example/system. They show use cases for actual use in OED.
 
-1. Determine total energy usage in MJ from meters that are both Electric utility in kWh & Natural gas in cubic meters. You do the conversion Electric utility → kwh → MJ and Natural Gas → cubic meters → MJ. You can do this for as many meters are that are associated with each starting unit. Once all the meter values are in MJ you can sum them up to get the total MJ for all such meters desired. Note that including meters that measure in Natural Gas BTU is not fundamentally different. They would be converted by Natural Gas → BTU → MJ and then combined with the other two. Note that displaying each meter separately is the same except you do not do the final summing. This is true in all examples.
+1. Determine total energy usage in MJ from meters that are both Electric utility in kWh & Natural gas in cubic meters. You do the conversion Electric utility → kWh → MJ and Natural Gas → cubic meters → MJ. You can do this for as many meters that are associated with each starting unit. Once all the meter values are in MJ you can sum them up to get the total MJ for all such meters desired. Note that including meters that measure in Natural Gas BTU is not fundamentally different. They would be converted by Natural Gas → BTU → MJ and then combined with the other two. Note that displaying each meter separately is the same except you do not do the final summing. This is true in all examples.
 2. Determine total cost in US dollar for meters that are Electric utility, Electric solar, Natural Gas in cubic meters, Natural Gas as BTU & Water. This is not fundamentally different than example #1. You do each conversion to US dollars and then sum them. The needed conversions are: Electric utility → US dollar, Electric solar → US dollar, Natural Gas as cubic meters → US dollar, Natural gas as BTU → Euro → US dollar & Water → Euro → US dollar.
-3. Determine total CO2 as Short ton from Natural Gas as BTU & Trash in kg. Convert Natural Gas as BTU → kg CO2 → kg → lbs → Short ton & Trash in kg → kg CO2 → kg → lbs → Short ton and then sum. Note you could add Electric utility meters since there is a conversion to kg CO2 but you cannot do it for Electric Solar nor Natural Gas as cubic meters since neither has a conversion to kg CO2. This is an example of a unit that is linked to other units in only one direction but is the same in other respects. A real site may want to add these.
+3. Determine total CO2 as Short ton from Natural Gas as BTU & Trash in kg. Convert Natural Gas as BTU → kg CO2 → kg → lb → Short ton & Trash in kg → kg CO2 → kg → lb → Short ton and then sum. Note you could add Electric utility meters since there is a conversion to kg CO2 but you cannot do it for Electric Solar nor Natural Gas as cubic meters since neither has a conversion to kg CO2. kg CO2 is an example of a unit that is linked to other units in only one direction but is the same in other respects. A real site may want to add these.
 4. Determine total volume as liters of Natural Gas as cubic meters and water as liter. This request does not make sense even though both seem to have a common unit of volume. This is not possible since there is no path from Natural Gas as cubic meters to liter so it does the right thing. See the [sample conversions](#sample-conversions) for why this is not allowed and the unit types.
 5. Determine total cost as Euros for Natural Gas as cubic meters and water as liter. This is done by Natural Gas as cubic meters → US dollar → Euro and Water → Euro and summing. This shows that even though the last one was properly excluded, this one does work.
 6. Display total energy usage as 100 watt bulb for 10 hrs (1 kWh) for both Electric solar as kWh and Natural Gas as BTU meters. This is done by Electric solar as kWh → kWh → energy usage as 100 watt bulb for 10 hrs and Natural Gas as BTU → BTU → MJ → kWh → 100 watt bulb for 10 hrs and then sum. This is very different but shows an example with a unit with only links into it. This is also an example of a user defined unit as OED will not be providing this.
@@ -137,13 +137,12 @@ Here are some examples that show how conversions can and cannot happen with the 
 9. Determine total volume as liters of Gasoline and Water meters. This is allowed because both meters are linked to liter. However, you really don't want to do this since they are very different types of liquids. Here are thoughts:
     1. You can graph them both as separate meters each with its own line. If you understand what it means then this is okay.
     2. If you put both types of meters into a group then you will get a line with the sum. This is probably a bad idea. The way around this is for the admin not to put them in a group and that is what you would expect.
-    3. Create a new type of liter Gasoline that is not linked to the provided volume units such as liter. Then link the Gasoline meter to this unit. This unit has the same links as the current figure with Gasoline (to BTU and Euro). Now you cannot group it with water and cannot graph it with water. The two negatives are that you need to create this unit and you cannot automatically convert it to other volume units because there is no link to liter. To get other units you need to create other Gasoline units and link them to allow conversion.
-This is all okay but needs to be documented for admin/user.
+    3. Create a new type of liter Gasoline that is not linked to the provided volume units such as liter. Then link the Gasoline meter to this unit. This unit has the same links as the current figure with Gasoline (to BTU and Euro). Now you cannot group it with water and cannot graph it with water. The two negatives are that you need to create this unit and you cannot automatically convert it to other volume units because there is no link to liter. To get other units you need to create other Gasoline units and link them to allow conversion. This is all okay but needs to be documented for admin/user. Note kg CO2 is somewhat similar and the solution given below [graph-details](#graph-details) and [creating-graph](#creating-graph) for it will also work similarly for this case.
 10. While power units are not shown, they will act the same as energy units where there are not links between power and energy.
 
 ## notation
 
-OED generally uses the database id (integer) to identify objects in the system including their storage in Redux state. This document will use that same convention unless noted otherwise. When referring to an attribute of an object, this document uses the . syntax a meter's name would be meter.name. For example, if the pseudocode has
+OED generally uses the database id (integer) to identify objects in the system including their storage in Redux state. This document will use that same convention unless noted otherwise. When referring to an attribute of an object, this document uses the . syntax. For example, a meter's name would be meter.name. If the pseudocode has
 
     for each meter M in array whatever {
       // referring to M here means M is the meter id
@@ -162,7 +161,7 @@ OED needs to figure out if a set of meters is compatible with a given unit. In t
 
 OED will have a 2D array of conversions between units that we will call C<sub>ik</sub> where i is the row and k is the column. It represents taking each path in the graph and reducing it to a direct path. For example, if the graph finds a path from a → b → c → d, then the row representing a and the column representing d (C<sub>ad</sub>) would be the path from a → d with the overall conversion for that path. This is what OED needs to know to convert from one unit to another. By analyzing the graph and storing the information in C<sub>ik</sub>, OED saves all the path analysis work each time it needs to do a unit conversion. This works well because the graph rarely changes and only an admin can do this. Thus, the graph is assumed not to change while a regular user is interacting with OED until they reload OED.
 
-There are several further optimizations of C<sub>ik</sub>. The first is to note the allowed rows and columns in C<sub>ik</sub>. OED isn't interested in every possible path in the graph. OED needs to convert from readings to the desired graphic unit that is the unit the user wants to see on the y-axis. Readings come from meters and meters can only have units associated with a meter as described in [graph vertices](#vertices). This means the rows of C<sub>ik</sub> are limited to the meter vertices in the graph. These are the black rectangles in the sample graph. Note that you can and often do have multiple meters that are storing readings point to the same meter unit in the graph. For example, a site might have 10 meters that collect kWh for electricity. They all have Electric utility as their unit and all convert to other units in the same way. Thus, the single Electric utility vertex in the graph handles many meters in the system. Overall, this means that the number of rows in C<sub>ik</sub> is very likely to be much smaller than the number of meters when you have a site with lots of meters. First, this means that OED only needs to determine paths from meters vertices to unit vertices. This will substantially reduce the number of paths that need to be found (compared to the all vertices to all vertices path problem). Second, the work to create C<sub>ik</sub> will be substantially reduced as will its size.
+There are several further optimizations of C<sub>ik</sub>. The first is to note the allowed rows and columns in C<sub>ik</sub>. OED isn't interested in every possible path in the graph. OED needs to convert from readings to the desired graphic unit that is the unit the user wants to see on the y-axis. Readings come from meters and meters can only have units associated with a meter as described in [graph vertices](#vertices). This means the rows of C<sub>ik</sub> are limited to the meter vertices in the graph. These are the black rectangles in the sample graph. Note that you can and often do have multiple meters that are storing readings that point to the same meter unit in the graph. For example, a site might have 10 meters that collect kWh for electricity. They all have Electric utility as their unit and all convert to other units in the same way. Thus, the single Electric utility vertex in the graph handles many meters in the system. Overall, this means that the number of rows in C<sub>ik</sub> is very likely to be much smaller than the number of meters when you have a site with lots of meters. First, this means that OED only needs to determine paths from meters vertices to unit vertices. This will substantially reduce the number of paths that need to be found (compared to the all vertices to all vertices path problem). Second, the work to create C<sub>ik</sub> will be substantially reduced as will its size. Third, adding a new meter of a type already in OED does not change the graph (the meter has a reference to its meter type in the graph).
 
 A second optimization is to note that not all vertices can be destinations of paths so the number of columns of C<sub>ik</sub> is substantially less than the number of vertices. As described in [graph vertices](#vertices), meter vertices can only have outgoing edges. This means that a meter vertex can never be a destination and is never a column in C<sub>ik</sub>. The graph algorithm finding the paths will naturally figure this out since no path exists from a meter vertex to another meter vertex.
 
@@ -194,32 +193,32 @@ In what follows, the graphic unit will sometimes be set to "no unit". Rather tha
 
 The details of when compatible units are needed is given later but OED needs to determine what units are compatible with a set of meters. For example, this would allow you to know all the possible units you can use to graph this set of meters including the meters in a group. To do this analysis, we start with a set with only one meter. The set of compatible units are all units that are compatible with the type of unit that the meter collects. This can be gotten from P<sub>ik</sub> by getting the unit_index from the meter name and then looking across row unit_index of P<sub>ik</sub> to find all allowed conversions where the value is true. This is the same as the product idea above. Now, if you have a set of meters to find compatible units for, it is all the units that are compatible with all meters in the set. This is the intersection of all the sets of compatible units for each meter. A concrete example that is used in [Example](#examples) #3 above is (sets are surrounded by { }):
 
-- units compatible with Natural Gas as BTU are {BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Meter ton, lbs, Short ton}
-- units compatible with Trash are {kg CO2, kg, Meter ton, lbs, Short ton}
-- units compatible with Electric Utility are {kWh, MJ, cubic meters of gas, BTU, 100 W bulb for 10 hrs, US dollar, Euro, kg CO2, kg, Meter ton, lbs, Short ton}
+- units compatible with Natural Gas as BTU are {BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Metric ton, lb, Short ton}
+- units compatible with Trash are {kg CO2, kg, Meter ton, lb, Short ton}
+- units compatible with Electric Utility are {kWh, MJ, cubic meters of gas, BTU, 100 W bulb for 10 hrs, US dollar, Euro, kg CO2, kg, Meter ton, lb, Short ton}
 - units compatible with Solar Electric are {kWh, MJ, cubic meters of gas, BTU, 100 W bulb for 10 hrs, US dollar, Euro}
 
-where compatible units are any that can be reached in the graph starting from the meter's unit of collection as shown with the examples. They are the values in P<sub>ij</sub> that are true. For example, for the row with kg CO2 the columns for kg CO2, kg, Meter ton, lbs, Short ton are true. Given P<sub>ij</sub>, these are determined by the function unitsCompatibleWithUnit below where you pass the unit_index of the meter (the row in P<sub>ij</sub> that corresponds to this meter type) and it returns the set of units shown above.
+where compatible units are any that can be reached in the graph starting from the meter's unit of collection as shown with the examples. They are the values in P<sub>ij</sub> that are true. For example, for the row with Trash, the columns for kg CO2, kg, Meter ton, lb, Short ton are true. Given P<sub>ij</sub>, these are determined by the function unitsCompatibleWithUnit below where you pass the unit_id of the meter (the row in P<sub>ij</sub> that corresponds to this meter type) and it returns the set of units (as ids) shown above.
 
 Now, say we want to graph Natural Gas as BTU meter(s) and Trash meter(s). The function unitsCompatibleWithMeters is passed the set containing both the meters and will return the units we can use in the graph. It will do:
 
-{BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Meter ton, lbs, Short ton}
+{BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Meter ton, lb, Short ton}
 
 ∩ (intersection)
 
-{kg CO2, kg, Meter ton, lbs, Short ton}
+{kg CO2, kg, Meter ton, lb, Short ton}
 
-which gives {kg CO2, kg, Meter ton, lbs, Short ton} (just happens to be the same as the units compatible with Trash). The first set in the intersection is what unitsCompatibleWithUnit returns as the compatible units for Natural Gas as BTU and the second set is for Trash. As stated in Example #3, you can graph Natural Gas as BTU meter(s) and Trash meter(s) as CO2 as Short ton and this is shown valid because that unit is in the intersection set. We also know we could graph it in kg CO2, kg, Meter ton and lbs since they are also in the set returned.
+which gives {kg CO2, kg, Meter ton, lb, Short ton} (just happens to be the same as the units compatible with Trash). The first set in the intersection is what unitsCompatibleWithUnit returns as the compatible units for Natural Gas as BTU and the second set is for Trash. As stated in Example #3, you can graph Natural Gas as BTU meter(s) and Trash meter(s) as CO2 as Short ton and this is shown valid because that unit is in the intersection set but more details are given below in how this happens. We also know we could graph it in kg CO2, kg, Meter ton and lb since they are also in the set returned.
 
 Note adding a Electric utility meter would mean finding the intersection of the three sets of units compatible with Natural Gas as BTU meter(s), Trash meter(s) and Electric utility. This does not change the result since the Electric utility set of compatible units has all the ones found before.
 
 Now, what happens if we look at Natural Gas as BTU meter(s), Trash meter(s) and Electric solar meter(s). That would calculate:
 
-{BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Meter ton, lbs, Short ton}
+{BTU, kWh, MJ, cubic meters of gas, US dollar, Euro, kg CO2, kg, Meter ton, lb, Short ton}
 
 ∩ (intersection)
 
-{kg CO2, kg, Meter ton, lbs, Short ton}
+{kg CO2, kg, Meter ton, lb, Short ton}
 
 ∩ (intersection)
 
@@ -320,19 +319,19 @@ The functions in this section will be used below when changes to the graphics, m
 
 ### vertices
 
-The graph will have two types of vertices. The graph store program probably will not know this so it is enforced via software. The vertex type will impact how it is used in the graph. The two types are:
+The graph will have three types of vertices. The graph store program probably will not know this so it is enforced via software. The vertex type will impact how it is used in the graph. The three types are:
 
-1) unit. When edges are added using this vertex, the vertex can be the source and/or destination vertex. When both the source and destination vertex is of a fundamental unit (SI units and similar ones), then it is common for the link to go both ways (bidirectional) where the conversion in one direction must be the inverse of the conversion in the other direction. Obviously, only compatible units should be linked. In the example, the orange ovals are this type of unit, e.g., BTU can be converted to MJ and MJ can be converted to BTU. For certain units, esp. ones defined by the site, the link only goes one way. In the example, the blue dashed ovals are this type of unit. In the case of CO2, the arrow goes from CO2 to kg with the identity conversion (1, 0). This allows the quantity of CO2 to be converted to any of the mass units (lbs, Metric ton, etc.). In the case of 100 W bulb for 10 hrs, the arrow goes from kWh to 100 W bulb for 10 hrs. The conversion happens to be the identity since 100 W x 10 hrs is 1 kWh. Another example would creating the custom unit for liter Gasoline ([see Example](#examples) #9) with links to BTU and Euro.
+1. unit. When edges are added using this vertex, the vertex can be the source and/or destination vertex. When both the source and destination vertex is of a fundamental unit (SI units and similar ones), then it is common for the link to go both ways (bidirectional) where the conversion in one direction must be the inverse of the conversion in the other direction. Obviously, only compatible units should be linked. In the example, the orange ovals are this type of unit, e.g., BTU can be converted to MJ and MJ can be converted to BTU. For certain units, esp. ones defined by the site, the link only goes one way. In the example, the blue dashed ovals are this type of unit. In the case of CO2, the arrow goes from CO2 to kg with the identity conversion (1, 0). This allows the quantity of CO2 to be converted to any of the mass units (lb, Metric ton, etc.). In the case of 100 W bulb for 10 hrs, the arrow goes from kWh to 100 W bulb for 10 hrs. The conversion happens to be the identity since 100 W x 10 hrs is 1 kWh. Another example would be creating the custom unit for liter Gasoline ([see Example](#examples) #9) with links to BTU and Euro.
 
-    Why do the units have these different types of arrows? If you are dealing with fundamental units that can be interchanged back and forth and the new unit makes sense then it is bidirectional. In the case of CO2, it is not a fundamental unit. If the arrow went both ways to include kg to CO2, then you could do Trash → kg → CO2 kg so trash would be shown as kg of CO2. This is not desirable so this direction of the arrow is not included. Now, why does the arrow go the other way? We want to allow the user to select any mass unit for CO2 so it could be kg, lbs, etc. The arrow in this direction permits these conversions. In the case of 100 W bulb for 10 hrs, we want the user to be able to display in this unit so the arrow only goes into this unit. While it would not cause issues, having the arrow go in both directions would allow converting from 100 W bulb for 10 hrs to other energy units. In this case we really need to label this bulb and have the unit be 1 kWh (100 W x 10 hours). Then we could convert the kWh to other energy units but then you have bulb kWh, bulb BTU, etc. and users don't think of bulbs in this way. Thus, the arrow does not have 100 W bulb for 10 hrs as the source.
+    Why do the units have these different types of arrows? If you are dealing with fundamental units that can be interchanged back and forth and the new unit makes sense then it is bidirectional. In the case of CO2, it is not a fundamental unit. If the arrow went both ways to include kg to CO2, then you could do Trash → kg → CO2 kg so trash would be shown as kg of CO2. This is not desirable so this direction of the arrow is not included. Now, why does the arrow go the other way? We want to allow the user to select any mass unit for CO2 so it could be kg, lb, etc. The arrow in this direction permits these conversions. In the case of 100 W bulb for 10 hrs, we want the user to be able to display in this unit so the arrow only goes into this unit. While it would not cause issues, having the arrow go in both directions would allow converting from 100 W bulb for 10 hrs to other energy units. In this case we really need to label this bulb and have the unit be 1 kWh (100 W x 10 hours). Then we could convert the kWh to other energy units but then you have bulb kWh, bulb BTU, etc. and users don't think of bulbs in this way. Thus, the arrow does not have 100 W bulb for 10 hrs as the source.
 
     How do units get the correct type of links? The majority will be provided by OED and be correct. Others, such as adding a new unit of money can follow the recommendations given. In other cases, the admin adding the unit needs to analyze the situation to get the correct type of link. A mistake should not lead to incorrect results but will allow for displaying of funny units.
-
-2) meter. When edges are added using this vertex, the vertex must be the source and cannot be the destination. Thus, a meter vertex can be converted to another unit type but other unit types cannot be converted to a meter. These are expected to be used to represent a meter. By default, the suffix will be blank. The need for a meter type of vertex is discussed in [sample-conversions](#sample-conversions).
+2. meter. When edges are added using this vertex, the vertex must be the source and cannot be the destination. Thus, a meter vertex can be converted to another unit type but other unit types cannot be converted to a meter. These are expected to be used to represent a meter. By default, the suffix will be blank. The need for a meter type of vertex is discussed in [sample-conversions](#sample-conversions).
+3. suffix. Are units created by OED as part of analyzing suffix units (such as CO2) and described in [determining-conversions](#determining-conversions).
 
 ### edges
 
-Edges represents a conversion between the units of two vertices (it really is the reading value for the meter when the source is a meter). The constraint on edges is given in the [vertices](#vertices) section. The graph is unweighted and the conversion factors are not stored in the graph. They are found from the path of the shortest path algorithm run on the graph as described the section on [determining-conversions](#determining-conversions). Note that it is possible to have multiple paths leading from one source to one destination. Fundamental units with bidirectional links should not be an issue since all their conversions should be consistent. For units with only incoming links this cannot happen. When there outgoing links that are not bidirectional, it could pose an issue. However, it is unclear that any such use will be useful in OED and seems to come from a misuse/problem. Thus, this issue is considered settled. The graph algorithm will provide the shortest one (or one of the shortest ones if multiple of the same length so in that last case of potentially inconsistent paths a consistent value will be displayed). This will be a little more efficient for OED to deal with the path but does not matter in principle since all paths have equivalent conversions. The trash example in [sample-conversions](#sample-conversions) shows one of these where you can get to Short ton through two paths with the same overall conversion.
+Edges represent a conversion between the units of two vertices (it really is the reading value for the meter when the source is a meter). The constraint on edges is given in the [vertices](#vertices) section. The graph is unweighted and the conversion factors are not stored in the graph. They are found from the path of the shortest path algorithm run on the graph as described the section on [determining-conversions](#determining-conversions). Note that it is possible to have multiple paths leading from one source to one destination. Fundamental units with bidirectional links should not be an issue since all their conversions should be consistent. For units with only incoming links this cannot happen. When there outgoing links that are not bidirectional, it could pose an issue. However, it is unclear that any such use will be useful in OED and seems to come from a misuse/problem. Thus, this issue is considered settled. The graph algorithm will provide the shortest one (or one of the shortest ones if multiple of the same length so in that last case of potentially inconsistent paths a consistent value will be displayed). This will be a little more efficient for OED to deal with the path but does not matter in principle since all paths have equivalent conversions. The trash example in [sample-conversions](#sample-conversions) shows one of these where you can get to Short ton through two paths with the same overall conversion.
 
 ### creating-graph
 
@@ -404,17 +403,17 @@ The conversion table for this example is:
 |    13     |       14       |        F      |    1      |     0     | Trash → kg                   |
 |    14     |       15       |        T      |    1e-3   |     0     | kg → Metric ton              |
 
-The cost ones vary with time but a typical value was chosen and OED does not allow multiple conversion values.
+The cost ones vary with time but a typical value was chosen and OED does not allow multiple conversion values. The other values are hopefully correct, standard conversions.
 
 ### determining-conversions
 
 It is assumed that the shortest path algorithm on the graph will return the edges associated with the path between the source and destination. It is also assumed that the information returned will allow OED to look up the conversion represented by each edge in the path and the information on the vertices involved. For example, it is possible to return a tree where the source is the root, the leaves are reachable destinations and each node passed through represents a vertex (unit) on the path. Each pair of vertices in a path from the root to the leaf would give OED the source and destination to look up the conversion and vertex information. The exact details will depend on the graph software used and how we store the conversion/node information in OED.
 
-First we present how to conceptually create C<sub>ik</sub> and the will give the pseudocode.
+First we present how to conceptually create C<sub>ik</sub> and then will give the pseudocode.
 
-Lets say you want to know the conversion from source vertex a to destination vertex e where the path goes through all the inclusive letter vertices so it is a → b → c → d → e. For each edge i → k, there is an associated conversion in the conversion table in the database. The following pseudocode specifies how to get the needed conversion where the use of suffix is described below:
+Let's say you want to know the conversion from source vertex a to destination vertex e where the path goes through all the inclusive letter vertices so it is a → b → c → d → e. For each edge i → k, there is an associated conversion in the conversion table in the database. The following pseudocode specifies how to get the needed conversion where the use of suffix is described below:
 
-    // Given a sourceUnit id and a destination unit id
+    // Given a sourceUnit id and a destinationUnit id
     // return the slope & intercept for the conversion from sourceUnit
     // to destinationUnit and suffix of the destination unit for it.
     function structure conversionValues(integer sourceUnit, integer destinationUnit) {
@@ -493,12 +492,12 @@ The final step is to put the conversions for each conversion along the path toge
       suffix = ""
       // Loop over the path
       for each edge E in path {
-       // Get the source and destination for edge E in terms of units id.
-        // The means relating them to the entries in the units table
+        // Get the source and destination for edge E in terms of unit ids.
+        // This means relating them to the entries in the units table
         // in the database. These are the values used in the conversions table.
         // TODO Figure out how to encode this info in the graph and get it back.
-        edgeSourceId = the units id for the source of E
-        edgeDestinationId = the units id for the destination of E
+        edgeSourceId = the unit id for the source of E
+        edgeDestinationId = the unit id for the destination of E
         {newSlope, newIntercept, newSuffix} = conversionValues(edgeSourceId, edgeDestinationId)
         // Update the path conversion for this new edge
         {slope, intercept} = updatedConversion(slope, intercept, newSlope, newIntercept)
@@ -523,7 +522,7 @@ For most OED conversions, intercept = 0 so the process is simplified. For exampl
     1. The conversions table has an entry for source_id = 4 and destination_id of 5 which is (947.8, 0).
     2. updatedConversion gives (947.8 * 38.46, 947.8 * 0 + 0) = (3.64e4, 0)
 
-Now lets do one with an intercept. The conversion of temperature C → F is (1.8, 32). Just for testing, lets make up a temperature unit for C → Z is (2, -111). If you start with 212 F that becomes 100 C. The 100 C becomes 89Z. Doing it with the code gives:
+Now let's do one with an intercept. The conversion of temperature C → F is (1.8, 32). Just for testing, let's make up a temperature unit for C → Z is (2, -111). If you start with 212 F that becomes 100 C. The 100 C becomes 89Z. Doing it with the code gives:
 
 1. Convert from F → C. Only have C → F so invert to get (1/1.8, -(32 / 1.8)) = (0.55555, -17.777).
 2. Add the conversion C → Z which has a conversion of (2, -111). This gives the overall conversion of (2 * 0.55555, 2 * (-17.777) -111) = (1.1111, -146.55)).
@@ -536,19 +535,19 @@ To keep the same basic graph and allow chained conversions, each unit will have 
 While the conceptual idea works, there is an issue in keeping track of the units labeled from ones created by a path through a unit with a suffix. First, it is possible for two paths to get to the final destination unit with different y-axis labels and conversion value. In the sample graph this happens because:
 
 1. Trash → kg has the label "kg" since there are no suffixes along the path. The conversion is the identity.
-2. Trash → kg CO2 → kg has the label "kg of CO2" because the kg CO2 unit in the graph has the suffix of CO2. The conversion is not the identity by the kg of CO2 produced by a kg of trash.
+2. Trash → kg CO2 → kg has the label "kg of CO2" because the kg CO2 unit in the graph has the suffix of CO2. The conversion is not the identity but the kg of CO2 produced by a kg of trash.
 
 At the graph level this is happening because there are one direction edges into and out of kg CO2. (The original design did not allow this but this use case pushed us to allow them.) At a fundamental level this is happening because there are two different units involved. Recall from above, one option considered was to make the admin create a unique unit for each CO2 unit desired. This would create two different units: one for kg of mass for displaying Trash and one for kg of CO2. Another problem is that kg of CO2 is not in the unit table so OED would not easily know to show the user that graphic unit for display. To correct this situation given the graph provided, OED needs to generate the second set of units, conversion and fix up the graph. The figure below shows the final result of the process where this aspect can be seen by the two new units named kg of CO2 and Metric ton of CO2 in the orange ovals.
 
-The original suffix unit is now no longer needed. In many regards it is similar to a meter in the sense that it accepts data but is not displayed. This is the case since we just created all the units based on that unit which acted as the template. We need to leave it in the database so the next time we recreate the graph it is included. For example, if you add another unit that it can be reached from the suffix unit then a new unit would be created. To avoid anyone seeing the suffix unit, it becomes hidden. An admin should never have a unit that has a suffix but cannot get to another unit as it will be hidden without another unit created. This type of unit does not make sense. Note a hidden vertex in the graph can still be transitioned through to create paths. Also as part of this, the conversion of the hidden unit is removed from the graph. This means the conversion/link from the unit with the suffix to the other unit is removed. In the figure below, the red dotted line with an arrow that replaced the original black one represents doing this. The edge has actually been removed from the graph so the red dotted line is just for illustration.
+The original suffix unit is now no longer needed. In many regards it is similar to a meter in the sense that it accepts data but is not displayed. This is the case since we just created all the units based on that unit which acted as the template. We need to leave it in the database so the next time we recreate the graph it is included. For example, if you add another unit that can be reached from the suffix unit then a new unit would be created. To avoid anyone seeing the suffix unit, it becomes hidden. An admin should never have a unit that has a suffix but cannot get to another unit as it will be hidden without another unit created. This type of unit does not make sense. Note a hidden vertex in the graph can still be transitioned through to create paths. Also as part of this, the conversion of the hidden unit is removed from the graph. This means the conversion/link from the unit with the suffix to the other unit is removed. In the figure below, the red dotted line with an arrow that replaced the original black one represents doing this. The edge has actually been removed from the graph so the red dotted line is just for illustration.
 
-The final part is to add the necessary conversions to the database table. For each unit added, the link from the suffix unit to that unit is added. It has the slope and intercept of the conversion for the path in the original graph (before removing  or adding links). In the figure below, these are the black line with arrows: kg CO2 → kg of CO2 and kg CO2 → Metric ton of CO2. Note the other values for this conversion will be added later.
+The final part is to add the necessary conversions to the database table. For each unit added, the link from the suffix unit to that unit is added. It has the slope and intercept of the conversion for the path in the original graph (before removing  or adding links). In the figure below, these are the black line with arrows: kg CO2 → kg of CO2 and kg CO2 → Metric ton of CO2. Note the other entries for this conversion will be added later.
 
 When this is done, the updated graph looks like:
 
 ![image of simplified sample conversions](sampleConversionsSimplifiedProcessed.png "image of simplified sample conversions")
 
-The values for unit_index in the unit table need to be set. It would be nice if any current values could be left the same but there is a requirement that they go from 0 to the # of rows/columns - 1 and changes, esp. deletions from the table mean that renumbering is best. First, any entry that has displayable of none cannot be seen or used so it does not need to be in Cij. Thus, these are not given a unit_index. The units with type_of_meter of meter form the rows and type_of_meter of unit form the columns where each start at 0.
+The values for unit_index in the unit table need to be set. It would be nice if any current values could be left the same but there is a requirement that they go from 0 to the # of rows/columns - 1 and changes, esp. deletions from the table mean that renumbering is best. First, any entry that has displayable of none cannot be seen or used so it does not need to be in Cij. Thus, these are not given a unit_index. The units with type_of_unit of meter form the rows and type_of_unit of unit form the columns where each start at 0.
 
 The units table after the complete process is shown next. It assumes the unit_index is set by going down the rows in order but another order could happen and would be fine. The displayable of MJ was made admin just to show that.
 
@@ -572,7 +571,7 @@ The units table after the complete process is shown next. It assumes the unit_in
 |   16  | kg of CO2          | kg of CO2             |     unit       |       9      |          |      all      |     F     |
 |   17  | Metric_ton of CO2  | Metric_ton of CO2     |     unit       |      10      |          |      all      |     F     |
 
-The conversions changed by this process are (the rest remain the same):
+The conversions added by this process are (the rest remain the same):
 
 | source_id | destination_id | bidirectional |   slope   | intercept |             note             |
 | :-------: | :------------: | :-----------: | :-------: | :-------: | :--------------------------: |
@@ -581,7 +580,7 @@ The conversions changed by this process are (the rest remain the same):
 
 All of these ideas are in the following pseudocode:
 
-    // Need to create of get passed a database conn.
+    // Need to create or get passed a database conn.
     // Create the needed units for ones created by units with a suffix.
     // Get all units that have a suffix
     suffixUnits = Unit.getSuffix(conn)
@@ -602,21 +601,19 @@ All of these ideas are in the following pseudocode:
         sourceId = get the database id of unit that is associated with source
         // Find the conversion from the start to end of path.
         {slope, intercept, suffix} = pathConversion(path)
-        // The name of the needed unit is the last unit name on the path + " of " and the suffix of start of path.
-        String unitName = destinationId.name + " of " + suffix of source of first vertex in path
+        // The name of the needed unit is the last unit name on the path + " of " and the suffix of the path.
+        String unitName = destinationId.name + " of " + suffix
         // See if this unit already exists. Would if this was done before where this path existed.
         Unit neededSuffixUnit = Unit.getByName(unitName, conn)
         if (neededSuffixUnit does not exist) {
           // Add this as a new units where: name and identifier is unitName, type_of_unit is Unit.type.suffix,
           // displayable and primary is the same as destination.
+          // Note a type_of_unit of suffix is different than a unit with a suffix string.
           // Note the admin can later change identifier, displayable and primary to something else
           // since OED does not recreate the unit if it exists so those changes will stay.
           Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <primary of destination>, "suffix unit created by OED")
           newUnit.insert(conn)
           // We now need to add the conversion for the new unit.
-          // The suffix should be the suffix of the first vertex in the path as was used above unless there are
-          // two suffix units on the path. We are not doing that at this time.
-          // We could check this to be sure the code is working as expected.
           // Create the conversion from the prefix unit to this new unit.
           Conversion newConversion = new Conversion(sourceId, destinationId, false, slope, intercept, "created by OED for unit with prefix")
           newConversion.insert(conn)
@@ -656,47 +653,22 @@ All of these ideas are in the following pseudocode:
       }
     }
 
-    // Gives the unit name when dealing with a suffix created unit.
-
-    // Set the unit_index.
-    // Get all units rows of displayable meters to somebody (admin covers all) from the database
-    meters = Unit.getVisibleMeter(Displayable.type.admin, conn)
-    // The current row index
-    integer row = 0
-    // Loop over all meters
-    for each meters M {
-      // Give the meters in Cij the row indices in order seen
-      M.unit_index = row
-      // Update database for this unit
-      M.update(conn)
-      row++
-    }
-    // Get all units rows of displayable to somebody (admin covers all) and unit_type of Unit.type.unit or Unit.type.suffix from the database
-    units = getVisibleUnitOrSuffix(Displayable.type.admin, conn)
-    // The current column index
-    integer column = 0
-    // Loop over all units
-    for each unit U in units {
-      // Give the units in Cij the column indices in order seen
-      U.unit_index = column
-      // Update database for this unit
-      U.update(conn)
-      column++
-    }
 
 The following pseudocode will create the C<sub>ik</sub> array:
 
     // This code creates Cik from scratch. For now, OED will always do this on any change.
 
     // need a database conn object.
-    // Get the vertices associated with the sources (meters) and destinations (units) that can be displayed to some user.
-    sources = Unit.getVisibleMeter(Displayabletype.admin, conn)
+    // Get the vertices associated with the sources (meters) and destinations (units) that can be displayed
+    // to some user. admin covers everyone.
+    sources = Unit.getVisibleMeter(Displayable.type.admin, conn)
     destinations = Unit.getVisibleUnitOrSuffix(Displayable.type.admin, conn)
     // Size of each of these.
     integer numSources = size of sources
     integer numDestinations = size of destinations
-    // Create an array to hold the values. Each entry will have double slope, double intercept and string suffix.
+    // Create an array to hold the values. Each entry will have double slope, double intercept.
     c = new array[numSources, numDestinations]
+    // Now set up and store the mapping of the row/column in Cik with the unit involved.
     // Set the row index in Cik. Start with first one and increase each loop iteration.
     integer row = 0
     for each sources S {
@@ -732,12 +704,14 @@ The following pseudocode will create the C<sub>ik</sub> array:
           {slope, intercept, suffix} = pathConversion(path)
           // All suffix units were dealt with above so all units with suffix have displayable of none.
           // This means this path has a suffix of "" (empty) so it does not matter.
-          // The name of any unit associated with a prefix was already set correctly.
+          // The name of any unit associated with a suffix was already set correctly.
           // Thus, we can just use the destination identifier as the unit name.
           cTemp[S.unitIndex][D.unitIndex] = {slope, intercept, D.identifier}
         }
       }
     }
+    // The table in the database for the logical Cik needs to be wiped and these values stored.
+    // This code will be added once the database table for using it to get readings is set.
 
 Note in the actual code we may want to create types for {slope, intercept} and {slope, intercept, suffix} since they are used a lot.
 
@@ -757,7 +731,7 @@ The value in the table is the slope. The intercept is 0.0 for all these entries.
 Here is how some different types of values are determined as a sample:
 
 - C[0[][0] is Electric_utility → kWh. Since the meter collects in kWh it is the identity conversion. In this example, all the orange arrows have the identity conversion since the meter collects in the unit is it attached (as is generally the case).
-- C[0][2] is Electric_utility → BTU. The picture of the graph shows the path would be Electric_utility → kwH → MJ → BTU. The conversion entries in the table above give Electric_utility → kwH is (1, 0), kwH → MJ is (3.6, 0) & MJ → BTU is 947.8. The total slope is the product of each slope in the path so it is 1 * 3.6 * 947.8 = 3412.
+- C[0][2] is Electric_utility → BTU. The picture of the graph shows the path would be Electric_utility → kWh → MJ → BTU. The conversion entries in the table above give Electric_utility → kwH is (1, 0), kwH → MJ is (3.6, 0) & MJ → BTU is 947.8. The total slope is the product of each slope in the path so it is 1 * 3.6 * 947.8 = 3412.
 - C[1][5] is Natural_Gas_BTU → US_dollar. The graph shows the path is Natural_Gas_BTU → Euro → US_dollar. The conversion entries in the table are Natural_Gas_BTU → Euro is (2.6e-6, 0) & US_dollar → Euro is (0.88). The US_dollar → Euro has the source and destination reversed so we need to invert this conversion by doing the reciprocal of the slope to give 1.14. The overall slope for the conversion is 2.6e-6 * 1.14 = 2.96e-6.
 - C[4][10] is Trash → Metric_ton of CO2. The graph shows the path is Trash → kg CO2 → Metric_ton of CO2. The conversion table has Trash → CO2 as (3.24e-6, 0) & kg of CO2 → Metric_ton of CO2 as (1e-3, 0). The overall conversion is 3.24e-6 * 1e-3 = 3.24e-9. This conversion is an example of having a suffix. Note the original graph has Trash → kg CO2 → kg → Metric_ton. This gives the same conversion as 3.24e-6 * 1 * 1e-3 = 3.24e-9 but had the issue with unit labels and multiple paths.
 
@@ -774,26 +748,26 @@ The creation of P<sub>ik</sub> is easy. For each entry in C<sub>ik</sub> that is
 
 When does C<sub>ik</sub> and P<sub>ik</sub> need to be calculated? They need to be created (note recreate when updated) in the following circumstances:
 
-- OED starts up on the server. The server should cache the value for both arrays for future use.
-- A new unit is created via the [admin unit page](#new-admin-unit-page). All the current values stay the same but a new row/column is added where every value indicates that no path since no conversions have been added.
+- OED starts up on the server. The server should cache the value for both arrays for future use. Note we now are going to store a representation of C<sub>ik</sub> in the database so it can likely be used instead of using the graph.
+- A new unit is created via the [admin unit page](#new-admin-unit-page). All the current values stay the same but a new row/column is added where every value indicates that no path since no conversions have been added. Normally an admin would not add a unit without a conversion but it might happen (at least for a while) so this avoids bad cases in the code.
 - If a conversion is changed (except note) including being added on the [admin unit page](#new-admin-unit-page). It is possible an admin will make a series of unit changes so we should have a save button to put any number of changes into the database. Right after that happens, OED needs to recalculate these values just as it did at startup to get the new values.
   - If only the slope and/or intercept is changed then we could skip doing the graph algorithm since the paths do not change. For now, we ignore this optimization and just redo everything.
 
-It is not expected that these will happen very often and it will only happen to an admin who is working on units/conversions. Users will delay seeing the unit changes until the reload OED into the web browser. For a regular user that is not an issue. An admin needs to reload OED in the web browser to see the changes for graphing.
+It is not expected that these will happen very often. Users will delay seeing the unit changes until the reload OED into the web browser. For a regular user that is not an issue. An admin needs to reload OED in the web browser to see the changes for graphing.
 
-The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units). (As a historical note, there were discussions of where to do the unit transformation early on: client or server. Given the current design it made most sense to do it on the server. While that could change, it isn't likely.)
+The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units) and note that P<sub>ik</sub> is sufficient to do all calcualtion needed on the client side. (As a historical note, there were discussions of where to do the unit transformation early on: client or server. Given the current design it made most sense to do it on the server. While that could change, it isn't likely.) As noted in the pseudocode above, a version of C<sub>ik</sub> is needed in the database and changes must be stored each time it changes. OED can easily calculate P<sub>ik</sub> on startup.
 
 ## default_graphic_unit
 
-There is a startup consideration in determining the graphic unit. When no meter or group has been selected for graphing, it is unclear what unit to use when one is selected since, in general, there are multiple choices. Note the same situation occurs if the user later deselects all meters and groups. OED could make the user decide by either selecting the unit in advance or choosing a compatible one once the meter is selected. First,  this might confuse the user and be overly complicated to decide the best unit. Second, the admin who created the meter/group may have thoughts on the best default unit the user will see. Thus, OED will have the admin choose the default graphic unit for the meter and group and it will be stored with the meter/group. This unit will be used when the first meter or group is selected and will be made the graphic unit. For further meter/group additions to the graph, this unit will be used unless updated.
+There is a startup consideration in determining the graphic unit. When no meter or group has been selected for graphing, it is unclear what unit to use when one is selected since, in general, there are multiple choices. Note the same situation occurs if the user later deselects all meters and groups. OED could make the user decide by either selecting the unit in advance or choosing a compatible one once the meter is selected. First,  this might confuse the user and be overly complicated to decide the best unit. Second, the admin who created the meter/group may have thoughts on the best default unit the user will see. Thus, OED will have the admin choose the default graphic unit for the meter and group and it will be stored with the meter/group. This unit will be used when the first meter or group is selected and will be made the graphic unit. For further meter/group additions to the graphic, this unit will be used unless updated.
 
-The admin can make the default graphic unit be an unit that is compatible with that meter or group. Note that the default graphic unit does not change the compatibility units of the meter/group but is consistent with them. OED thought about forcing the admin to select a default graphic unit but chose to make it optional but encouraged. In the case of meters, the default graphic unit is the unit associated with the meter. In the case of groups, it is not clear what the default should be. Thus, it is "no unit"; this is the same value taken by the graphic unit by default. How OED deals with "no unit" is described in other sections that deal with this value. Note that a group that has a default graphic unit of "no unit" cannot be used if the graphic unit is "no unit" since there is no obvious way (other than random) to select the graphic unit.
+The admin can make the default graphic unit be any unit that is compatible with that meter or group. Note that the default graphic unit does not change the compatibility units of the meter/group but is consistent with them. OED thought about forcing the admin to select a default graphic unit but chose to make it optional but encouraged. In the case of meters, the default graphic unit is the unit associated with the meter if none is selected by the admin. In the case of groups, it is not clear what the default should be. Thus, it is "no unit"; this is the same value taken by the graphic unit by default. How OED deals with "no unit" is described in other sections that deal with this value. Note that a group that has a default graphic unit of "no unit" cannot be used if the graphic unit is "no unit" since there is no obvious way (other than random) to select the graphic unit.
 
 ## database-changes-for-units
 
 - need unit_type as enum of values unit, meter, suffix
 - need displayable_type as enum of value all, admin, none
-- need unit_represent_type as enum of quantity, flow, raw, unused (unused for when it is a unit_type is not meter)
+- need unit_represent_type as enum of quantity, flow, raw, unused (unused is for when it is a unit_type other than meter)
 - new table named units that has columns:
   - integer id that auto increments and is primary key
   - string name that is unique (name of unit for identification)
@@ -804,7 +778,7 @@ The admin can make the default graphic unit be an unit that is compatible with t
   - integer unit_index is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
   - displayable_type displayable (whether it can be seen/used for graphing by anyone, admin or nobody)
-  - boolean primary (If this unit is always displayed. If not, the it is secondary and the user needs to ask to see. To be used in a future enhancement.)
+  - boolean primary (If this unit is always displayed. If not, then it is secondary and the user needs to ask to see. To be used in a future enhancement.)
   - string note that holds comments by the admin or OED inserted
   - note type_of_unit and unit_index are unique in combination
 - new table named conversions. The primary key is the source_units_id, destination_units_id. Need to make sure the source_units_id is not the same as destination_id in any row to avoid self conversion. (See src/server/sql/group/create_groups_tables.sql for using "CHECK (source_units_id != destination_units_id parent_id") It has columns:
@@ -823,17 +797,15 @@ The admin can make the default graphic unit be an unit that is compatible with t
   - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
 - see [database readings changes](#how-oed-should-calculate-readings-displayed-in-line-graphics) for other database changes.
 - src/server/sql/reading/create_compressed_reading_views.sql has compressed_group_readings_2 & compressed_bar_group_readings_2 that appear to first get all the meter ids and then sum the result of querying over all the meters to get the readings to display. Since we need, in general, to now apply different unit transformations to the different meters in a group these will need to be changed. (Let's create new functions with better names and leave these for now during the conversion.)
-  - TODO figure out an efficient way to do this
 - Need to load all the predefined OED units and conversions in those tables. The note for each should be set to indicate it was preloaded by OED. The examples have some and other ideas are:
   - Energy units: kWh, BTU, therm (100,000 BTUs), cubic feet of natural gas, cubic meters of natural gas, gallon of gasoline (?) [see list of conversions](conversionFactors.xlsx)
   - Volume (not equivalent to power): liters, gallons, cubic feet, Mcf (thousands of cubic feet), Ccc (hundreds of cubic feet)
   - Power: kW, BTU/hr
   - Temperature: degree Celsius, degree Fahrenheit
-  - Weight/mass: lbs, kg, ton (2000 lbs), metric ton (1000 kg)
-  - A few money units not linked together to all easy addition for sites to money and as examples: US dollar, Euro, Mexican Peso (any others?)
+  - Weight/mass: lb, kg, ton (2000 lb), metric ton (1000 kg)
+  - A few money units not linked together to allow easy addition for sites to money and as examples: US dollar, Euro, Mexican Peso (any others?)
   - CO2 is in terms of mass but need [conversions](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) from kWh, gasoline (ga), diesel (ga), BTU, natural gas (therms or Mcf)
   - TODO figure out complete list
-  - The [EPA web page](https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references) has a lot of other conversions for CO2 such as coal, impact of recycling, etc. Want any?
 
 - When we migrate a current DB we need to set some default values:
   - For meters, the unit_id should correspond to kWh since all current meters are that.
@@ -843,7 +815,7 @@ The admin can make the default graphic unit be an unit that is compatible with t
 
 Note that we really want to use Redux state when getting database values. This specifies how to get the values if not yet in Reudx.
 
-The models in src/server/models need to be updated for the database changes and for places where subsets of the data is needed from the database for the pseudocode proposed in this document. Every model code will have a constructor, createTable, mapRow, insert, delete and getAll as exist in current models. Each new function needs to be added to the SQL code in addition to the model. Changes for specific database changes are:
+The models in src/server/models need to be updated for the database changes and for places where subsets of the data is needed from the database for the pseudocode proposed in this document. Every model will have a constructor, createTable, mapRow, insert, delete and getAll as exist in current models. Each new function needs to be added to the SQL code in addition to the model. Changes for specific database changes are:
 
 ### unit
 
@@ -888,10 +860,10 @@ What follows are the changes needed on specific OED web pages.
 
 Each graphics page (line, bar, compare, map) will have a dropdown menu that shows the graphic units for graphing (and "no unit"). It will probably go right below the groups: and meters: dropdown menus and have a similar look with title and then the menu. This dropdown has some similarities to the map dropdown for meters/groups that are filtered based on the selected map. The default menu value is "no unit" when the page is first loaded and this is set before the algorithm below is run so there is already a selected unit. Since the algorithms use an id to identify all values, the entry "no unit" will be encoded with -99 since the id should always be positive for real units. Using the value -99 makes it stand out more. Note the meters/groups menus must be updated to the compatible units as [described](#changes-to-meters-groups-dropdown-menus). Also note that if the current unit is "no unit" then once the first meter/group is selected then its default graphic unit becomes the default graphic unit for the selected meter/group. If "no unit" is selected by the user then all meters and groups are deselected since none could have been selected with this choice. Note this is an easy way to restart the graphing process. It would be good to warn the user if "no unit" is selected but there are selected meters/groups so they can either continue or cancel to avoid accidentally removing all meters/groups. A graphic unit is defined as follows:
 
-1. Only units in the units table that are of type unit (so not meter) can be a graphic unit.
+1. Only units in the units table that are of type unit or suffix (so not meter) can be a graphic unit.
 2. Only units displayable to this user are displayed. Always if displayable is all, only user admin if displayable is admin and never if displayable is none.
 3. If every meter and group that is already selected for graphing is compatible with a graphic unit then it is shown in the usual dropdown font. Note if no meter/group is yet selected then this is all units displayable to this user.
-4. If the unit does not pass step 2 then it is shown in grayed out font and are not selectable. These are all the units that would make some displayed meters and/or groups be undisplayable and change the graphic. OED has decided not to allow this since it can confuse the user and it is harder to implement. The user must remove all incompatible meters/groups to change to one of these selections. This could be changed if people feel this is a bad choice for the UI.
+4. If the unit does not pass step 3 then it is shown in grayed out font and are not selectable. These are all the units that would make some displayed meters and/or groups be undisplayable and change the graphic. OED has decided not to allow this since it can confuse the user and it is harder to implement. The user must remove all incompatible meters/groups to change to one of these selections. This could be changed if people feel this is a bad choice for the UI.
 
 Each time the graphic unit is changed the y-axis graphic values need to change. See the section below for [unit-display](#unit-display) for information on how this is done. The selected unit is the graphic unit choice.
 
@@ -917,7 +889,7 @@ The following pseudocode will create the graphic unit menu (see [determining-com
       // Get for all meters
       for each meter M that is selected {
         // {M} means turn M into a set.
-        newUnits = unitsCompatibleWithMeters({M})
+        Set newUnits = unitsCompatibleWithMeters({M})
         if (first) {
           // First meter/group so all its units are acceptable at this point
           units = newUnits
@@ -929,7 +901,7 @@ The following pseudocode will create the graphic unit menu (see [determining-com
       }
       // Get for all groups
       for each group G that is selected {
-        newUnits = unitsCompatibleWithMeters(metersInGroup(G))
+        Set newUnits = unitsCompatibleWithMeters(metersInGroup(G))
         if (first) {
           // First meter/group so all its units are acceptable at this point
           units = newUnits
@@ -940,8 +912,8 @@ The following pseudocode will create the graphic unit menu (see [determining-com
         }
       }
 
-      // Loop over all units (they must be of type unit - case 1)
-      for each unit U in units where type_of_unit is unit {
+      // Loop over all units (they must be of type unit or suffix - case 1)
+      for each unit U in units where type_of_unit is unit or suffix {
         // Control displayable ones (case 2)
         if ((U.displayable is all) or (U.displayable is admin if user is admin)) {
           if (U is in units) {
@@ -954,9 +926,9 @@ The following pseudocode will create the graphic unit menu (see [determining-com
         }
       }
     }
-    // Ready to display unit.
-    Add each compatibleUnit C add name C.identifier to unit menu in alphabetically sorted order in regular font for case 3
-    Add each incompatibleUnit I add name I.identifier to unit menu in alphabetically sorted order as grayed out and not selectable for case 4
+    // Ready to display unit. Put selectable ones before unselectable ones.
+    For each compatibleUnit C add name C.identifier to unit menu in alphabetically sorted order in regular font for case 3
+    For each incompatibleUnit I add name I.identifier to unit menu in alphabetically sorted order as grayed out and not selectable for case 4
 
 ### new-graphic-rate-menu
 
@@ -971,7 +943,9 @@ This menu only applies to the line graphic. Currently, OED always graphs kW whic
 
 The default value will be per hour and selected when the menu is first shown.
 
-Each time the graphic rate is set, the values on the line graphic must be recalculated. The values from the database (in Redux state) are per hour. Each reading must be multiplied by the value associate with the user choice. For example, if the reading in the Redux state is 5 quantity/hour and the graphic rate is per day then the graphic value becomes 5 quantity/hour * 24 hour/day = 0120 quantity/day. The same factor is applied to every readings from every meter and group that is being graphed. Note that the server is not contacted as part of this process since the meter/group was already selected so its values are in the Redux state (but the usual check will be made via Redux to verify this).
+Each time the graphic rate is set, the values on the line graphic must be recalculated. The values from the database (in Redux state) are per hour. Each reading must be multiplied by the value associate with the user choice. For example, if the reading in the Redux state is 5 quantity/hour and the graphic rate is per day then the graphic value becomes 5 quantity/hour * 24 hour/day = 120 quantity/day. The same factor is applied to every readings from every meter and group that is being graphed. Note that the server is not contacted as part of this process since the meter/group was already selected so its values are in the Redux state (but the usual check will be made via Redux to verify this). If the user selects per hour then the values are not actually changed by this process and this could be a special case. Note the values in the Redux state are not changed; only the values displayed on the line graphic change.
+
+Note that readings of type raw are not impacted by this menu. They display the average for the time range of the point displayed. In the longer-term, it would be nice to remove this menu in this case but for now it can stay with no effect.
 
 ### changes-to-meters-groups-dropdown-menus
 
@@ -985,20 +959,27 @@ This does not change the current situation that hides some meters/groups if they
 As [discussed above](#new-units-menu), both the meters and groups dropdown menus must be updated whenever the graphic unit is updated. The algorithm for updating the meter menu is:
 
     // need database conn
-    // All meters
-    allMeters = Meter.getDisplayable(conn) if not admin otherwise getAll(conn)
+    // Get all the meters that this user can see.
+    Meters visibleMeters
+    if (admin) {
+      // Can see all groups
+      visibleMeters = Meter.getAll(conn)
+    } else {
+      // regular user or not logged in so only displayable ones
+      visibleMeters = Meter.getDisplayable(conn)
+    }
     // meters that can graph
     Set compatibleMeters = {}
     // meters that cannot graph.
     Set incompatibleMeters = {}
-    if (graphicUnit = no unit) {
+    if (graphicUnit = -99/no unit) {
       // If there is no graphic unit then no meters/groups are displayed and you can display all meters.
       //  Also, if not admin, then meters not displayable are not viewable.
       // admin can see all.
-      compatibleMeters = allMeters
+      compatibleMeters = visibleMeters
     } else {
       // If displayable is false then only admin.
-      for each allMeters M  {
+      for each visibleMeters M  {
         // {M} means turn M into a set.
         Set units = unitsCompatibleWithMeters({M})
         if (graphicUnit is in units) {
@@ -1011,14 +992,14 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
       }
     }
     // Ready to display meters in menu. Note you display the identifier and not the id.
-    Add each compatibleUnit C add name C.identifier to meter menu in alphabetically sorted order in regular font for case 1
-    Add each incompatibleUnit I add name I.identifier to meter menu in alphabetically sorted order as grayed out and not selectable for case 2
+    For each compatibleUnit C add name C.identifier to meter menu in alphabetically sorted order in regular font for case 1
+    ForAdd each incompatibleUnit I add name I.identifier to meter menu in alphabetically sorted order as grayed out and not selectable for case 2
 
 The algorithm for groups is similar where doing displayable for groups partly addresses [issue #414](https://github.com/OpenEnergyDashboard/OED/issues/414) where the other part is addressed in [group viewing page](#group-viewing-pages):
 
     // need database conn
     // Get all the groups that this user can see.
-    Group visibleGroups
+    Groups visibleGroups
     if (admin) {
       // Can see all groups
       visibleGroups = Group.getAll(conn)
@@ -1030,7 +1011,7 @@ The algorithm for groups is similar where doing displayable for groups partly ad
     Set compatibleGroups = {}
     // groups that cannot graph.
     Set incompatibleGroups = {}
-    if (graphicUnit = no unit (-99)) {
+    if (graphicUnit = -99/no unit) {
       // If there is no graphic unit then no meters/groups are displayed and you can display all groups
       // that have a default graphic unit that user can see (if displayable is false then only admin)
       for each visibleGroup G {
@@ -1055,12 +1036,12 @@ The algorithm for groups is similar where doing displayable for groups partly ad
       }
     }
     // Ready to display meters in menu. Note you display the identifier and not the id.
-    Add each compatibleUnit C add name C.name to group menu in alphabetically sorted order in regular font for case 1
-    Add each incompatibleUnit I add name I.identifier to group menu in alphabetically sorted order as grayed out and not selectable for case 2
+    For each compatibleUnit C add name C.name to group menu in alphabetically sorted order in regular font for case 1
+    For each incompatibleUnit I add name I.identifier to group menu in alphabetically sorted order as grayed out and not selectable for case 2
 
 ### meter-viewing-page
 
-If an admin is viewing the page then the new items in the [database schema](#database-changes-for-units) for meters should be displayed where the ids are converted to identifier for the units. These values are editable and are displayed with a dropdown menu where it is set to the current value when loading this page. The values listed in the unit_id are any unit in the unit table with type_of_unit = unit (not meter or suffix). The values for the [default_graphic_unit](#default_graphic_unit) are the list of all units compatible with the current unit_id unit. This can be found by:
+If an admin is viewing the page then the new items in the [database schema](#database-changes-for-units) for meters should be displayed where the ids are converted to identifier for the units. These values are editable and are displayed with a dropdown menu where it is set to the current value when loading this page. The values listed in the unit_id menu are any unit in the unit table with type_of_unit = unit (not meter or suffix). The values for the [default_graphic_unit](#default_graphic_unit) are the list of all units compatible with the current unit_id unit. This can be found by:
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithUnit(unit_id)
 
@@ -1068,7 +1049,7 @@ The menu will contain the identifier associated with each id in allowedDefaultGr
 
 Whenever either value is changed then it needs to be stored into the meter table in the database. In addition, these actions need to happen whenever the unit_id is changed:
 
-- The set compatible units of the new unit_id are calculated as above. If the current value of default_graphic_unit is not in this set then it is changed to the new unit_id and the admin is notified of this change.
+- The set of compatible units of the new unit_id are calculated as above. If the current value of default_graphic_unit is not in this set then it is changed to the new unit_id and the admin is notified of this change.
 - update groups that contain this meter if editing
   - TODO probably similar to analysis of editing a group member but need to figure get pseudocode done
 
@@ -1078,7 +1059,7 @@ A feature that would be desirable is to list all compatible units for the meter 
 
 ### group-viewing-pages
 
-The group page needs to have the [default_graphic_unit](#default_graphic_unit) added as was done for meters. Note in this case it is both on the viewing page for edits and on the group creation page and only applies when the admin is logged in. One other difference is the menu will also include the "no unit" option and that will be the default value on group creation unless the admin choose another value. Finally, the way to determine the values to display on the default graphic unit menu is different than for meters as [described elsewhere](#determining-compatible-units):
+The group page needs to have the [default_graphic_unit](#default_graphic_unit) added as was done for meters. Note in this case it is both on the viewing page for edits and on the group creation page and only applies when the admin is logged in. One other difference is the menu will also include the "no unit" option and that will be the default value on group creation unless the admin chooses another value. Finally, the way to determine the values to display on the default graphic unit menu is different than for meters as [described elsewhere](#determining-compatible-units):
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithMeters(metersInGroup(group_id))
 
@@ -1086,11 +1067,11 @@ and "no unit" is also added (with id -99). When this needs to happen is describe
 
 As long as this page is being updated, it will be modified so non-admins can only see displayable groups.  This partly addresses [issue #414](https://github.com/OpenEnergyDashboard/OED/issues/414) where the other part is address in [group graphic menus](#changes-to-meters-groups-dropdown-menus).
 
-When the admin edits a group, then the default graphic unit can be set via a dropdown menu and has the current value selected when created.
+When the admin edits a group, the default graphic unit can be set via a dropdown menu and has the current value selected when created.
 
 When an admin creates a group, there is a dropdown to select the default graphic unit as with editing a group where "no unit" is selected. Before saving the group, an admin should (but is not required to) choose a default graphic unit to eliminate "no unit" since [this restricts certain graphing choice](#default_graphic_unit).
 
-Allowing an admin to select select/add/remove multiple meters and/or groups at a time during creation and editing means incompatible changes between these meters/groups is possible. As a result, OED will be removing this feature. When there was only one unit in OED this was not an issue. The meter and group menus will remain as they are on the group admin pages but as soon as a new choice is selected the menus on the page must be updated. The create page looks the same where the selected item is then displayed at the top and removed from the menu choices. For the edit page, a select causes that meter/group to immediately go to the other menu of that type. This means the meter/group switches between left column of Child meter/group and the right column of Unused meter/group. For example if an unused meter is selected, it is no longer unused and becomes part of the Child meters and its menu. After this, all menu choices must be updated as described below. As a result, the arrows will be removed from the groups pages for creating and editing and this eliminates [issue #413](#https://github.com/OpenEnergyDashboard/OED/issues/413) once completed.
+Allowing an admin to select/add/remove multiple meters and/or groups at a time during creation and editing means incompatible changes between these meters/groups is possible. As a result, OED will be removing this feature. When there was only one unit in OED this was not an issue. The meter and group menus will remain as they are on the group admin pages but as soon as a new choice is selected the menus on the page must be updated. The create page looks the same where the selected item is then displayed at the top and removed from the menu choices. For the edit page, a select causes that meter/group to immediately go to the other menu of that type. This means the meter/group switches between left column of Child meter/group and the right column of Unused meter/group. For example if an unused meter is selected, it is no longer unused and becomes part of the Child meters and its menu. After this, all menu choices must be updated as described below. As a result, the arrows will be removed from the groups pages for creating and editing and this eliminates [issue #413](https://github.com/OpenEnergyDashboard/OED/issues/413) once completed.
 
 The compatible units of a group has impacts as discussed below. Note this only applies to admins since they are the only ones who can make changes. This will naturally happen since the page only displays these items if an admin. There are two cases:
 
@@ -1109,24 +1090,27 @@ The dropdown menus of meters and groups will change so they are listed as follow
 
 The pseudocode for setting the meter/group menus is (see [compatible unit code](#determining-compatible-units) on functions called) follows. The value gid is the group id of the group being worked on.
 
+    // need database conn
     // Determine compatibility of meter/group to the current group being worked on (currentGroup)
     // Get the currentGroup's compatible units.
     Set currentUnits = unitsCompatibleWithMeters(metersInGroup(gid))
-    // Current group's default graphic unit
+    // Current group's default graphic unit (via Redux)
     integer currentDefaultGraphicUnit = gid.default_graphic_unit
     // Now check each meter
-    for each meter M {
+    meters = Meter.getAll(conn)
+    for each meters M {
       // Get the case involved
-      integer case = compatibleChanges(currentUnits, M, "meter", currentDefaultGraphicUnit)
+      integer case = compatibleChanges(currentUnits, M, DataType.meter, currentDefaultGraphicUnit)
       // If case 4 then won't display. Otherwise use the correct "font" or whatever need to show as desired.
       if (case != 4) {
         add M.identifier to meter menu with "font" howToDisplay(case)
       }
     }
     // Now check each group
-    for each group G {
+    groups = Group.getAll(conn)
+    for each groups G {
       // Get the case involved
-      integer case = compatibleChanges(currentUnits, G, "group", currentDefaultGraphicUnit)
+      integer case = compatibleChanges(currentUnits, G, DataType.group, currentDefaultGraphicUnit)
       // If case 4 then won't display. Otherwise you the correct "font" or whatever need to show as desired.
       if (case != 4) {
         add G.name to group menu with "font" howToDisplay(case)
@@ -1134,7 +1118,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     }
 
     // Returns the state (see groupCase function) for meter or group provided by id and
-    // otherUnits where type is either DataTypeMeter or DataType.Group
+    // otherUnits where type is either DataType.Meter or DataType.Group
     function integer compatibleChanges(Set otherUnits, integer id, DataType type, integer defaultGraphicUnit) {
       // Determine the compatible units for meter or group represented by id
       Set newUnits = compatibleUnits(id, type)
@@ -1169,7 +1153,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
       } else if (lostUnits.size = currentUnits.size) {
         // No compatible units left.
         return 4
-      } else if (defaultGraphicUnit is not no unit (-99) or lostUnits contains defaultGraphicUnit) {
+      } else if (defaultGraphicUnit != -99 (no unit) and lostUnits contains defaultGraphicUnit) {
         return 22
       } else {
         // If the default graphic unit is no unit then you can add any meter/group so check above covers this.
@@ -1203,14 +1187,14 @@ If this group is contained in another group (recursively) then either possibilit
 
 This check is made before the selected meter/group is changed but after the checks within the group (has gid as its id in pseudocode below). The pseudocode for the second set of choices is:
 
-    // Determine if the change in compatible units of one group are okay and if the admin needs to be warned.
+    // Determine if the change in compatible units of one group are okay with another group. Warn admin if changes.
     // All admin messages are grouped together and a popup is used where the admin can copy the items since the
     // number of messages could be long.
     // It may be possible to avoid some of this work if done while the meter/group menu changes are being done
     // but this has not been checked out.
     // Get the unit for the meter/group that is going to change, e.g. selected, and get its compatible units
     // depending on if meter or group.
-    Set currentGroupUnits = compatibleUnits(gid, "group")
+    Set currentGroupUnits = compatibleUnits(gid, DataType.group)
     // This will hold the overall message for the admin alert
     msg = ""
     // Tells if the change should be cancelled
@@ -1219,16 +1203,16 @@ This check is made before the selected meter/group is changed but after the chec
     // The returned groups will not change while this group is being edited.
     for each group G containing gid {
       // Get the case for group G if current group is changed.
-      integer case = compatibleChanges(currentUnits, G, "group", G.default_graphic_unit)
+      integer case = compatibleChanges(currentUnits, G, DataType.group, G.default_graphic_unit)
       if (case = 21) {
         msg += Group G.name will have its compatible units changed by the edit to this group\n
       } else if (case = 22) {
         msg += Group G.name will have its compatible units changed and its default graphic unit set to no unit by the edit to this group\n
-      } else {
-        // Case 4
+      } else if (case = 4) {
         msg += Group G.name would have no compatible units by the edit to this group so the edit is cancelled\n
         cancel = true
       }
+      // case 1 requires no message.
     }
     if (msg is not blank) {
       if (cancel) {
@@ -1255,9 +1239,11 @@ A feature that would be desirable is to list all the compatible units for a grou
 
 ### new-admin-unit-page
 
-OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) except unit_index that is not show and a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot change id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
+OED needs to allow an admin to see all units as a table. There would be a column for each [column in the database](#database-changes-for-units) except unit_index that is not shown. There is a row for each unit. This will be very similar to the meter and map admin pages. The admin cannot change id and unit_index nor can they change a type_of_unit from prefix. Changing displayable if the type_of_unit is meter will have no impact so maybe disable.
 
-OED allows admins to add a new unit. An "add unit" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a unit. The id and unit_index will not be set by the admin but filled in by OED later. A "save" button would put the changes into the database. If a unit is added then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). The default values are:
+There should be a button to delete any unit. There needs to be a check if the unit shows up as either the source or destination for any conversion. If so, admin is told and delete is rejected. It is also rejected if any meter uses this unit (which should effectively include groups and default graphic units.)
+
+OED allows admins to add a new unit. An "add unit" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a unit. The id and unit_index will not be set by the admin but filled in by OED later. A "save" button would put the changes into the database. The default values are:
 
 - suffix is an empty string ("")
 - displayable is all
@@ -1275,31 +1261,33 @@ The column for sec_in_rate should take any integer value that is > 0. If possibl
 
 If another way such as clicks for these four choices and an area to enter a value (similar to bar lengths but that has a slider) then that is okay too.
 
-The admin should be clearly told that the identifier of a unit should be the quantity associated with the unit. For a unit of unit_represent_type of quantity that makes sense. For flow it might be less obvious. For example, a rate of liter/hour has an identifier of liter. Note the name could be liter/hour. The same is true for raw but that seems more intuitive.
+The admin should be clearly told in the help documentation that the identifier of a unit should be the quantity associated with the unit. For a unit of unit_represent_type of quantity that makes sense. For flow it might be less obvious. For example, a rate of liter/hour has an identifier of liter. Note the name could be liter/hour. The same is true for raw but that seems more intuitive.
+
+If a unit is changed (really only applies if type_of_unit, suffix and/or displayable is changed) by edit, creation or deletion then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). 
 
 ### new-admin-conversion-page
 
-OED needs to allow an admin to see all unit conversions as a table. There would be a column for each [column in the database](#database-changes-for-units) and a row for each conversion. As usual, ids are converted to the name. This will be very similar to the meter and map admin pages. All values but the id can be changed by the admin. The destination_id cannot have type_of_unit of meter. The default values are:
+OED needs to allow an admin to see all unit conversions as a table. There would be a column for each [column in the database](#database-changes-for-units) and a row for each conversion. As usual, ids are converted to the name. This will be very similar to the meter and map admin pages. All values but the id can be changed by the admin. The destination_id cannot have type_of_unit of meter. Also, the source cannot be the same as the destination. The default values are:
 
 - bidirectional is false
 - slope = 1
 - intercept = 0
 
-OED allow admins to add a new conversions. An "add conversion" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a conversion. If bidirectional is chosen, make sure the other direction of destination to source is not in the conversion table; if it does then report to admin and don't allow the change. A "save" button would put the changes into the database. If a conversion slope, intercept or bidirectional is changed (by edit or created) then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). While optimizations could be made, for the first shot just redoing the array from scratch seems best.
+There should also be a button to delete any conversion/row.
+
+OED allow admins to add a new conversions. An "add conversion" button would be available on this page that would then reveal the needed input items. This could be very similar to editing a conversion. If bidirectional is chosen, make sure the other direction of destination to source is not in the conversion table; if it does then report to admin and don't allow the change. A "save" button would put the changes into the database. If a conversion slope, intercept or bidirectional is changed (by edit, created or deleted) then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). While optimizations could be made, for the first shot just redoing the array from scratch seems best.
 
 Note we need to be sure that whenever the source_unit or destination_unit is modified then they are not the same for any row but this should be checked by the database.
 
 ### csv-upload-page
 
-Both upload tabs (readings and meters) need to have a dropdown menu with all allowed units and "use meter value" (default selected when menu first displayed). It will have the following impact:
-
-- If uploading readings, this value is only normally set if the option to create a new meter is being used. In this case it defines the unit of the new meter created (or error if invalid). If not creating a new meter then it causes an error if it does not match the value on the meter.
+The readings tab/page needs to have a dropdown menu with all allowed units and "use meter value" (default selected when menu first displayed). This value is only normally set if the option to create a new meter is being used. In this case it defines the unit of the new meter created (or error if invalid). If not creating a new meter then it causes an error if it does not match the value on the meter.
 
 Note that equivalent parameters need to be created for a URL request to upload a CSV. It acts the same as above. Open to ideas but maybe:
 
 - unit=value for the unit value. It will match by the name of the unit displayed on the unit page. The default value if the parameter is not given is "use meter value".
 
-The CSV upload for meters needs to be updated so it can take the new meter values. If not default graphic value is given then it is set to the meter unit. Note this can fail if the value is not consistent with the meter unit. In this case the default graphic type becomes the meter unit and a warning message is sent back.
+The CSV upload for meters needs to be updated so it can take the new meter values. If no default graphic value is given then it is set to the meter unit. Note this can fail if the value is not consistent with the meter unit. In this case the default graphic type becomes the meter unit and a warning message is sent back.
 
 ### export
 
@@ -1309,7 +1297,7 @@ When reading data is exported, it needs to contain the unit associated with it. 
 
 ### chartlink
 
-The chart link that appears on each graphic page needs to be enhanced to include the unit of graphic display.
+The chart link that appears on each graphic page needs to be enhanced to include the unit of graphic display and the flow unit if appropriate.
 
 ### multiple-edits
 
@@ -1319,13 +1307,7 @@ OED has never protected against two different admin pages simultaneously changin
 
 ### autocreated-meters
 
-MAMAC and Obvius meters can be automatically created. The code needs to be updated so the unit associated with the meter can be added as part of creating the meter. Note it will be rejected if there is not appropriate unit.
-
-### graphs
-
-The y-axis label on all graphics need to show the unit and not kW or kWh. Mostly that will be the unit identifier associated with the graphic unit.
-
-## other-database-considerations
+MAMAC and Obvius meters can be automatically created. The code needs to be updated so the unit associated with the meter can be added as part of creating the meter. Note if there is no appropriate unit then it would be nice to create it but we could choose to reject the request.
 
 ### unit-display
 
@@ -1333,15 +1315,16 @@ Currently OED uses kW on line graphics and kWh on bar and compare, and kWh/day o
 
 At this point OED needs to support three types of units for readings:
 
-1. Quantity that represent something physical and can be consumed. In OED these are energy (kWh, BTU, ...), volume, mass, etc. Note a number of other units used fall into this including CO2 as mass, money, gasoline (volume), etc. This is how the code and DB code gets readings and that will continue to work for units other than kWh that currently done. This has unit_represent in the units table in the database of quantity.
+1. Quantity that represent something physical and can be consumed. In OED these are energy (kWh, BTU, ...), volume, mass, etc. Note a number of other units used fall into this including CO2 as mass, money, gasoline (volume), etc. This is how the current code and DB code gets readings and that will continue to work for units other than kWh that currently done. This has unit_represent in the units table in the database of quantity.
 2. Rates that are typically quantity/time. In OED these are power (watt, ...), gallons/min, etc. OED needs to change how it gets readings for this to work (see below). This has unit_represent in the units table in the database of flow. The admin help page needs to tell them to make the identifier be the quantity with the rate unit. For example, liter/min has the identifier of liter.
 3. Quantities that are not consumable and do not have a rate of usage associated with them. The only one at this time is temperature. Unlike the other two, it does not make sense to sum these to get a total quantity. For example, summing temperatures (except for finding the average) does not really make sense. Thus, these can only be shown on a line graph where the unit is the original quantity but often averaged. Thus, the y-axis label is the unit identifier. It will get the line value in the same way as rates. This has unit_represent in the units table in the database of raw.
 
 The first two cases (quantity and rate) are labeled the same way (case three was discussed above):
 
-- For a line graphic, the y-axis label will be "<graphic unit identifier>/<graphic rate value>". For example the quantity of liter asked to graph at a rate of minute would have a y-axis label of liter/minute. A rate using liter/day would still be labeled the same as its identifier should be the same and the software will convert the rate to liter/minute. Note that kWh will be labeled kWh/hour rather than kW. This is not usual and we could make a special case for this if we want. Not sure if others have this same idea but none known at this time.
-- For a bar or compare graphic, the y-axis label will be  "<graphic unit identifier>" as these are quantities.
-- For the map graphic, it will replace the kWh with the "<graphic unit identifier>". Thus, a liter unit might have "liter/day", "liter/week", etc. based on the user choice for length of time for each circle on the map graphic page. As such it looks similar to the line case.
+- For a line graphic, the y-axis label will be "&lt;graphic unit identifier&gt;/&lt;graphic rate value&gt;". For example, the quantity of liter asked to graph at a rate of minute would have a y-axis label of liter/minute. A meter rate using liter/day but requested at a time period of min would still be labeled the same because its identifier should be the same way and the software will convert the rate to liter/minute. Note that kWh will be labeled kWh/hour rather than kW. This is not usual and we could make a special case for this if we want. Not sure if other dashboard have this same idea but none known at this time.
+- For a bar or compare graphic, the y-axis label will be  "&lt;graphic unit identifier&gt;" as these are quantities.
+- For the map graphic, it will replace the kWh with the "&lt;graphic unit identifier&gt;". Thus, a liter unit might have "liter/day", "liter/week", etc. based on the user choice for length of time for each circle on the map graphic page. As such it looks similar to the line case.
+## other-database-considerations
 
 ### how-oed-should-calculate-readings-displayed-in-line-graphics
 
@@ -1375,7 +1358,7 @@ The units of each reading for electricity is watts which is power. Note watts ar
 
 If you work out the units you get Quantity/hour. This means the reading is multiplied by the second term before being returned. Note if quantities have sec_in_rate set to 3600 then this conversion has no effect as desired.
 
-Finally, let's consider case 3 of something like temperature. In this case you want to graph to average value. If you look at the formula for rates, it is just calculating the average over the time frame. That is why it starts with readings with a rate (such as J/sec) and finishes with a rate (such as J/sec). Thus, this case can use the same formula as case two.
+Finally, let's consider case 3 of something like temperature. In this case you want to graph the average value. If you look at the formula for rates, it is just calculating the average over the time frame. That is why it starts with readings with a rate (such as J/sec) and finishes with a rate (such as J/sec). Thus, this case can use the same formula as case two. The sec_in_rates should be 3600 so no rate conversion is made.
 
 See [unit table changes](#database_changes_for_units) for other database changes.
 
@@ -1391,15 +1374,17 @@ Maps and comparison graphics need to be analyzed to see if they properly use the
 
 ### meter-graphic-values
 
-The database function discussed above also has logic for determining the time frame for each point based on the total date ranges to be graphed. Thus, the x-axis values are part of this function and do not change based on the unit being graphed. The y-axis values depend on the unit being graphed. For meters this is a single unit calculation that transforms the meter from the meter's unit to the display unit chosen by the user. The known transformation could be passed as a new parameter to the database function and the transformation could be applied in the select statement. In general, one value would be needed per meter. An alternative would be to do the transformation after the data is gotten from the database. Note that this also allows the y-axis values to be recalculated without going to the database when the graphic unit is changed. At this time, all these calculating will be done on the server. Thus, the data requested by the client and the information returned by the server will be virtually the same as it already is but the client needs to tell the server the desired graphic unit.
+The database function discussed above also has logic for determining the time frame for each point based on the total date ranges to be graphed. Thus, the x-axis values are part of this function and do not change based on the unit being graphed. The y-axis values depend on the unit being graphed. To minimize changes and make it fast, the database will do this calculation. A table equivalent to the C<sub>ik</sub> array will be stored and used by the database to do the conversion. A new value needs to be sent from the client to server when requesting readings that is the graphic unit. This value will then be passed on to the database function. Note this means that every time the graphic unit is changed to something new the readings are gotten from the database (unless already in Redux state).
+
+The Redux state for readings now needs to include a category for the graphic unit.
 
 ### group-graphic-values
 
-Since groups have multiple underlying meters, in general, OED needs to apply different unit transformations to each meter in the group. To do this within the database would mean providing all unit transformations for every underlying meter. The practicality of doing this so the database function can easily choose the needed transformation for each meter is not known. A more complex way would be to separate the underlying meters into groups where each group has meters with the same unit. Then the transformation is the same within each group so they could easily be done together within the database. The returned sum from each unit group would then be summed together to get the final y-axis graphic value. Since the y-axis graphic points are the sum of the transformed values for each meter it is not possible to take y-axis values from one unit and transform them into y-axis value in another unit unless all the unit group y-axis values are saved. No matter what is selected, the server will be doing this work and the end result is similar to meters in that the server/client interaction will not change much.
+Since groups have multiple underlying meters, in general, OED needs to apply different unit transformations to each meter in the group. The database functions will determine the underlying meters and then use the meter function (described above) to get the readings in the desired graphic unit. As such, they work similarly to how they do it now. As with meters, the desired graphic unit will be passed to the server and database functions. Also as with meters, the Redux state needs to include the graphic unit category.
 
 ## implementation-plan
 
-The implementation of the resource generalization many independent pieces of varying importance. The following graphic (hopefully) shows the main dependencies in this effort. A group of tasks are indicated by the rectangular boxes. An arrow from a rectangle to another indicates it must be completed in some way before the other item. The different type/color arrows indicate different types of dependencies as the legend describes. Tasks higher in the figure either need to be done to get other tasks done and/or are of higher priority. The link for an item is into a section of this document. The plan is to use this graphic to understand the items in the [resource generalization project board](https://github.com/orgs/OpenEnergyDashboard/projects/1/views/1) which tries to have tasks to do sooner higher on the list. The image is shown next where the [PDF](implementingDependencies.pdf) includes the links.
+The implementation of the resource generalization has many independent pieces of varying importance. The following graphic (hopefully) shows the main dependencies in this effort. A group of tasks are indicated by the rectangular boxes. An arrow from a rectangle to another indicates it must be completed in some way before the other item. The different type/color arrows indicate different types of dependencies as the legend describes. Tasks higher in the figure either need to be done to get other tasks done and/or are of higher priority. The link for an item is into a section of this document. The plan is to use this graphic to understand the items in the [resource generalization project board](https://github.com/orgs/OpenEnergyDashboard/projects/1/views/1) which tries to have tasks to do sooner higher on the list. The image is shown next where the [PDF](implementingDependencies.pdf) includes the links.
 
 ![graphic of interdependencies of tasks](implementingDependencies.png "image of sample conversions")
 
@@ -1454,11 +1439,13 @@ The following list has most of the tasks in the graphic. It sometimes has a more
 
 ### JavaScript-npm-packages
 
-Right now we are planning to use a JS package. They are being reviewed and which one we will use is an urgent question.
+Right now we are planning to use a JS package. The final decision was to use ngraph since it is supported and has lots of features.
 
-Once a package is determined, we need to see how to create the graph to be sure what we store in unit and conversion tables is all that is needed. We also need to figure out what algorithm(s) within the graph package will be used to create the needed paths to create C<sub>ik</sub>.
+We need to see how to create the graph to be sure what we store in unit and conversion tables is all that is needed. We also need to figure out what algorithm(s) within the graph package will be used to create the needed paths to create C<sub>ik</sub>. Finally, how the graph labels relate to the unit and conversion table must be determined. The pseudocode needs to be updated once we have functions to do the graph operations and relationships to the database values.
 
-This is a very incomplete list that was created to show it could be done:
+ngraph appears to be able to create a graphical representation of a graph. In the future we should see what it looks like and if we should allow admins (and maybe any user) to see it.
+
+This is a very incomplete list that was created to show it could be used:
 
 - [Graphlib](https://github.com/dagrejs/graphlib/wiki/API-Reference) is interesting but no longer maintained.
 - [ngraph](https://github.com/anvaka/ngraph) seems okay and still has developers
@@ -1487,7 +1474,7 @@ This is a first shot. There will be more tests to run and think about.
 3. Create sample data based on the current test data that represents different units. This can probably be the same data but labeled for different units. Another useful set of values would be step functions as is used in some of the website graphs. The value can be  chosen to be the desired daily value * # days the reading spans so the daily average comes out to the desired value. If this is an easy value (such as an integer) then the final value after transformation is easy. Either way, this means getting meters and readings changed. Try to have 2 meters for each unique type in the examples from step 1. Load this data into the database as done with the test data. The code/script should be placed in repo for others to use. Ultimately when CSV upload is modified it can be done that way.
 4. Create interesting groups based on the meters. See the examples for ideas. See devDocs/website/websiteSetup.sh and websiteData.sql for how it creates meters/groups.
 5. The new test data can be used in the following tests:
-    - Check unitsCompatibleWithMeters. Try called functions if there are issues. The example have some cases that should be checked. Write up description of test cases as they can be used for checking if menus work correctly.
+    - Check unitsCompatibleWithMeters. Try called functions if there are issues. The examples have some cases that should be checked. Write up description of test cases as they can be used for checking if menus work correctly.
 6. Test all the new menus by trying cases and write up what tested. This includes both the graphing ones and the ones for admin groups, etc.
 7. Test the graphing of all types when ready.
 8. We need to have rate data and examples to test. It will be similar to the examples in the text but the units are different and disjoint in the graph. Also test that rate and quantity units don't mix improperly.
