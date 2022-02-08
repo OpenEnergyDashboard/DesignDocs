@@ -238,7 +238,7 @@ We note that parts of this example will not be how OED ultimately works. You wil
       // Loop over all meters
       for each meter M in meters {
         // Get row in P_ik associated with this meter
-        integer m = Unit.getUnitId(M, conn) // or in Redux state
+        integer m = Unit.getUnitIndex(M, conn) // or in Redux state
         // Set of compatible units with this meter.
         Set meterUnits = unitsCompatibleWithUnit(M.unit_id)
         // meterUnits how has all compatible units.
@@ -789,9 +789,8 @@ The admin can make the default graphic unit be any unit that is compatible with 
   - floating point intercept
   - string note that holds comments by the admin or OED inserted
 - meters table needs the following new column:
-  - unit_id that is foreign key to id in units table. We need to be sure that the type_of_unit for the supplied unit_id is meter. This is the unit that the meter receives data in and is the one pointed to by the meter in the graph.
+  - unit_id that is foreign key to id in units table. We need to be sure that the type_of_unit for the supplied unit_id is meter. This is the unit that the meter receives data in and is the one pointed to by the meter in the graph. Note this can be null so a meter with unknown unit (such as from automatic creation) can be added without losing readings.
   - integer default_graphic_unit not NULL that is foreign key to id in units table. Note, unlike a group, this must have a unit that is real.
-  - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
 - groups table needs new column:
   - integer default_graphic_unit that is foreign key to id in units table and null if no unit.
   - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
@@ -829,7 +828,7 @@ Unit is a new model. Functions needed:
 - getByID(integer id, conn): for given unit id return the associated unit object
 - getByName(string name, conn): for given unit name return the associated unit object. Return special value if does not exist.
 - getByUnitIndexMeter(integer unitIndex, conn): given a unit_index of a Unit.type.meter, return the associated unit id.
-- getByUnitIndexUnit(integer unitIndex, conn): given a unit_index of a Unit.type.unit, return the associated unit id. Must return special value if conversion does not exist - need to decide.
+- getByUnitIndexUnit(integer unitIndex, conn): given a unit_index of a Unit.type.unit, return the associated unit id.
 - getSuffix(conn): return all units where suffix != ''
 - unitObject.update(conn): updates all other values for the id where all values are provided by the unitObject
 
@@ -837,14 +836,14 @@ Unit is a new model. Functions needed:
 
 Conversion is a new model.
 
-- getBySourceDestination(integer source, integer destination, conn): returns the conversion object associated with given source and destination.
+- getBySourceDestination(integer source, integer destination, conn): returns the conversion object associated with given source and destination. Returns null if the conversion does not exist.
 - conversionObject.update(conn): updates all other values for the source and destination where all values are provided by the conversionObject
 - delete(integer source, integer destination, conn): removes this conversion from the database
 
 ### meter
 
 Meter exists but needs to be changed for new columns.
-getUnitId(id, conn): for the meter id provided, return the unit_id meaning the row/column index in C<sub>ik</sub>/P<sub>ik</sub>. To do this the unit_id for the desired meter is used to reference the units table and the entry's unit_index is returned.
+getUnitIndex(id, conn): for the meter id provided, return the unit_id meaning the row/column index in C<sub>ik</sub>/P<sub>ik</sub>. To do this the unit_id for the desired meter is used to reference the units table and the entry's unit_index is returned.
 
 ### group
 
