@@ -346,23 +346,23 @@ The [example](#examples) used so far will now be simplified so less information 
 
 For this image, the units table for this example is shown next. id is set by the database and some values are arbitrary to show different cases. The note field is not shown.
 
-| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  primary  |
-| :---: | :----------------: | :-------------------: | :------------: | :----------: | :------: | :-----------: | :-------: |
-|   1   | Electric_utility   |                       |     meter      |              |          |      none     |     F     |
-|   2   | Natural_Gas_BTU    |                       |     meter      |              |          |      none     |     F     |
-|   3   | kWh                | kWh                   |     unit       |              |          |      all      |     T     |
-|   4   | MJ                 | MegaJoules            |     unit       |              |          |      admin    |     F     |
-|   5   | BTU                | BTU                   |     unit       |              |          |      all      |     T     |
-|   6   | M3_gas             | cubic meters of gas   |     unit       |              |          |      all      |     F     |
-|   7   | 100 W bulb         | 100 W bulb for 10 hrs |     unit       |              |          |      all      |     F     |
-|   8   | Natural_Gas_M3     |                       |     meter      |              |          |      none     |     F     |
-|   11  | Natural_Gas_dollar |                       |     meter      |              |          |      none     |     F     |
-|   9   | US_dollar          | US $                  |     unit       |              |          |      all      |     T     |
-|   10  | Euro               | €                     |     unit       |              |          |      all      |     T     |
-|   12  | kg CO2             | kg CO2                |     unit       |              | CO2      |      all      |     F     |
-|   13  | Trash              |                       |     meter      |              |          |      none     |     F     |
-|   14  | kg                 | kg                    |     unit       |              |          |      all      |     F     |
-|   15  | Metric_ton         | Metric ton            |     unit       |              |          |      all      |     F     |
+| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  alwaysDisplay  |
+| :---: | :----------------: | :-------------------: | :------------: | :----------: | :------: | :-----------: | :-------------: |
+|   1   | Electric_utility   |                       |     meter      |              |          |      none     |        F        |
+|   2   | Natural_Gas_BTU    |                       |     meter      |              |          |      none     |        F        |
+|   3   | kWh                | kWh                   |     unit       |              |          |      all      |        T        |
+|   4   | MJ                 | MegaJoules            |     unit       |              |          |      admin    |        F        |
+|   5   | BTU                | BTU                   |     unit       |              |          |      all      |        T        |
+|   6   | M3_gas             | cubic meters of gas   |     unit       |              |          |      all      |        F        |
+|   7   | 100 W bulb         | 100 W bulb for 10 hrs |     unit       |              |          |      all      |        F        |
+|   8   | Natural_Gas_M3     |                       |     meter      |              |          |      none     |        F        |
+|   11  | Natural_Gas_dollar |                       |     meter      |              |          |      none     |        F        |
+|   9   | US_dollar          | US $                  |     unit       |              |          |      all      |        T        |
+|   10  | Euro               | €                     |     unit       |              |          |      all      |        T        |
+|   12  | kg CO2             | kg CO2                |     unit       |              | CO2      |      all      |        F        |
+|   13  | Trash              |                       |     meter      |              |          |      none     |        F        |
+|   14  | kg                 | kg                    |     unit       |              |          |      all      |        F        |
+|   15  | Metric_ton         | Metric ton            |     unit       |              |          |      all      |        F        |
 
 Note that if type_of_unit is meter then displayable must be none. A few comments on the values:
 
@@ -551,25 +551,25 @@ The values for unit_index in the unit table need to be set. It would be nice if 
 
 The units table after the complete process is shown next. It assumes the unit_index is set by going down the rows in order but another order could happen and would be fine. The displayable of MJ was made admin just to show that.
 
-| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  primary  |
+| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  alwaysDisplay  |
 | :---: | :----------------: | :-------------------: | :------------: | :----------: | :------: | :-----------: | :-------: |
-|   1   | Electric_utility   |                       |     meter      |       0      |          |      none     |     F     |
-|   2   | Natural_Gas_BTU    |                       |     meter      |       1      |          |      none     |     F     |
-|   3   | kWh                | kWh                   |     unit       |       0      |          |      all      |     T     |
-|   4   | MJ                 | MegaJoules            |     unit       |       1      |          |      admin    |     F     |
-|   5   | BTU                | BTU                   |     unit       |       2      |          |      all      |     T     |
-|   6   | M3_gas             | cubic meters of gas   |     unit       |       3      |          |      all      |     F     |
-|   7   | 100 W bulb         | 100 W bulb for 10 hrs |     unit       |       4      |          |      all      |     F     |
-|   8   | Natural_Gas_M3     |                       |     meter      |       2      |          |      none     |     F     |
-|   11  | Natural_Gas_dollar |                       |     meter      |       3      |          |      none     |     F     |
-|   9   | US_dollar          | US $                  |     unit       |       5      |          |      all      |     T     |
-|   10  | Euro               | €                     |     unit       |       6      |          |      all      |     T     |
-|   12  | kg CO2             | kg CO2                |     unit       |              | CO2      |      none     |     F     |
-|   13  | Trash              |                       |     meter      |       4      |          |      none     |     F     |
-|   14  | kg                 | kg                    |     unit       |       7      |          |      all      |     F     |
-|   15  | Metric_ton         | Metric ton            |     unit       |       8      |          |      all      |     F     |
-|   16  | kg of CO2          | kg of CO2             |     unit       |       9      |          |      all      |     F     |
-|   17  | Metric_ton of CO2  | Metric_ton of CO2     |     unit       |      10      |          |      all      |     F     |
+|   1   | Electric_utility   |                       |     meter      |       0      |          |      none     |        F        |
+|   2   | Natural_Gas_BTU    |                       |     meter      |       1      |          |      none     |        F        |
+|   3   | kWh                | kWh                   |     unit       |       0      |          |      all      |        T        |
+|   4   | MJ                 | MegaJoules            |     unit       |       1      |          |      admin    |        F        |
+|   5   | BTU                | BTU                   |     unit       |       2      |          |      all      |        T        |
+|   6   | M3_gas             | cubic meters of gas   |     unit       |       3      |          |      all      |        F        |
+|   7   | 100 W bulb         | 100 W bulb for 10 hrs |     unit       |       4      |          |      all      |        F        |
+|   8   | Natural_Gas_M3     |                       |     meter      |       2      |          |      none     |        F        |
+|   11  | Natural_Gas_dollar |                       |     meter      |       3      |          |      none     |        F        |
+|   9   | US_dollar          | US $                  |     unit       |       5      |          |      all      |        T        |
+|   10  | Euro               | €                     |     unit       |       6      |          |      all      |        T        |
+|   12  | kg CO2             | kg CO2                |     unit       |              | CO2      |      none     |        F        |
+|   13  | Trash              |                       |     meter      |       4      |          |      none     |        F        |
+|   14  | kg                 | kg                    |     unit       |       7      |          |      all      |        F        |
+|   15  | Metric_ton         | Metric ton            |     unit       |       8      |          |      all      |        F        |
+|   16  | kg of CO2          | kg of CO2             |     unit       |       9      |          |      all      |        F        |
+|   17  | Metric_ton of CO2  | Metric_ton of CO2     |     unit       |      10      |          |      all      |        F        |
 
 The conversions added by this process are (the rest remain the same):
 
@@ -607,11 +607,11 @@ All of these ideas are in the following pseudocode:
         Unit neededSuffixUnit = Unit.getByName(unitName, conn)
         if (neededSuffixUnit does not exist) {
           // Add this as a new units where: name and identifier is unitName, type_of_unit is Unit.type.suffix,
-          // displayable and primary is the same as destination.
+          // displayable and alwaysDisplay is the same as destination.
           // Note a type_of_unit of suffix is different than a unit with a suffix string.
-          // Note the admin can later change identifier, displayable and primary to something else
+          // Note the admin can later change identifier, displayable and alwaysDisplay to something else
           // since OED does not recreate the unit if it exists so those changes will stay.
-          Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <primary of destination>, "suffix unit created by OED")
+          Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <alwaysDisplay of destination>, "suffix unit created by OED")
           newUnit.insert(conn)
           // We now need to add the conversion for the new unit.
           // Create the conversion from the prefix unit to this new unit.
@@ -755,7 +755,7 @@ When does C<sub>ik</sub> and P<sub>ik</sub> need to be calculated? They need to 
 
 It is not expected that these will happen very often. Users will delay seeing the unit changes until the reload OED into the web browser. For a regular user that is not an issue. An admin needs to reload OED in the web browser to see the changes for graphing.
 
-The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units) and note that P<sub>ik</sub> is sufficient to do all calcualtion needed on the client side. (As a historical note, there were discussions of where to do the unit transformation early on: client or server. Given the current design it made most sense to do it on the server. While that could change, it isn't likely.) As noted in the pseudocode above, a version of C<sub>ik</sub> is needed in the database and changes must be stored each time it changes. OED can easily calculate P<sub>ik</sub> on startup.
+The plan is to calculate C<sub>ik</sub> and P<sub>ik</sub> on the server. This should be faster as it is closer to the database. The server should cache these arrays for future use. Each time a new client starts up/refreshes, we will now send P<sub>ik</sub> to store in the Redux state. The rationale is discussed in [the structure of the arrays](#supporting-structure-for-units) and note that P<sub>ik</sub> is sufficient to do all calculation needed on the client side. (As a historical note, there were discussions of where to do the unit transformation early on: client or server. Given the current design it made most sense to do it on the server. While that could change, it isn't likely.) As noted in the pseudocode above, a version of C<sub>ik</sub> is needed in the database and changes must be stored each time it changes. OED can easily calculate P<sub>ik</sub> on startup.
 
 ## default_graphic_unit
 
@@ -778,7 +778,7 @@ The admin can make the default graphic unit be any unit that is compatible with 
   - integer unit_index is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
   - displayable_type displayable (whether it can be seen/used for graphing by anyone, admin or nobody)
-  - boolean primary (If this unit is always displayed. If not, then it is secondary and the user needs to ask to see. To be used in a future enhancement.)
+  - boolean always_display (If this unit is always displayed. If not, then it is only displayed if the user asks to see. To be used in a future enhancement.)
   - string note that holds comments by the admin or OED inserted
   - note type_of_unit and unit_index are unique in combination
 - new table named conversions. The primary key is the source_units_id, destination_units_id. Need to make sure the source_units_id is not the same as destination_id in any row to avoid self conversion. (See src/server/sql/group/create_groups_tables.sql for using "CHECK (source_units_id != destination_units_id parent_id") It has columns:
@@ -1246,7 +1246,7 @@ OED allows admins to add a new unit. An "add unit" button would be available on 
 
 - suffix is an empty string ("")
 - displayable is all
-- primary is true
+- alwaysDisplay is true
 - sec_in_rate is 3600
 
 The column for sec_in_rate should take any integer value that is > 0. If possible, it would be nice if it could also take the following words that are converted to an integer:
@@ -1510,7 +1510,7 @@ There are likely similar types of testing done in other parts of OED that can se
 
 We may want to think about these in case they impact how we plan to do the current work.
 
-- On all graphics pages and the unit page, add a click box "secondary" that is unchecked by default. It will go next to the units dropdown menu on graphics pages and somewhere appropriate on the unit page. The units displayed will be limited to primary units. If the "secondary" box is checked then all displayable units are listed except for admins on the unit page. The idea is that there may be a lot of units so limiting to the common ones by default is valuable. Sites not wanting this can make all units primary. We are adding the values to the database and admin page to plan for this.
+- On all graphics pages and the unit page, add a click box "display all" that is unchecked by default. It will go next to the units dropdown menu on graphics pages and somewhere appropriate on the unit page. The units displayed will be limited to alwaysDisplay units. If the "display all" box is checked then all displayable units are listed except for admins on the unit page. The idea is that there may be a lot of units so limiting to the common ones by default is valuable. Sites not wanting this can make all units alwaysDisplay of true. We are adding the values to the database and admin page to plan for this.
 - Allowing CSV input/export of units and conversions.
 - Groups have an area field. We probably want one for meters too. Also, the unit is unclear and should probably be connected to the new units.
 - Should OED allow multiple y-axis units so could graph more than one type of unit at a time?  
