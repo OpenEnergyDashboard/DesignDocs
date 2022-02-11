@@ -96,6 +96,55 @@ update meters_immediate_children set child_id = 10019 where child_id in (select 
 update meters_immediate_children set parent_id = 10019 where parent_id in (select id from meters where name in ('eter 8'));
 update readings set meter_id = 10019 where meter_id in (select id from meters where name in ('eter 8'));
 delete from meters where id in (select id from meters where name in ('eter 8'));
+--Dorm A Residents
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10020, concat('D', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('D', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('orm A Residents'));
+update baseline set meter_id = 10020 where meter_id in (select id from meters where name in ('orm A Residents'));
+update groups_immediate_meters set meter_id = 10020 where meter_id in (select id from meters where name in ('orm A Residents'));
+update meters_immediate_children set child_id = 10020 where child_id in (select id from meters where name in ('orm A Residents'));
+update meters_immediate_children set parent_id = 10020 where parent_id in (select id from meters where name in ('orm A Residents'));
+update readings set meter_id = 10020 where meter_id in (select id from meters where name in ('orm A Residents'));
+delete from meters where id in (select id from meters where name in ('orm A Residents'));
+--Dorm A Other
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10021, concat('D', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('D', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('orm A Other'));
+update baseline set meter_id = 10021 where meter_id in (select id from meters where name in ('orm A Other'));
+update groups_immediate_meters set meter_id = 10021 where meter_id in (select id from meters where name in ('orm A Other'));
+update meters_immediate_children set child_id = 10021 where child_id in (select id from meters where name in ('orm A Other'));
+update meters_immediate_children set parent_id = 10021 where parent_id in (select id from meters where name in ('orm A Other'));
+update readings set meter_id = 10021 where meter_id in (select id from meters where name in ('orm A Other'));
+delete from meters where id in (select id from meters where name in ('orm A Other'));
+--Dorm B Residents
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10022, concat('D', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('D', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('orm B Residents'));
+update baseline set meter_id = 10022 where meter_id in (select id from meters where name in ('orm B Residents'));
+update groups_immediate_meters set meter_id = 10022 where meter_id in (select id from meters where name in ('orm B Residents'));
+update meters_immediate_children set child_id = 10022 where child_id in (select id from meters where name in ('orm B Residents'));
+update meters_immediate_children set parent_id = 10022 where parent_id in (select id from meters where name in ('orm B Residents'));
+update readings set meter_id = 10022 where meter_id in (select id from meters where name in ('orm B Residents'));
+delete from meters where id in (select id from meters where name in ('orm B Residents'));
+--Dorm B Other
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10023, concat('D', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('D', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('orm B Other'));
+update baseline set meter_id = 10023 where meter_id in (select id from meters where name in ('orm B Other'));
+update groups_immediate_meters set meter_id = 10023 where meter_id in (select id from meters where name in ('orm B Other'));
+update meters_immediate_children set child_id = 10023 where child_id in (select id from meters where name in ('orm B Other'));
+update meters_immediate_children set parent_id = 10023 where parent_id in (select id from meters where name in ('orm B Other'));
+update readings set meter_id = 10023 where meter_id in (select id from meters where name in ('orm B Other'));
+delete from meters where id in (select id from meters where name in ('orm B Other'));
+-- These are normally just used to create other meter data that shifted for compare but fix them up too.
+-- Meter 3
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10024, concat('M', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('M', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('eter 3'));
+update baseline set meter_id = 10024 where meter_id in (select id from meters where name in ('eter 3'));
+update groups_immediate_meters set meter_id = 10024 where meter_id in (select id from meters where name in ('eter 3'));
+update meters_immediate_children set child_id = 10024 where child_id in (select id from meters where name in ('eter 3'));
+update meters_immediate_children set parent_id = 10024 where parent_id in (select id from meters where name in ('eter 3'));
+update readings set meter_id = 10024 where meter_id in (select id from meters where name in ('eter 3'));
+delete from meters where id in (select id from meters where name in ('eter 3'));
+-- Meter 4
+insert into meters (id, name, ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, identifier, note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp) (select 10025, concat('M', name), ipaddress, enabled, displayable, meter_type, default_timezone_meter, gps, concat('M', identifier), note, area, cumulative, cumulative_reset, cumulative_reset_start, cumulative_reset_end, reading_gap, reading_variation, reading_duplication, time_sort , end_only_time, reading, start_timestamp, end_timestamp from meters where name in ('eter 4'));
+update baseline set meter_id = 10025 where meter_id in (select id from meters where name in ('eter 4'));
+update groups_immediate_meters set meter_id = 10025 where meter_id in (select id from meters where name in ('eter 4'));
+update meters_immediate_children set child_id = 10025 where child_id in (select id from meters where name in ('eter 4'));
+update meters_immediate_children set parent_id = 10025 where parent_id in (select id from meters where name in ('eter 4'));
+update readings set meter_id = 10025 where meter_id in (select id from meters where name in ('eter 4'));
+delete from meters where id in (select id from meters where name in ('eter 4'));
 
 -- The next step is to fix up the group ids in a similar way to the meters.
 -- Group 1 & 2
@@ -116,3 +165,15 @@ update groups_immediate_children set child_id = 10014 where child_id in (select 
 update groups_immediate_children set parent_id = 10014 where parent_id in (select id from groups where name in ('roup 1 & 2 & 7 & 8'));
 update groups_immediate_meters set group_id = 10014 where group_id in (select id from groups where name in ('roup 1 & 2 & 7 & 8'));
 delete from groups where id in (select id from groups where name in ('roup 1 & 2 & 7 & 8'));
+-- Dorm A
+insert into groups (id, name, displayable, gps, note, area) (select 10015, 'Dorm A', displayable, gps, note, area from groups where name in ('orm A'));
+update groups_immediate_children set child_id = 10015 where child_id in (select id from groups where name in ('orm A'));
+update groups_immediate_children set parent_id = 10015 where parent_id in (select id from groups where name in ('orm A'));
+update groups_immediate_meters set group_id = 10015 where group_id in (select id from groups where name in ('orm A'));
+delete from groups where id in (select id from groups where name in ('orm A'));
+-- Dorm B
+insert into groups (id, name, displayable, gps, note, area) (select 10016, 'Dorm B', displayable, gps, note, area from groups where name in ('orm B'));
+update groups_immediate_children set child_id = 10016 where child_id in (select id from groups where name in ('orm B'));
+update groups_immediate_children set parent_id = 10016 where parent_id in (select id from groups where name in ('orm B'));
+update groups_immediate_meters set group_id = 10016 where group_id in (select id from groups where name in ('orm B'));
+delete from groups where id in (select id from groups where name in ('orm B'));
