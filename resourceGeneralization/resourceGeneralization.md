@@ -237,10 +237,16 @@ We note that parts of this example will not be how OED ultimately works. You wil
       Set compatibleUnits
       // Loop over all meters
       for each meter M in meters {
-        // Get row in P_ik associated with this meter
-        integer m = Unit.getUnitIndex(M, conn) // or in Redux state
-        // Set of compatible units with this meter.
-        Set meterUnits = unitsCompatibleWithUnit(M.unit_id)
+        Set meterUnits = {}
+        // If meter had no unit then nothing compatible with it.
+        // This probably won't happen but be safe. Note once you have one of these then
+        // the final result must be empty set but don't check specially since don't expect.
+        if (meter.unitId != -99) {
+          // Get row in P_ik associated with this meter
+          integer m = Unit.getUnitIndex(M, conn) // or in Redux state
+          // Set of compatible units with this meter.
+          meterUnits = unitsCompatibleWithUnit(M.unit_id)
+        }
         // meterUnits how has all compatible units.
         if (first) {
           // First meter so all its units are acceptable at this point
@@ -257,18 +263,22 @@ We note that parts of this example will not be how OED ultimately works. You wil
 
     // Return a set of units ids that are compatible with this unit id.
     function Set unitsCompatibleWithUnit(integer unit) {
-      // Get the row index in of this unit
-      row = unit.unit_index
-      // The compatible units are all columns with true for p_ik where i = row.
       // unitSet starts as an empty set
       Set unitSet = {}
-      // Loop over all columns of P_ik in row
-      for k = 0 to # columns in P_ik - 1 {
-        // true indicates they are compatible
-        if (P[row][k]) {
-          // unit at index k is compatible with meter unit so add to set.
-          // Convert index in Pik to unit id
-          unitSet += unitFromPRow(k)
+      // If unit was null in the database then -99. This means there is no unit
+      // so nothing is compatible with it. Skip processing and return empty set at end.
+      if (unit != -99) {
+        // Get the row index in of this unit
+        row = unit.unit_index
+        // The compatible units are all columns with true for p_ik where i = row.
+        // Loop over all columns of P_ik in row
+        for k = 0 to # columns in P_ik - 1 {
+          // true indicates they are compatible
+          if (P[row][k]) {
+            // unit at index k is compatible with meter unit so add to set.
+            // Convert index in Pik to unit id
+            unitSet += unitFromPRow(k)
+          }
         }
       }
       return unitSet
@@ -346,7 +356,7 @@ The [example](#examples) used so far will now be simplified so less information 
 
 For this image, the units table for this example is shown next. id is set by the database and some values are arbitrary to show different cases. The note field is not shown.
 
-| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  alwaysDisplay  |
+| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  preferredDisplay  |
 | :---: | :----------------: | :-------------------: | :------------: | :----------: | :------: | :-----------: | :-------------: |
 |   1   | Electric_utility   |                       |     meter      |              |          |      none     |        F        |
 |   2   | Natural_Gas_BTU    |                       |     meter      |              |          |      none     |        F        |
@@ -551,7 +561,7 @@ The values for unit_index in the unit table need to be set. It would be nice if 
 
 The units table after the complete process is shown next. It assumes the unit_index is set by going down the rows in order but another order could happen and would be fine. The displayable of MJ was made admin just to show that.
 
-| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  alwaysDisplay  |
+| id    |        name        |      identifier       |  type_of_unit  |  unit_index  |  suffix  |  displayable  |  preferredDisplay  |
 | :---: | :----------------: | :-------------------: | :------------: | :----------: | :------: | :-----------: | :-------: |
 |   1   | Electric_utility   |                       |     meter      |       0      |          |      none     |        F        |
 |   2   | Natural_Gas_BTU    |                       |     meter      |       1      |          |      none     |        F        |
@@ -607,11 +617,11 @@ All of these ideas are in the following pseudocode:
         Unit neededSuffixUnit = Unit.getByName(unitName, conn)
         if (neededSuffixUnit does not exist) {
           // Add this as a new units where: name and identifier is unitName, type_of_unit is Unit.type.suffix,
-          // displayable and alwaysDisplay is the same as destination.
+          // displayable and preferredDisplay is the same as destination.
           // Note a type_of_unit of suffix is different than a unit with a suffix string.
-          // Note the admin can later change identifier, displayable and alwaysDisplay to something else
+          // Note the admin can later change identifier, displayable and preferredDisplay to something else
           // since OED does not recreate the unit if it exists so those changes will stay.
-          Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <alwaysDisplay of destination>, "suffix unit created by OED")
+          Unit newUnit = new Unit(undefined, unitName, unitName, unused, <sec_of_unit of source>, Unit.type.suffix, -1, "", <displayable of destination>, <preferredDisplay of destination>, "suffix unit created by OED")
           newUnit.insert(conn)
           // We now need to add the conversion for the new unit.
           // Create the conversion from the prefix unit to this new unit.
@@ -778,7 +788,7 @@ The admin can make the default graphic unit be any unit that is compatible with 
   - integer unit_index is the row/column index in C<sub>ik</sub>/P<sub>ik</sub> for this unit. If the type_of_unit is a meter then it is the row index and if the type_of_meter is a unit then it is the column index.
   - string suffix default '' ([see for description](#vertices))
   - displayable_type displayable (whether it can be seen/used for graphing by anyone, admin or nobody)
-  - boolean always_display (If this unit is always displayed. If not, then it is only displayed if the user asks to see. To be used in a future enhancement.)
+  - boolean preferred_display (If this unit is displayed by default. If not, then it is only displayed if the user asks to see. To be used in a future enhancement.)
   - string note that holds comments by the admin or OED inserted
   - note type_of_unit and unit_index are unique in combination
 - new table named conversions. The primary key is the source_units_id, destination_units_id. Need to make sure the source_units_id is not the same as destination_id in any row to avoid self conversion. (See src/server/sql/group/create_groups_tables.sql for using "CHECK (source_units_id != destination_units_id parent_id") It has columns:
@@ -790,7 +800,7 @@ The admin can make the default graphic unit be any unit that is compatible with 
   - string note that holds comments by the admin or OED inserted
 - meters table needs the following new column:
   - unit_id that is foreign key to id in units table. We need to be sure that the type_of_unit for the supplied unit_id is meter. This is the unit that the meter receives data in and is the one pointed to by the meter in the graph. Note this can be null so a meter with unknown unit (such as from automatic creation) can be added without losing readings.
-  - integer default_graphic_unit not NULL that is foreign key to id in units table. Note, unlike a group, this must have a unit that is real.
+  - integer default_graphic_unit that is foreign key to id in units table. null means it has none.
 - groups table needs new column:
   - integer default_graphic_unit that is foreign key to id in units table and null if no unit.
   - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
@@ -842,8 +852,17 @@ Conversion is a new model.
 
 ### meter
 
-Meter exists but needs to be changed for new columns.
-getUnitIndex(id, conn): for the meter id provided, return the unit_id meaning the row/column index in C<sub>ik</sub>/P<sub>ik</sub>. To do this the unit_id for the desired meter is used to reference the units table and the entry's unit_index is returned.
+- Meter exists but needs to be changed for new columns.
+- getUnitIndex(id, conn): for the meter id provided, return the unit_id meaning the row/column index in C<sub>ik</sub>/P<sub>ik</sub>. To do this the unit_id for the desired meter is used to reference the units table and the entry's unit_index is returned. The meter should not have a unit of null when this is called or the result may be a value without meaning.
+- getUnitNotNull(conn): return all meters where unit is not null.
+- insert and update should enforce the following rules:
+
+  - if unit_id is null then default_graphic_unit is null and displayable is false.
+  - if unit_id not null then if default_graphic_unit is null then it becomes the unit_id.
+
+If any value is changed then it is logged. Also note that if either unit_id or default_graphic_unit is -99 then null is used to insert into database.
+
+- getRow will convert null for either unit_id or default_graphic_unit to -99.
 
 ### group
 
@@ -961,8 +980,8 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
     // Get all the meters that this user can see.
     Meters visibleMeters
     if (admin) {
-      // Can see all groups
-      visibleMeters = Meter.getAll(conn)
+      // Can see all meters that don't have null for unit
+      visibleMeters = Meter.getUnitNotNull(conn)
     } else {
       // regular user or not logged in so only displayable ones
       visibleMeters = Meter.getDisplayable(conn)
@@ -974,7 +993,7 @@ As [discussed above](#new-units-menu), both the meters and groups dropdown menus
     if (graphicUnit = -99/no unit) {
       // If there is no graphic unit then no meters/groups are displayed and you can display all meters.
       //  Also, if not admin, then meters not displayable are not viewable.
-      // admin can see all.
+      // admin can see all except if unit is null (not included in ones gotten above). 
       compatibleMeters = visibleMeters
     } else {
       // If displayable is false then only admin.
@@ -1024,7 +1043,9 @@ The algorithm for groups is similar where doing displayable for groups partly ad
       for each visibleGroups G {
         // Get the meters associated with this group.
         Set meters = metersInGroup(G)
-        // Get compatible units for all these meters
+        // Get compatible units for all these meters.
+        // While a group should not have a meter without a unit (e.g., null) this will return an empty
+        // set so nothing is compatible with it.
         Set units = unitsCompatibleWithMeters(meters)
         if (graphicUnit is in units) {
           // The compatible units of the group have graphic unit so can graph
@@ -1044,7 +1065,7 @@ If an admin is viewing the page then the new items in the [database schema](#dat
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithUnit(unit_id)
 
-The menu will contain the identifier associated with each id in allowedDefaultGraphicUnit.
+The menu will contain the identifier associated with each id in allowedDefaultGraphicUnit. Note in the unusual case where unit_id is null/-99 then the menu may be empty.
 
 Whenever either value is changed then it needs to be stored into the meter table in the database. In addition, these actions need to happen whenever the unit_id is changed:
 
@@ -1077,7 +1098,7 @@ The compatible units of a group has impacts as discussed below. Note this only a
 1. A meter/group is removed from the group. This either leaves the compatible units of the group the same or adds compatible units. This case does not cause any of the problems below so the checks are not needed.
 2. A meter/group is added to the group. This could reduce the compatible units of the group and can lead to the issues described below. Thus, the following checks only need to be done on adding a meter/group.
 
-The dropdown menus of meters and groups will change so they are listed as follows (note all units are compatible with the default graphic unit if it is "no unit" (-99).):
+The dropdown menus of meters and groups will change so they are listed as follows (note all non-null units are compatible with the default graphic unit if it is "no unit" (-99).):
 
 1. Adding this meter/group will not change the compatible units for the group. This also means the default graphic unit is not required to change. In this case the meter/group is shown in normal font and can be selected. In this case the meter/group will not alter the attributes of this group.
 2. Adding this meter/group will change some of the compatible units of the group but there is still at least one compatible unit for this group. This is the same as saying that this meter/group's compatible units overlap the group's current compatible units but some do not overlap. This means that the possible graphic unit choices is reduced but the group would still be graphable. This has two subgroups:
@@ -1095,8 +1116,8 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     Set currentUnits = unitsCompatibleWithMeters(metersInGroup(gid))
     // Current group's default graphic unit (via Redux)
     integer currentDefaultGraphicUnit = gid.default_graphic_unit
-    // Now check each meter
-    meters = Meter.getAll(conn)
+    // Now check each meter that has a unit (not null)
+    meters = Meter.getUnitNotNull(conn)
     for each meters M {
       // Get the case involved
       integer case = compatibleChanges(currentUnits, M, DataType.meter, currentDefaultGraphicUnit)
@@ -1143,8 +1164,8 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
     // newUnits should be the units that will be added
     function integer groupCase(Set currentUnits, Set newUnits, integer defaultGraphicUnit) {
       // The compatible units of a set of meters or groups is the intersection of the compatible units for each.
-      // Thus, we can get the units that will go away with:
-      Set lostUnits = currentUnits ∩ newUnits
+      // Thus, we can get the units that will go away with (- is set subtraction):
+      Set lostUnits = currentUnits - (currentUnits ∩ newUnits)
       // Do the possible cases.
       if (lostUnits.size = 0) {
         // 1. no change
@@ -1246,7 +1267,7 @@ OED allows admins to add a new unit. An "add unit" button would be available on 
 
 - suffix is an empty string ("")
 - displayable is all
-- alwaysDisplay is true
+- preferredDisplay is true
 - sec_in_rate is 3600
 
 The column for sec_in_rate should take any integer value that is > 0. If possible, it would be nice if it could also take the following words that are converted to an integer:
@@ -1510,7 +1531,7 @@ There are likely similar types of testing done in other parts of OED that can se
 
 We may want to think about these in case they impact how we plan to do the current work.
 
-- On all graphics pages and the unit page, add a click box "display all" that is unchecked by default. It will go next to the units dropdown menu on graphics pages and somewhere appropriate on the unit page. The units displayed will be limited to alwaysDisplay units. If the "display all" box is checked then all displayable units are listed except for admins on the unit page. The idea is that there may be a lot of units so limiting to the common ones by default is valuable. Sites not wanting this can make all units alwaysDisplay of true. We are adding the values to the database and admin page to plan for this.
+- On all graphics pages and the unit page, add a click box "display all" that is unchecked by default. It will go next to the units dropdown menu on graphics pages and somewhere appropriate on the unit page. The units displayed will be limited to preferredDisplay units. If the "display all" box is checked then all displayable units are listed except for admins on the unit page. The idea is that there may be a lot of units so limiting to the common ones by default is valuable. Sites not wanting this can make all units preferredDisplay of true. We are adding the values to the database and admin page to plan for this.
 - Allowing CSV input/export of units and conversions.
 - Groups have an area field. We probably want one for meters too. Also, the unit is unclear and should probably be connected to the new units.
 - Should OED allow multiple y-axis units so could graph more than one type of unit at a time?  
