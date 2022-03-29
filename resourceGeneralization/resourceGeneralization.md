@@ -505,7 +505,7 @@ The final step is to put the conversions for each conversion along the path toge
         // Get the source and destination for edge E in terms of unit ids.
         // This means relating them to the entries in the units table
         // in the database. These are the values used in the conversions table.
-        // TODO Figure out how to encode this info in the graph and get it back.
+        // Figure out how to encode this info in the graph and get it back - done in actual code.
         edgeSourceId = the unit id for the source of E
         edgeDestinationId = the unit id for the destination of E
         {newSlope, newIntercept, newSuffix} = conversionValues(edgeSourceId, edgeDestinationId)
@@ -557,7 +557,7 @@ When this is done, the updated graph looks like:
 
 ![image of simplified sample conversions](sampleConversionsSimplifiedProcessed.png "image of simplified sample conversions")
 
-The values for unit_index in the unit table need to be set. It would be nice if any current values could be left the same but there is a requirement that they go from 0 to the # of rows/columns - 1 and changes, esp. deletions from the table mean that renumbering is best. First, any entry that has displayable of none cannot be seen or used so it does not need to be in Cij. Thus, these are not given a unit_index. The units with type_of_unit of meter form the rows and type_of_unit of unit form the columns where each start at 0.
+The values for unit_index in the unit table need to be set. It would be nice if any current values could be left the same but there is a requirement that they go from 0 to the # of rows/columns - 1 and changes, esp. deletions from the table mean that renumbering is best. First, any entry that has displayable of none cannot be seen or used so it does not need to be in Cik. Thus, these are not given a unit_index. The units with type_of_unit of meter form the rows and type_of_unit of unit form the columns where each start at 0.
 
 The units table after the complete process is shown next. It assumes the unit_index is set by going down the rows in order but another order could happen and would be fine. The displayable of MJ was made admin just to show that.
 
@@ -819,7 +819,7 @@ The admin can make the default graphic unit be any unit that is compatible with 
   - integer default_graphic_unit that is foreign key to id in units table and null if no unit.
   - string note that holds comments by the admin or OED inserted (not directly related to units changes but consistent)
 - see [database readings changes](#how-oed-should-calculate-readings-displayed-in-line-graphics) for other database changes.
-- src/server/sql/reading/create_compressed_reading_views.sql has compressed_group_readings_2 & compressed_bar_group_readings_2 that appear to first get all the meter ids and then sum the result of querying over all the meters to get the readings to display. Since we need, in general, to now apply different unit transformations to the different meters in a group these will need to be changed. (Let's create new functions with better names and leave these for now during the conversion.)
+- src/server/sql/reading/create_compressed_reading_views.sql has compressed_group_readings_2 & compressed_bar_group_readings_2 that appear to first get all the meter ids and then sum the result of querying over all the meters to get the readings to display. Since we need, in general, to now apply different unit transformations to the different meters in a group these will need to be changed. (Let's create new functions with better names and leave these for now during the conversion.) See [readings database implementation](#readings-database-implementation) for details.
 - Need to load all the predefined OED units and conversions in those tables. The note for each should be set to indicate it was preloaded by OED. The examples have some and other ideas are:
   - Energy units: kWh, BTU, therm (100,000 BTUs), cubic feet of natural gas, cubic meters of natural gas, gallon of gasoline (?) [see list of conversions](conversionFactors.xlsx)
   - Volume (not equivalent to power): liters, gallons, cubic feet, Mcf (thousands of cubic feet), Ccc (hundreds of cubic feet)
@@ -1382,11 +1382,11 @@ The formula could be simpler if readings did not cross the time frame boundaries
 
 where the units are (sec/hour * kWh) / sec = kW as expected. Note you could just work in hours if you wanted to avoid the conversion of 3600. This formula sums the energy and divides by the time it took to use that energy to get the average rate/power over the time interval of the point. It is probably easier to see what it means from this formula than the one that deals with special cases.
 
-Now let's discuss the second case of rates. The formula for case one can be simplified in this case since you already have the rate and that is part of what the numerator is calculating. Thus, the formula becomes:
+Now let's discuss the second case of rates (flow type in database). The formula for case one can be simplified in this case since you already have the rate and that is part of what the numerator is calculating. Thus, the formula becomes:
 
 <img src="https://render.githubusercontent.com/render/math?math=\frac{\sum_\rm{all\ readings\ in\ desired\ time\ frame\ of\ each\ point} \left(\rm{readings\ value}\times \rm{number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_\rm{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left(\rm{time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}">
 
-The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{J/sec} \times \rm{sec}}\rm{sec} = \rm{J/sec}"> which is a rate just as in the first case. Note this will work for any rate unit but OED needs to know the rate unit (per hour, per minute, etc.) so it can properly label and calculate values. See [new-graphic-rate-menu](#new-graphic-rate-menu) for how this will be done. Note OED will store the values of rates in the original rate from the meter in the database. This means the raw data will be in meter units. When rates are sent to the client, they will always be converted to a quantity/hour. If the user wants to graph in a different rate unit then that conversion will be done on the client side. Thus, the only change is in what is returned for reading points for rates and not what is stored in the readings, daily_readings nor hourly_readings table from the formula above. Each unit for a meter will have a sec_in_rate that that gives how many seconds are in the unit as explained in [database-changes-for-units](#database-changes-for-units). The value stored in each database table for rates is Quantity / unit time. The value returned by the table is converted to the standard rate unit of 1 hour by:
+The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{J/sec} \times \rm{sec}}\rm{sec} = \rm{J/sec}"> which is a rate just as in the first case. Note this will work for any rate unit but OED needs to know the rate unit (per hour, per minute, etc.) so it can properly label and calculate values. See [new-graphic-rate-menu](#new-graphic-rate-menu) for how this will be done. Note OED will store the values of rates in the original rate from the meter in the database. This means the raw data will be in meter units. When rates are sent to the client, they will always be converted to a quantity/hour. If the user wants to graph in a different rate unit then that conversion will be done on the client side. Thus, the only change is in what is returned for reading points for rates and not what is stored in the readings. The daily_readings and hourly_readings views/tables need to be modified for these types of meters so it uses the formula above. Each unit for a meter will have a sec_in_rate that that gives how many seconds are in the unit as explained in [database-changes-for-units](#database-changes-for-units). The value stored in each database table for rates is Quantity / unit time. The value returned by the table is converted to the standard rate unit of 1 hour by:
 
 <img src="https://render.githubusercontent.com/render/math?math=\rm{Quantity/unit\ time} \times \frac{3600\ (sec/hour)}{sec\_in\_rate\ (sec/unit\ time)}">
 
@@ -1395,7 +1395,6 @@ If you work out the units you get Quantity/hour. This means the reading is multi
 Finally, let's consider case 3 of something like temperature. In this case you want to graph the average value. If you look at the formula for rates, it is just calculating the average over the time frame. That is why it starts with readings with a rate (such as J/sec) and finishes with a rate (such as J/sec). Thus, this case can use the same formula as case two. The sec_in_rates should be 3600 so no rate conversion is made.
 
 See [unit table changes](#database_changes_for_units) for other database changes.
-
 ### bar-compare-map-graphic-values
 
 Units of raw type cannot be graphed this way.
@@ -1415,6 +1414,218 @@ The Redux state for readings now needs to include a category for the graphic uni
 ### group-graphic-values
 
 Since groups have multiple underlying meters, in general, OED needs to apply different unit transformations to each meter in the group. The database functions will determine the underlying meters and then use the meter function (described above) to get the readings in the desired graphic unit. As such, they work similarly to how they do it now. As with meters, the desired graphic unit will be passed to the server and database functions. Also as with meters, the Redux state needs to include the graphic unit category.
+
+### readings-database-implementation
+
+#### cik_database
+
+- `src/server/sql/cik/` will have the following new files:
+  - `create_cik_table.sql` creates the cik table in the DB with these attributes:
+    - row_index INTEGER
+    - column_index INTEGER
+    - slope FLOAT
+    - intercept FLOAT
+    - primary key of (row_index, column_index)
+    - `src/server/sql/cik/delete_all_conversions.sql` removes all entries in the cik table.
+  - `src/server/sql/cik/insert_new_conversion.sql`
+    - Takes the parameters rowIndex, columnIndex, slope, intercept to create a new row in cik table.
+  - `src/server/sql/cik/get_conversion.sql` takes parameters rowIndex, columnIndex and returns this row/column in the table.
+- `src/server/models/Cik.js`
+  - This is a new file that contains the model for accessing the Cik values from the DB.
+  - `createTable(conn)` creates the table by calling `src/server/sql/cik/create_cik_table.sql`
+  - `insert(cik[], conn)` stores provided cik values into DB. Each i,j that has an actual conversion (not NaN for slope and intercept) is placed put into the table by calling `src/server/sql/cik/insert_new_conversion.sql` with arguments rowIndex = i, columnIndex = j, slope, intercept. Note the values in cik table must all be removed and then the values in cik added (so only the new ones exist in table) by first calling `src/server/sql/cik/delete_all_conversions.sql`. To avoid requests being made while this is happening, this should be done as a transaction.
+    - TODO For transaction for cik reload, see src/server/migrations/migrateDatabase.js and src/server/models/Reading.js for examples.
+  - Do we need a constructor, get, etc. since not clear will be used?
+
+#### line_readings
+
+This was a rough sketch that is now completed in the code. Going groups was easy since they rely on the meter reading SQL.
+
+- `src/server/models/Reading.js`
+  - getNewCompressedReadings will add a parameter that is the graphic unit id where the readings are returned in this unit. It will also be renamed. Thus, the signature will become  
+`getLineMetersReadings(meterIDs, unit, fromTimestamp = null, toTimestamp = null, conn)`
+- `src/server/routes/compressedReadings.js` needs to have the same parameter that was added to `compressedLineReadings` and call `getLineMetersReadings` instead of `getNewCompressedReadings`.
+- The following files call `compressedLineReadings` and need to be updated for the new names and parameters. They may not be called/used by items that require changes but that should be checked.
+  - `src/client/app/actions/lineReadings.ts`
+  - `src/client/app/types/redux/lineReadings.ts`
+  - `src/client/app/utils/api/CompressedReadingsApi.ts`
+- `src/server/sql/reading/create_compressed_reading_views.sql` will copy and modify `compressed_readings_2` function to become  
+CREATE OR REPLACE FUNCTION line_meters_quantity_readings(meter_ids INTEGER[], graphic_unit_id INTEGER, start_stamp TIMESTAMP, end_stamp TIMESTAMP, min_day_points INTEGER, min_hour_points INTEGER)  
+where it will return the readings for the requested unit_id by doing the following:
+  - Each `meter_ids` will use the `meters` table to get the `unit_id`. This `unit_id` will be used as the `id` in the `units` table to get the `unit_index` that is now called `meter_row`.
+  - The `graphic_unit_id` will be used in the `units` table to get the `unit_index` that is now called `unit_column`.
+  - The `slope` and `intercept` is gotten from the `cik` table using `src/server/sql/cik/get_entry.sql` with arguments `meter_row`, `unit_column`.
+  - The `reading_rate` returned is the current reading_rate * slope + intercept.
+- Update testing
+  - `src/server/test/db/newCompressedReadingsTests.js` should copied and renamed `lineReadingsTests.js` and updated for the new parameters and expected return values.
+  - `src/server/test/routes/compressedReadingsRouteTests.js` should be copied and renamed `lineReadingsRouteTests.js` and updated for the new functions.
+  - See code for actual implementation.
+
+#### Some details on how the code changes were tested
+
+- To set up testing do:
+  - Wipe DB and redo install if changed DB setup.
+    - In shell on web container when running:  
+npm run insertSpecialUnitsAndConversions
+
+#### A number of meters, readings, units and conversions are used for testing this work. This may also help with automated testing.
+
+#### This is the CSV data for readings where each was added via the CSV webpage and the meter was created as part of the process. If you set the Length Variation to 80000 then you won't get warnings about this.
+
+- This is a quantity meter (kWh) with name Q1 that goes 1-5 for each day but the days are split into a couple of hour segments to test that.
+
+<pre>
+24,2021-06-01 00:00:00,2021-06-02 00:00:00
+9.6,2021-06-02 00:00:00,2021-06-02 06:00:00
+38.4,2021-06-02 06:00:00,2021-06-03 00:00:00
+12,2021-06-03 00:00:00,2021-06-03 08:00:00
+60,2021-06-03 08:00:00,2021-06-04 00:00:00
+40,2021-06-04 00:00:00,2021-06-04 12:00:00
+56,2021-06-04 12:00:00,2021-06-05 00:00:00
+72,2021-06-05 00:00:00,2021-06-05 18:00:00
+48,2021-06-05 18:00:00,2021-06-06 00:00:00
+</pre>
+
+- This is a quantity meter (kWh) with name Q2 that goes 2-10 for each day as whole days.
+
+<pre>
+48,2021-06-01 00:00:00,2021-06-02 00:00:00
+96,2021-06-02 00:00:00,2021-06-03 00:00:00
+144,2021-06-03 00:00:00,2021-06-04 00:00:00
+192,2021-06-04 00:00:00,2021-06-05 00:00:00
+240,2021-06-05 00:00:00,2021-06-06 00:00:00
+</pre
+
+- This is a rate meter (BTU) with name F1 that 1-5 where the days are split into a couple of hour segments
+
+<pre>
+1,2021-06-01 00:00:00,2021-06-02 00:00:00
+1.6,2021-06-02 00:00:00,2021-06-02 06:00:00
+2.133333,2021-06-02 06:00:00,2021-06-03 00:00:00
+1.5,2021-06-03 00:00:00,2021-06-03 08:00:00
+3.75,2021-06-03 08:00:00,2021-06-04 00:00:00
+3.33333,2021-06-04 00:00:00,2021-06-04 12:00:00
+4.66666,2021-06-04 12:00:00,2021-06-05 00:00:00
+4,2021-06-05 00:00:00,2021-06-05 18:00:00
+8,2021-06-05 18:00:00,2021-06-06 00:00:00
+</pre>
+
+- This is a rate meter (kW) with name F2 that is similar to the one above but the days are split by fractions of an hour to test that
+
+<pre>
+1,2021-06-01 00:00:00,2021-06-02 00:00:00
+1.6,2021-06-02 00:00:00,2021-06-02 06:00:00
+2.14105,2021-06-02 06:00:00,2021-06-02 23:47:00
+1.5,2021-06-02 23:47:00,2021-06-03 08:00:00
+3.75,2021-06-03 08:00:00,2021-06-04 00:29:00
+3.28111,2021-06-04 00:29:00,2021-06-04 12:00:00
+4.7,2021-06-04 12:00:00,2021-06-05 00:00:00
+4,2021-06-05 00:00:00,2021-06-05 18:00:00
+8,2021-06-05 18:00:00,2021-06-06 00:00:00
+</pre>
+
+- The is a raw meter with name T1 that is temperature in Fahrenheit that has the Celsius values of 100, 50, 75, 25, 100 and is split in some hours for the days.
+
+<pre>
+212,2021-06-01 00:00:00,2021-06-02 00:00:00
+111,2021-06-02 00:00:00,2021-06-02 07:00:00
+126.5294,2021-06-02 07:00:00,2021-06-03 00:00:00
+167,2021-06-03 00:00:00,2021-06-04 00:00:00
+77,2021-06-04 00:00:00,2021-06-05 00:00:00
+212,2021-06-05 00:00:00,2021-06-06 00:00:00
+</pre>
+
+#### A number of units and conversions need to be set up to deal with these meters:
+
+insert into units values (100, 'kW Meter', 'kW Meter', 'flow', 360, 'meter', null, '', 'none', false, 'flow meter');  
+insert into units values (101, 'kW', 'kW', 'flow', 0, 'unit', null, '', 'all', false, 'flow unit');  
+insert into conversions values (100, 101, false, 2, 0, 'kW meter to kW but 2x');  
+insert into units values (200, 'Temperature Meter', 'Temperature Meter', 'raw', 3600, 'meter', null, '', 'none', false, 'temperature meter');  
+insert into conversions values (200, (select id from units where name = 'Fahrenheit'), false, 1, 0, 'F temp meter to F temp unit');  
+update units set unit_represent='raw' where name in ('Fahrenheit', 'Celsius');
+
+#### And the meters need to be updated for their unit type.
+
+update meters set unit_id=(select id from units where name = 'Electric_utility') where name = 'Q1';  
+update meters set unit_id=(select id from units where name = 'kW Meter') where name = 'F1';  
+update meters set unit_id=(select id from units where name = 'Natural_Gas_BTU') where name = 'Q2';  
+update meters set unit_id=(select id from units where name = 'kW Meter') where name = 'F2';  
+update meters set unit_id=(select id from units where name = 'Temperature Meter') where name = 'T1';  
+
+#### Recreate the needed Cik DB structure. You need to do this whenever you change units/conversions. This also has the code to do Pik that you might want to test/use at some time
+
+node -e 'require("./src/server/services/graph/redoCik.js").redoCik()'  
+node -e 'require("./src/server/services/graph/redoCik.js").createPik()'  
+
+#### Need to populate the views with the new data
+
+REFRESH MATERIALIZED VIEW daily_readings_unit;
+REFRESH MATERIALIZED VIEW hourly_readings_unit;
+
+#### You need to get the meter ids for what follows.
+
+select id from meters where name = 'Q1'; -- Call this #1  
+select id from meters where name = 'Q2'; -- Call this #2  
+select id from meters where name = 'F1'; -- Call this #3  
+select id id from meters where name = 'F2'; -- Call this #4  
+select id from meters where name = 'T1'; -- Call this #5  
+
+- The following query gets readings for Q1, Q2 with raw/meter points. For Q1 you expect to see the same values as the CSV but divided by the number of hours each point represents so you get  
+
+<pre>
+1,2021-06-01 00:00:00,2021-06-02 00:00:00
+1.6,2021-06-02 00:00:00,2021-06-02 06:00:00
+2.1333,2021-06-02 06:00:00,2021-06-03 00:00:00
+1.5,2021-06-03 00:00:00,2021-06-03 08:00:00
+3.75,2021-06-03 08:00:00,2021-06-04 00:00:00
+3.3333,2021-06-04 00:00:00,2021-06-04 12:00:00
+4.6666,2021-06-04 12:00:00,2021-06-05 00:00:00
+4,2021-06-05 00:00:00,2021-06-05 18:00:00
+8,2021-06-05 18:00:00,2021-06-06 00:00:00
+</pre>
+
+For Q2 you are converting from BTU to kWh which has a conversion of 2.93e-4 so the overall conversion is 2.93e-4 / 24 = 1.2208e-5 so you get 5.86e-4, 1.17e-3, 1.76e-3, 2.34e-3, 2.93e-3 because the original values were 48, 96, .., 240. Note the value of 200 for number of points is arbitrary and just a large enough value to skip that category.  
+select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
+
+- Same as above but for daily points. For Q1 it is the original values averaged for each day per hour so 1, 2, 3, 4, 5 from 24/24, (9.6 + 38.4)/24, (12 + 60)/24, ... For Q2, it is the same as above since each point spanned exactly 1 day.  
+select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 1, 200);
+
+- Same as above but for hourly points. For Q1 it is the original values averaged for each day per hour where they span the time they originally had so the same as the raw but divided into those hours. Thus, 2021-06-01 00:00:00 to 2021-06-01 01:00:00 is 1 as are all hourly for that day when it becomes 1.6 for all hourly from 2021-06-02 00:00:00 to 2021-06-02 06:00:00. For Q2, it is the same as above since each point spanned exactly 1 day but each hour is shown.  
+select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 1);
+
+- Do the two flow meters where display at kW for raw/meter data. The conversion from the meter to kW is 2. The rate on the kW Meter is 360 sec in rate so to get back to unit/hr you need to multiply by 10. Overall this gives 2 x 10 = 20 as the conversion. Thus, the original values is the CSV * 20 is what you expect.  
+select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 200);
+
+- Same as above but for daily points. The average rate for the days is 1, 2, ..., 5. For example, 6/2 is (1.6 * 6 * 60 + 2.14105 * (18 * 60 - 13) + 1.5 * 13) / (24 * 60) = 2. With the overall conversion of 20 this gives 20, 40, .., 100.  
+select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 1, 200);
+
+- Same as above but for hourly points. The values are similar to above except most meter readings span the hour so it is the reading  * 20. A point that is different is 2021-06-02 23:00:00 to 2021-06-03 00:00:00 for F2 (#4) where the expected value is (2.14105 \* 47 + 1.5 \* 13) / 60 \* 20 = 40.0431.  
+select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 1);
+
+- Now do the temperature meter. It is the same idea as flow but the conversion is different. Here we are going from Fahrenheit to Celsius with conversion 0.555555 - 17.77777. The values for each day in Celsius are 100, 50, 75, 25, 100. The only except is 6/2 that are part of a day so you get 43.88888 and 52.5163. Note add #1 to show you won't get any extra values if have a meter that cannot convert to this unit (but it should never happen in the code).  
+select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 200);
+
+- Same but for daily points. Now get the averages for each day.  
+select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 1, 200);
+
+- Same but for hourly points. Now get the averages for each day for the appropriate hour.  
+select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 1);
+
+- Similar to quantity meter above but for group. First create group "G-Q1&2" that has Q1 and Q2 meters in it. Now get the raw readings. Expect it to be the sum of the ones above.  
+select id from groups where name = 'G-Q1&2'; -- Call this #8  
+select line_groups_readings_unit('{#8}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
+  - TODO If the two different meters in a group have different times then they are not being averaged. I suspect this existed before these changes and needs to be addressed.
+
+#### The following commands can be useful in doing the work:
+
+- Get a table giving the Cik conversions.  
+select  C.slope, C.intercept, U.name as row_meter, U.unit_index, U2.name as col_unit, U2.unit_index from cik as C, units as U, units as U2 where C.row_index = U.unit_index and U.type_of_unit = 'meter' and C.column_index = U2.unit_index and U2.type_of_unit in ('unit','suffix') order by C.row_index, C.column_index;
+- A nice command to show values is  
+raise notice 'string: %', variable_name;
+- Get rid of the view  
+DROP MATERIALIZED VIEW daily_readings_unit;
+- Get the readings in the view that are ordered
+select * from daily_readings_unit order by meter_id, time_interval;
 
 ## implementation-plan
 
@@ -1466,7 +1677,7 @@ The following list has most of the tasks in the graphic. It sometimes has a more
   - Create data and tests for the simplified examples in text (some automated and some for developers for coding tests)
   - automated input of example units and conversions (use models)
   - test conversions including temperature in [determining-conversions](#determining-conversions)
-  - test Cij/Pik creation in [determining-conversions](#determining-conversions)
+  - test Cik/Pik creation in [determining-conversions](#determining-conversions)
   - design and implement tests for each function/code in text
 
 ## possible-ways-to-store-unit-graph
