@@ -277,7 +277,7 @@ We note that parts of this example will not be how OED ultimately works. You wil
           if (P[row][k]) {
             // unit at index k is compatible with meter unit so add to set.
             // Convert index in Pik to unit id
-            unitSet += unitFromPRow(k)
+            unitSet += unitFromPColumn(k)
           }
         }
       }
@@ -1461,6 +1461,75 @@ where it will return the readings for the requested unit_id by doing the followi
   - `src/server/test/routes/compressedReadingsRouteTests.js` should be copied and renamed `lineReadingsRouteTests.js` and updated for the new functions.
   - See code for actual implementation.
 
+The changes made for including the graphicUnitID in React/Redux:
+
+- compressedReadingsApi -> readingsApi
+  - src/client/app/actions/barReadings.ts
+  - src/client/app/actions/lineReadings.ts
+  - src/client/app/actions/mapReadings.ts
+- CompressedLineReadings -> LineReadings
+  - src/client/app/types/compressed-readings.ts
+  - src/client/app/actions/lineReadings.ts
+  - src/client/app/types/redux/lineReadings.ts
+  - src/client/app/utils/api/ReadingsApi.ts
+- src/server/routes/compressedReadings.js -> src/server/routes/unitReadings.js
+  - validateLineReadingsQueryParams updated to add graphicUnitId
+  - compressedLineReadings -> meterLineReadings with add graphicUnitId parameter (and similar for compressedGroupLineReadings)
+    - Reading.getNewCompressedReadings -> Reading.getReadings
+  - createRouter() for /line/meters/ and /line/groups/
+    - added graphicUnitID as req
+    - compressedLineReadings -> meterLineReadings updated and same for group
+  - src/client/app/utils/api/ReadingsApi.ts
+    - all /api/compressedReadings -> /api/unitReadings
+  - src/server/app.js (and rename the router created)
+- src/client/app/utils/api/CompressedReadingsApi.ts -> src/client/app/utils/api/ReadingsApi.ts
+  - src/client/app/utils/api/index.ts
+- src/server/models/Reading.js
+  - getNewCompressedReadings -> getLineMeterReadings where add graphicUnitId parameter and variable names changed to align
+  - getNewCompressedGroupReadings -> getLineGroupReadings as previous
+- src/client/app/types/redux/state.ts.
+  - The overall state is declare here.
+  - It defines readings: {line: LineReadingsState ...}. This does not need to be changed but LineReadingState does. Note it has it as state.readings.line.
+  - It has graph: GraphState;. Need to update GraphState to include graphicUnitID.
+- src/client/app/types/redux/graph.ts
+  - add selectedUnit: number to GraphState
+    - src/client/app/reducers/graph.ts
+      - add in GraphState: selectedUnit: -99,
+- src/client/app/types/redux/lineReadings.ts
+  - All LineReadingsAction added unitID as item below meter/group ids.
+  - LineReadingsState adds [unitID: number] as last one so it becomes state.readings.line.byMeterID.meterID.timeInterval.unitID. Oh my! Do same for byGroupID.
+    - src/client/app/actions/lineReadings.ts
+      - add check for unitID as parameter and to see if need to shouldFetch.
+      - add unitID as parameter to request, fetch and receive for meter and group.
+      - add unitID to readingsApi.meterLineReadings dispatch.
+  - src/client/app/containers/ExportContainer.ts
+    - add unitID from state.graph.selectedUnit;
+    - byGroupID[timeInterval.toString()] -> byGroupID[timeInterval.toString()][unitID]
+  - src/client/app/reducers/lineReadings.ts
+    - add unitID from action;
+    - byMeterID[meterID][timeInterval] -> byMeterID[meterID][timeInterval][unitID] and group too.
+  - src/client/app/containers/LineChartContainer.ts
+    - add unitID from state.graph.selectedUnit;
+    - byGroupID[timeInterval.toString()] -> byGroupID[timeInterval.toString()][unitID]
+- src/client/app/utils/api/ReadingsApi.ts
+  - add unitID parameter to meterLineReadings and group
+  - in same functions, add to the /api so sent as argument
+- src/client/app/actions/graph.ts
+  - update fetchNeededLineReadings, fetchNeededReadingsForGraph to add parameter getState().graph.selectedUnit
+- src/client/app/containers/DashboardContainer.ts
+  - to mapStateToProps set the state.graph.selectedUnit to 1 for testing
+    - TODO Setting to a fixed value really won't work but okay for testing
+    - TODO needs to be set by unit menu choice and really should come from the Unit route.
+
+TODO
+
+- src/client/app/components/ChartDataSelectComponent.tsx probably will be updated as part of creating the unit menu to keep that in props. That will interact with src/client/app/containers/ChartDataSelectContainer.ts to do the necessary action. For example, mapDispatchToProps dispatches changeSelectedMeters/Groups. This goes to src/client/app/actions/graph.ts that updates the meters selected and dispatches to get the needed data. Also src/client/app/types/redux/graph.ts. These all need to know about graphicUnitID.
+- src/client/app/types/compressed-readings.ts
+  - CompressedLineReading, ... should we rename?
+  - We have compressed in a number of places
+- Do I want to standardize meterLine vs lineMeter (same with group) in all the names?
+- The test code is not updated for new names or unit
+
 #### Some details on how the code changes were tested
 
 - To set up testing do:
@@ -1614,7 +1683,10 @@ select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units wh
 - Similar to quantity meter above but for group. First create group "G-Q1&2" that has Q1 and Q2 meters in it. Now get the raw readings. Expect it to be the sum of the ones above.  
 select id from groups where name = 'G-Q1&2'; -- Call this #8  
 select line_groups_readings_unit('{#8}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
-  - TODO If the two different meters in a group have different times then they are not being averaged. I suspect this existed before these changes and needs to be addressed.
+  - TODO If the two different meters in a group have different times then they are not being averaged. I suspect this existed before these changes and needs to be addressed. Tried old code and get a similar issues:  
+select compressed_group_readings_2('{2}'::integer[], '-infinity', 'infinity', 200, 200);
+    - This is a somewhat fundamental question. If you are getting the raw data then the times will not align. How should OED deal with this?
+
 
 #### The following commands can be useful in doing the work:
 
