@@ -1654,39 +1654,38 @@ select id from meters where name = 'T1'; -- Call this #5
 </pre>
 
 For Q2 you are converting from BTU to kWh which has a conversion of 2.93e-4 so the overall conversion is 2.93e-4 / 24 = 1.2208e-5 so you get 5.86e-4, 1.17e-3, 1.76e-3, 2.34e-3, 2.93e-3 because the original values were 48, 96, .., 240. Note the value of 200 for number of points is arbitrary and just a large enough value to skip that category.  
-select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
+select meter_line_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
 
 - Same as above but for daily points. For Q1 it is the original values averaged for each day per hour so 1, 2, 3, 4, 5 from 24/24, (9.6 + 38.4)/24, (12 + 60)/24, ... For Q2, it is the same as above since each point spanned exactly 1 day.  
-select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 1, 200);
+select meter_line_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 1, 200);
 
 - Same as above but for hourly points. For Q1 it is the original values averaged for each day per hour where they span the time they originally had so the same as the raw but divided into those hours. Thus, 2021-06-01 00:00:00 to 2021-06-01 01:00:00 is 1 as are all hourly for that day when it becomes 1.6 for all hourly from 2021-06-02 00:00:00 to 2021-06-02 06:00:00. For Q2, it is the same as above since each point spanned exactly 1 day but each hour is shown.  
-select line_meters_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 1);
+select meter_line_readings_unit('{#1, #2}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 1);
 
 - Do the two flow meters where display at kW for raw/meter data. The conversion from the meter to kW is 2. The rate on the kW Meter is 360 sec in rate so to get back to unit/hr you need to multiply by 10. Overall this gives 2 x 10 = 20 as the conversion. Thus, the original values is the CSV * 20 is what you expect.  
-select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 200);
+select meter_line_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 200);
 
 - Same as above but for daily points. The average rate for the days is 1, 2, ..., 5. For example, 6/2 is (1.6 * 6 * 60 + 2.14105 * (18 * 60 - 13) + 1.5 * 13) / (24 * 60) = 2. With the overall conversion of 20 this gives 20, 40, .., 100.  
-select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 1, 200);
+select meter_line_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 1, 200);
 
 - Same as above but for hourly points. The values are similar to above except most meter readings span the hour so it is the reading  * 20. A point that is different is 2021-06-02 23:00:00 to 2021-06-03 00:00:00 for F2 (#4) where the expected value is (2.14105 \* 47 + 1.5 \* 13) / 60 \* 20 = 40.0431.  
-select line_meters_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 1);
+select meter_line_readings_unit('{#3, #4}'::integer[], (select id from units where name = 'kW'), '-infinity', 'infinity', 200, 1);
 
 - Now do the temperature meter. It is the same idea as flow but the conversion is different. Here we are going from Fahrenheit to Celsius with conversion 0.555555 - 17.77777. The values for each day in Celsius are 100, 50, 75, 25, 100. The only except is 6/2 that are part of a day so you get 43.88888 and 52.5163. Note add #1 to show you won't get any extra values if have a meter that cannot convert to this unit (but it should never happen in the code).  
-select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 200);
+select meter_line_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 200);
 
 - Same but for daily points. Now get the averages for each day.  
-select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 1, 200);
+select meter_line_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 1, 200);
 
 - Same but for hourly points. Now get the averages for each day for the appropriate hour.  
-select line_meters_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 1);
+select meter_line_readings_unit('{#5, #1}'::integer[], (select id from units where name = 'Celsius'), '-infinity', 'infinity', 200, 1);
 
 - Similar to quantity meter above but for group. First create group "G-Q1&2" that has Q1 and Q2 meters in it. Now get the raw readings. Expect it to be the sum of the ones above.  
 select id from groups where name = 'G-Q1&2'; -- Call this #8  
-select line_groups_readings_unit('{#8}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
+select group_line_readings_unit('{#8}'::integer[], (select id from units where name = 'kWh'), '-infinity', 'infinity', 200, 200);
   - TODO If the two different meters in a group have different times then they are not being averaged. I suspect this existed before these changes and needs to be addressed. Tried old code and get a similar issues:  
 select compressed_group_readings_2('{2}'::integer[], '-infinity', 'infinity', 200, 200);
     - This is a somewhat fundamental question. If you are getting the raw data then the times will not align. How should OED deal with this?
-
 
 #### The following commands can be useful in doing the work:
 
