@@ -1399,9 +1399,54 @@ See [unit table changes](#database_changes_for_units) for other database changes
 
 Units of raw type cannot be graphed this way.
 
-All quantity units are stored as per hour in the daily and hourly readings tables so they should all act the same as the current code. The raw readings are converted by compressed_readings_2 so they are also okay.
+#### Steps to make bar graphs unit aware
 
-Rate quantities return the value as rate/hour. However, the current code in src/server/sql/reading/create_compressed_reading_views.sql for compressed_barchart_readings_2 and compressed_barchart_group_readings_2 assume a rate/hour and this may not be the case rates. The conversion is the same as described in [how-oed-should-calculate-readings-displayed-in-line-graphics](#how-oed-should-calculate-readings-displayed-in-line-graphics).
+- src/server/sql/reading/create_reading_views.sql has compressed_barchart_readings_2 - NEED TO FIX UP SQL????
+  - rename to meter_bar_readings_unit - done
+  - The daily and hourly tables have the flow rate per hour. So, multiply by 24, sum the number of days needed and then convert that value to the desired unit. The biggest change was to group where it now uses the meter code to get the needed values as was done for line. If not, the joins are very hard to get right since each meter in a group has a different conversion factor so if group then each one shows up on own. Note raw group does not work with same issue as line. TODO fix so group works correctly in this case.
+  - used in src/server/models/Reading.js in getNewCompressedBarchartReadings
+    - rename to getMeterBarReadings & groups - done
+    - used in src/server/routes/unitReadings.js in compressedMeterBarReadings - done
+      - rename to meterBarReadings x 3 & group - done
+      - also used in two tests that ignore for now
+- Used in route /bar/meters/ in unitReadings and find /unitReadings/bar/meters in
+- src/client/app/utils/api/ReadingsApi.ts in meterBarReadings used in - done
+  - src/client/app/actions/barReadings.ts in many actions + group where reorder and add comments done
+  - src/client/app/actions/mapReadings.ts for maps that use bar - done
+    - src/client/app/actions/graph.ts to fix fetches - done
+  - src/client/app/reducers/barReadings.ts + group done
+  - src/client/app/types/redux/actions.ts but should be fine
+  - src/client/app/types/redux/barReadings.ts + group done
+    - made state be byMeter/GroupID[meterID][timeInterval][barDuration][unitID] - done
+  - src/server/test/routes/compressedReadingsRouteTests.js - skip for now
+- Search for state.readings.bar
+  - src/client/app/actions/barReadings.ts in shouldFetchMeterBarReadings - done
+  - src/client/app/containers/BarChartContainer.ts - done
+  - src/client/app/containers/DashboardContainer.ts but should be okay
+  - src/client/app/containers/ExportContainer.ts - done
+  - src/client/app/containers/MapChartContainer.ts - done
+
+- If meters and bar width of 1 day for quantity. Expect values to be 24, 48, ... 120 for Q1 and (48, 96, ... 240) * 2.93e-4 = 0.01406, 0.02813, 0.04219, 0.05626, 0.07032 for Q2.  
+select meter_bar_readings_unit('{1, 2}'::integer[], (select id from units where name = 'kWh'), 1, '-infinity', 'infinity');
+
+- Same but for 2 days. OED starts with the earliest time to make the bars so should get 2 days, then 2 days then 2 days but with only 1 day of readings. Thus, Q1 is 24 + 48 = 72, 72 + 96 = 168, 120 and Q2 is 0.04219, 0.09845, 0.07032.  
+select meter_bar_readings_unit('{1, 2}'::integer[], (select id from units where name = 'kWh'), 2, '-infinity', 'infinity');
+
+- If meters and bar width of 1 day for flow. Expect values to be 48, 96, ... 240 for F1 because the values average for each day is 1, 2, ..., 5, the the sec in rate is 360 so x 10 to per hour, the conversion is x 2 and their are 24 hour in 1 day so 1 x 10 x 2 x 24 = 480, 2 x 10 x 2 x 24 = 960, 1440, 1920, 2400. The flow values are the same for Q2 so the result is the same.  
+select meter_bar_readings_unit('{3, 4}'::integer[], (select id from units where name = 'kW'), 1, '-infinity', 'infinity');
+
+- Same but for 2 days. Get 480 + 960 = 1440, 1440 + 1920 = 3360, 2400 for both F1 & F2.
+select meter_bar_readings_unit('{3, 4}'::integer[], (select id from units where name = 'kW'), 2, '-infinity', 'infinity');
+
+- You should never do raw since adding it up makes no sense. If you did, you get 4435.555, 3235.556, 2808.888 because (212 x 24 + 122 x 24) x 5/9 - 17.78 = 435.55, etc.
+select meter_bar_readings_unit('{5}'::integer[], (select id from units where name = 'Celsius'), 2, '-infinity', 'infinity');
+
+- Do group that is Q1 + Q1 for one day. Thus, it is the sum of the ones above.  
+select group_bar_readings_unit('{1}'::integer[], (select id from units where name = 'kWh'), 1, '-infinity', 'infinity');
+
+- Do group that is Q1 + Q1 for two days. Thus, it is the sum of the ones above.  
+select group_bar_readings_unit('{1}'::integer[], (select id from units where name = 'kWh'), 2, '-infinity', 'infinity');
+
 
 Maps and comparison graphics need to be analyzed to see if they properly use the readings for all types.
 
@@ -1439,7 +1484,7 @@ Since groups have multiple underlying meters, in general, OED needs to apply dif
 
 #### line_readings
 
-This was a rough sketch that is now completed in the code. Going groups was easy since they rely on the meter reading SQL.
+This was a rough sketch that is now completed in the code. Doing groups was easy since they rely on the meter reading SQL.
 
 - `src/server/models/Reading.js`
   - getNewCompressedReadings will add a parameter that is the graphic unit id where the readings are returned in this unit. It will also be renamed. Thus, the signature will become  
@@ -1616,8 +1661,8 @@ update units set unit_represent='raw' where name in ('Fahrenheit', 'Celsius');
 #### And the meters need to be updated for their unit type.
 
 update meters set unit_id=(select id from units where name = 'Electric_utility') where name = 'Q1';  
-update meters set unit_id=(select id from units where name = 'kW Meter') where name = 'F1';  
 update meters set unit_id=(select id from units where name = 'Natural_Gas_BTU') where name = 'Q2';  
+update meters set unit_id=(select id from units where name = 'kW Meter') where name = 'F1';  
 update meters set unit_id=(select id from units where name = 'kW Meter') where name = 'F2';  
 update meters set unit_id=(select id from units where name = 'Temperature Meter') where name = 'T1';  
 
