@@ -42,6 +42,7 @@ Note: The equations in this document should render in Visual Studio Markdown Pre
   - [new-units-menu](#new-units-menu)
   - [new-graphic-rate-menu](#new-graphic-rate-menu)
   - [changes-to-meters-groups-dropdown-menus](#changes-to-meters-groups-dropdown-menus)
+  - [meter-group-selection](#meter-group-selection)
   - [meter-viewing-page](#meter-viewing-page)
   - [group-viewing-pages](#group-viewing-pages)
   - [new-admin-unit-page](#new-admin-unit-page)
@@ -1073,6 +1074,10 @@ The algorithm for groups is similar where doing displayable for groups partly ad
     For each compatibleUnit C add name C.name to group menu in alphabetically sorted order in regular font for case 1
     For each incompatibleUnit I add name I.identifier to group menu in alphabetically sorted order as grayed out and not selectable for case 2
 
+### meter-group-selection
+
+When a meter or group is selected, it is the first one so the graphing unit was not yet set, it must be set to the graphing unit used (the default one for that meter or group).
+
 ### meter-viewing-page
 
 If an admin is viewing the page then the new items in the [database schema](#database-changes-for-units) for meters should be displayed where the ids are converted to identifier for the units. These values are editable and are displayed with a dropdown menu where it is set to the current value when loading this page. The values listed in the unit_id menu are any unit in the unit table with type_of_unit = unit (not meter or suffix). The values for the [default_graphic_unit](#default_graphic_unit) are the list of all units compatible with the current unit_id unit. This can be found by:
@@ -1742,6 +1747,46 @@ raise notice 'string: %', variable_name;
 DROP MATERIALIZED VIEW daily_readings_unit;
 - Get the readings in the view that are ordered
 select * from daily_readings_unit order by meter_id, time_interval;
+
+### Some ideas on testing non-line graphics with units
+
+#### bar
+
+- If meters and bar width of 1 day for quantity. Expect values to be 24, 48, ... 120 for Q1 and (48, 96, ... 240) * 2.93e-4 = 0.01406, 0.02813, 0.04219, 0.05626, 0.07032 for Q2.  
+select meter_bar_readings_unit('{1, 2}'::integer[], (select id from units where name = 'kWh'), 1, '-infinity', 'infinity');
+
+- Same but for 2 days. OED starts with the earliest time to make the bars so should get 2 days, then 2 days then 2 days but with only 1 day of readings. Thus, Q1 is 24 + 48 = 72, 72 + 96 = 168, 120 and Q2 is 0.04219, 0.09845, 0.07032.  
+select meter_bar_readings_unit('{1, 2}'::integer[], (select id from units where name = 'kWh'), 2, '-infinity', 'infinity');
+
+- If meters and bar width of 1 day for flow. Expect values to be 48, 96, ... 240 for F1 because the values average for each day is 1, 2, ..., 5, the the sec in rate is 360 so x 10 to per hour, the conversion is x 2 and their are 24 hour in 1 day so 1 x 10 x 2 x 24 = 480, 2 x 10 x 2 x 24 = 960, 1440, 1920, 2400. The flow values are the same for Q2 so the result is the same.  
+select meter_bar_readings_unit('{3, 4}'::integer[], (select id from units where name = 'kW'), 1, '-infinity', 'infinity');
+
+- Same but for 2 days. Get 480 + 960 = 1440, 1440 + 1920 = 3360, 2400 for both F1 & F2.
+select meter_bar_readings_unit('{3, 4}'::integer[], (select id from units where name = 'kW'), 2, '-infinity', 'infinity');
+
+- You should never do raw since adding it up makes no sense. If you did, you get 4435.555, 3235.556, 2808.888 because (212 x 24 + 122 x 24) x 5/9 - 17.78 = 435.55, etc.
+select meter_bar_readings_unit('{5}'::integer[], (select id from units where name = 'Celsius'), 2, '-infinity', 'infinity');
+
+- Do group that is Q1 + Q1 for one day. Thus, it is the sum of the ones above.  
+select group_bar_readings_unit('{1}'::integer[], (select id from units where name = 'kWh'), 1, '-infinity', 'infinity');
+
+- Do group that is Q1 + Q1 for two days. Thus, it is the sum of the ones above.  
+select group_bar_readings_unit('{1}'::integer[], (select id from units where name = 'kWh'), 2, '-infinity', 'infinity');
+
+## compare
+
+update meters set unit_id=(select id from units where name = 'Electric_utility') where name = 'Q1Current';  
+update meters set unit_id=(select id from units where name = 'Natural_Gas_BTU') where name = 'Q2Current';  
+
+select compare_readings('{6,7}'::integer[], '2022-03-27 00:00', '2022-04-03 00:00', '168:00:00');
+
+select meter_compare_readings_unit('{8}'::integer[], (select id from units where name = 'kWh'), '2022-04-07 00:00', '2022-04-07 12:00', '24:00:00');
+select meter_compare_readings_unit('{8}'::integer[], (select id from units where name = 'kWh'), '2022-04-03 00:00', '2022-04-07 12:00', '168:00:00');
+select meter_compare_readings_unit('{8}'::integer[], (select id from units where name = 'kWh'), '2022-03-13 01:00', '2022-04-07 12:00', '672:00:00');
+
+select group_compare_readings('{2}'::integer[], '2022-03-27 00:00', '2022-04-03 00:00', '168:00:00');
+
+select group_compare_readings_unit('{2}'::integer[], (select id from units where name = 'kWh'), '2022-03-27 00:00', '2022-04-03 00:00', '168:00:00');
 
 ## implementation-plan
 
