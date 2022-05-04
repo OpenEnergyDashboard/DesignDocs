@@ -1381,10 +1381,12 @@ To fix all this up, the export feature will be changed so each meter or group is
   - actual unit for reading data in this file. We should put this in quotes just in case there is a comma in the unit identifier.
 
 A sample file would look like this:
+<pre>
 reading, start_timestamp, end_timestamp, Meter name, "my meter", Unit, "liters per hour"
 1, "2018-01-01 00:00:00", "2018-01-01 01:00:00"
 2, "2018-01-01 01:00:00", "2018-01-01 02:00:00"
 .....
+</pre>
 
 ### chartlink
 
