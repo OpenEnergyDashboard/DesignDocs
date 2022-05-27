@@ -1335,6 +1335,8 @@ but this caused issues. A few example of issues are:
 
 While these could be overcome, it was decided to remove the constraint. Since the new modal design only allows for editing one unit at a time, the Cik can be updated after each one. For a new unit it can be any dummy value but null may be a good choice. There will be a brief period in which the unit_index will be out of sync with Cik but this should be short. A bigger issue is that the Redux state in the client will be different for than in the database. OED has this issue in many places and a general solution would need to be done. Another issue is if two admins edit at the same time. Since these are all uncommon situations, OED is not going to deal with them at this time.
 
+The daily and hourly reading views' values change if unit_represent_type changes to or from flow or raw. Any unit that is flow or raw depends on the seconds in rate. Thus, if either of these changes occur, the reading views must be refreshed. src/server/models/Reading.js has the refreshDailyReadings & refreshHourlyReadings functions that can accomplish this when needed.
+
 ### new-admin-conversion-page
 
 TODO This is somewhat implemented but need to check what parts are left to do.
