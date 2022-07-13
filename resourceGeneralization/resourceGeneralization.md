@@ -901,7 +901,15 @@ What follows are the changes needed on specific OED web pages.
 
 ### new-units-menu
 
-Each graphics page (line, bar, compare, map) will have a dropdown menu that shows the graphic units for graphing (TODO?? and "no unit"). It will probably go right below the groups: and meters: dropdown menus and have a similar look with title and then the menu. This dropdown has some similarities to the map dropdown for meters/groups that are filtered based on the selected map. TODO?? The default menu value is "no unit" when the page is first loaded and this is set before the algorithm below is run so there is already a selected unit. Since the algorithms use an id to identify all values, the entry "no unit" will be encoded with -99 since the id should always be positive for real units. Using the value -99 makes it stand out more. Note the meters/groups menus must be updated to the compatible units as [described](#changes-to-meters-groups-dropdown-menus). TODO Also note that if the current unit is "no unit" then once the first meter/group is selected then its default graphic unit becomes the default graphic unit for the selected meter/group. TODO If "no unit" is selected by the user then all meters and groups are deselected since none could have been selected with this choice. Note this is an easy way to restart the graphing process. It would be good to warn the user if "no unit" is selected but there are selected meters/groups so they can either continue or cancel to avoid accidentally removing all meters/groups. A graphic unit is defined as follows:
+TODO The work in June 2022 by huss found the following still needs work:
+
+1. src/client/app/components/ChartDataSelectComponent.tsx has TODO items including that unit uses array when single item.
+2. The meters are not filtered so you have to only select valid ones based on selected unit. Note the first one you select does correctly set the graphic unit. This is probably part of the meter menu work.
+    - You can deselect the meters and then the unit without error.
+3. Changing the unit does not update the unit or graphed values.
+4. You must select a valid unit before you graph a group. The routing for the default graphic unit for groups is not yet done.
+
+Each graphics page (line, bar, compare, map) will have a dropdown menu that shows the graphic units for graphing (TODO?? and "no unit"). It will probably go right below the groups: and meters: dropdown menus and have a similar look with title and then the menu. This dropdown has some similarities to the map dropdown for meters/groups that are filtered based on the selected map. The default menu value is "no unit" when the page is first loaded and this is set before the algorithm below is run so there is already a selected unit. Since the algorithms use an id to identify all values, the entry "no unit" will be encoded with -99 since the id should always be positive for real units. Using the value -99 makes it stand out more. Note the meters/groups menus must be updated to the compatible units as [described](#changes-to-meters-groups-dropdown-menus). Also note that if the current unit is "no unit" then once the first meter/group is selected then its default graphic unit becomes the default graphic unit for the selected meter/group. TODO If "no unit" is selected by the user then all meters and groups are deselected since none could have been selected with this choice. Note this is an easy way to restart the graphing process. It would be good to warn the user if "no unit" is selected but there are selected meters/groups so they can either continue or cancel to avoid accidentally removing all meters/groups. A graphic unit is defined as follows:
 
 1. Only units in the units table that are of type unit or suffix (so not meter) can be a graphic unit.
 2. Only units displayable to this user are displayed. Always if displayable is all, only user admin if displayable is admin and never if displayable is none.
@@ -1326,16 +1334,30 @@ If another way such as clicks for these four choices and an area to enter a valu
 
 The admin should be clearly told in the help documentation that the identifier of a unit should be the quantity associated with the unit. For a unit of unit_represent_type of quantity that makes sense. For flow it might be less obvious. For example, a rate of liter/hour has an identifier of liter. Note the name could be liter/hour. The same is true for raw but that seems more intuitive.
 
-If a unit is changed (really only applies if type_of_unit, suffix and/or displayable is changed) by edit, creation or deletion then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). Note that the units table originally had the constraint that  
+If a unit is changed (really only applies if type_of_unit and/or suffix is changed) by edit, creation or deletion then cause C<sub>ik</sub> to be updated as described in [determining-conversions](#determining-conversions). Note that the units table originally had the constraint that  
 UNIQUE (type_of_unit, unit_index)  
 but this caused issues. A few example of issues are:
 
 - If you change the type of unit from meter to/from unit then the unit_index might be the same as one in the new type.
 - Type suffix does not ever use the unit_index so setting it to a unique value would be added work.
 
-While these could be overcome, it was decided to remove the constraint. Since the new modal design only allows for editing one unit at a time, the Cik can be updated after each one. For a new unit it can be any dummy value but null may be a good choice. There will be a brief period in which the unit_index will be out of sync with Cik but this should be short. A bigger issue is that the Redux state in the client will be different for than in the database. OED has this issue in many places and a general solution would need to be done. Another issue is if two admins edit at the same time. Since these are all uncommon situations, OED is not going to deal with them at this time.
+While these could be overcome, it was decided to remove the constraint.
+
+Since the new modal design only allows for editing one unit at a time, the Cik can be updated after each one (when described above). For a new unit, the unit_index can be any dummy value when stored to the DB but null may be a good choice. There will be a brief period in which the unit_index will be out of sync with Cik but this should be short. To help the admim see the change, Pik will be updated on the client. We should have a route that updates Cik and then redoes Pik to be returned to the client. Note the Redux state in other clients will be different than in the database. OED has this issue in many places and a general solution would need to be done. Another issue is if two admins edit at the same time. Since these are all uncommon situations, OED is not going to deal with them at this time.
 
 The daily and hourly reading views' values change if unit_represent_type changes to or from flow or raw. Any unit that is flow or raw depends on the seconds in rate. Thus, if either of these changes occur, the reading views must be refreshed. src/server/models/Reading.js has the refreshDailyReadings & refreshHourlyReadings functions that can accomplish this when needed.
+
+The overall steps for updating on unit change is:
+
+1. Update units in DB. The remaining steps assume this is successful. The new logic in the React hook work should do this.
+2. Update unit in Redux state.  The new logic in the React hook work should do this.
+3. If a change requiring a unit update to type_of_unit and/or suffix occurred then the following steps happen. If necessary we could do on all unit updates.
+
+    1. Update Cik in database and then return the updated Pik to the client. The server function for the Cik update is in src/server/services/graph/redoCik.js. I don't think there is yet a route to do this. The Pik update is done outside a route (for another reason) in src/client/app/types/conversionArray.ts. Unsure if want to do this (maybe yes) outside route to update Cik.
+    2. Update all units on the client. This is needed since the unit_index is changed when Cik is updated. src/client/app/utils/api/unitsApi.ts getUnitsDetails() has the client code to route the request to get the unit details. src/client/app/actions/units.ts fetchUnitsDetails() seems to do the route. This updates the Redux state for units.
+    3. If unit_represent_type or seconds_in_rate changes then use a route to call src/server/models/Reading.js doing both refreshDailyReadings() & refreshHourlyReadings(). Probably should have a refreshAllReadings() to do both. There does not seem to be a route to do this.
+
+src/server/services/createDB.js does a redoCik when OED is started. That also inserts the standard units/conversions if they do not yet exist. We cannot (at least now) tell if the are created or not so the redoCik is needed to be sure it is up-to-date.
 
 ### new-admin-conversion-page
 
