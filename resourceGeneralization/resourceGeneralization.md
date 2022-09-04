@@ -1110,29 +1110,94 @@ TODO A feature that would be desirable is to list all compatible units for the m
 
 ### group-viewing-pages
 
-Note that OED went to a modal system where there is a popup for editing, creating and viewing all details on an item. Thus, the first page shows the basic info on the items where each item is on a card. The card also has a button to edit/view more details (if the item has lots of other information such as meters). There is also a button to get a popup to create a new item rather than going to a new page. This has not been done for the group pages. The group page is currently different than the other pages, esp. meters, so here is how it should look:
+Note that OED went to a modal system where there is a popup for editing, creating and viewing all details on an item. Thus, the first page shows the basic info on the items where each item is on a card. The card also has a button to edit/view more details (if the item has lots of other information such as meters). There is also a button to get a popup to create a new item rather than going to a new page. The code for the meter, unit and conversion pages should be considered so we are consistent in all the code including internationalization. See src/client/app/components/ where the conversion/, meters/ and unit/ directories have the current code.
 
-- The card will have the name and default graphic unit of the group for everyone. If the user is an admin then they can also see the gps, area and the first (about) 20 characters of the note (it should be whatever can fit on one line one the card width). There will also be a button to see more info where it also says edit if an admin. If the user clicks this button they will see a popup with:
-  - If non-admin, then they see the immediate meters and groups along with the deep meters of the group as they currently do if they click on a group. There is a button to close the popup.
-  - If an admin, they see what the non-admin sees but also the DB id for the group (that cannot be edited). All other items can be edited where editing the child meters and groups is discussed below.
+This has not been done for the group pages. The group page is currently different than the other pages, esp. meters. When you first go to the group page (as an admin) looks like:
 
-The code for the meter, unit and conversion pages should be considered so we are consistent in all the code.
+![initial group page as admin](groupStart.png "initial group page as admin")
 
-The group page needs to have the [default_graphic_unit](#default_graphic_unit) added as was done for meters. This is on all pages/modals and everyone can see this information One other difference is the menu will also include the "no unit" option (now allowed on meter page) and that will be the default value on group creation unless the admin chooses another value. Finally, the way to determine the values to display on the default graphic unit menu is different than for meters as [described elsewhere](#determining-compatible-units):
+When a group is selected (clicked) then it look like:
+
+![selected group](groupSelected.png "selected group")
+
+After you click to edit the group you go to a new page:
+
+![editing a group](groupEdit.png "editing a group")
+
+After you click to create a group you go to a new page:
+
+![creating a group](groupCreate.png "creating a group")
+
+The initial group page will now have a card for each group instead of a menu of groups. It will mirror the meter card page that looks like this:
+
+![initial meter page with cards](meterCardPage.png "initial meter page with cards")
+
+The differences are:
+
+- A meter has a name and an identifier but groups only have a name. As a result, the title in blue will have the group name and the cards will be sorted by the group name.
+- The fields will be:
+  - default graphic unit including no unit if -99.
+  - (admin only) displayable that is color coded as done for meters (green/red for yes/no or true/false).
+  - (admin only) The first 20 characters of the note as done for meters.
+  - A button analogous to the "Edit Meter" button. Ideally it would be "Group Details" if not an admin and "Edit group" if an admin. Note this will require logic that does not exist on the meter page to make the button change.
+
+When the edit/details button is clicked, a popup modal will display similarly to meters. If the user is not an admin will have these fields that cannot be edited:
+
+- name
+- default graphic unit including no unit if -99.
+- A list of child meters. This is shown in the image above of the current group page. If possible, having space for a modest number of items and then a scroll bar would be nice. A text list would be the second choice (see current "All Meters"). See admin below where a selectable menu is needed so that seems best.
+- A list of the child groups. Similar to above for child meters.
+- A list of the deep meters (labeled "All Meters") as shown above. I think it should be in the same format as the child meters/groups. This is different from the current page where this is a text list but the other two are table listings.
+- A close button to leave the modal popup and return to the group card page.
+
+If the user is an admin then these are the fields where they can be edited. Note unlike the current page, the "Group ID" will not be shown. A similar look and data validation as meters should be done.
+
+- name in editable text box as with meters.
+- default graphic unit including no unit if -99. The current value is selected from the dropdown menu as is done with meters (or no unit if no yet chosen/in DB). This menu needs to be updated as described below.
+- displayable dropdown with current value selected as with meters.
+- area input with current value as done with meters.
+- GPS input with current value as done with meters.
+- note with text box editing as with meters.
+- A list of child meters that is the same as for non-admin except they can be removed (by "x" out) or appropriate new ones chosen. See below on how the menu must be updated with each choice and right below for the look.
+- A list of the child groups that mirrors the child meter one.
+- A list of the deep meters (labeled "All Meters") as for non-admin except the label should indicate it does not update during editing. This makes it simpler because the values are from the DB so not synched until saving.
+- discard and save buttons as the current meter page has:
+
+![](discardSaveButtons.png "")
+
+The child meters/groups should have the look of the meter/group selection on the graphics menu (which is similar to the current group create page):
+
+![graphing meter selection](meterSelection.png "graphing meter selection")
+
+The card page will have a "Create a Group" button at the top of the page (if an admin) similar to meters:
+
+![create meters button](metersCreateButton.png "create meters button")
+
+When clicked, a modal popup will happen that is similar to the edit modal popup except (similar to meters):
+
+- default graphic unit defaults to no unit.
+- displayable defaults to no.
+- area defaults to 0.
+- GPS is empty.
+- note is empty.
+- The list of child meters will have nothing selected and show "Select a child meter". The choices allowed and deleting is similar to edit.
+- The list of child groups is similar child meters.
+- The deep meters are not shown.
+- Same discard/save buttons as edit.
+
+Finally, the way to determine the values to display on the default graphic unit menu is different than for meters as [described elsewhere](#determining-compatible-units):
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithMeters(metersInGroup(group_id))
 
-and "no unit" is also added (with id -99). When this needs to happen is described below. Note that "no unit" for the default graphic unit will be stored as null in the database (already done via the model).
-
-When the admin edits a group, the default graphic unit can be set via a dropdown menu and has the current value selected when displayed.
+and "no unit" is also added (with id -99). However, the look/feel is the same as on the meter page. When this needs to happen is described below. Note that "no unit" for the default graphic unit will be stored as null in the database (already done via the model).
 
 When an admin creates a group, there is a dropdown to select the default graphic unit as with editing a group where "no unit" is selected. Before saving the group, an admin should (but is not required to) choose a default graphic unit to eliminate "no unit" since [this restricts certain graphing choice](#default_graphic_unit).
 
-Allowing an admin to select/add/remove multiple meters and/or groups at a time during creation and editing means incompatible changes between these meters/groups is possible. As a result, OED will be removing this feature. When there was only one unit in OED this was not an issue. The meter and group menus will remain as they are on the group admin pages but as soon as a new choice is selected the menus on the page must be updated. The create page looks the same where the selected item is then displayed at the top and removed from the menu choices. For the edit page, a select causes that meter/group to immediately go to the other menu of that type. This means the meter/group switches between left column of Child meter/group and the right column of Unused meter/group. For example if an unused meter is selected, it is no longer unused and becomes part of the Child meters and its menu. After this, all menu choices must be updated as described below. As a result, the arrows will be removed from the groups pages for creating and editing and this eliminates [issue #413](https://github.com/OpenEnergyDashboard/OED/issues/413) once completed. Note the recent switch to using modals for editing and creating means only one group can be edited at a time and is consistent with these plans.
+Allowing an admin to select/add/remove multiple meters and/or groups at a time during creation and editing means incompatible changes between these meters/groups is possible. As a result, OED will be removing this feature from the edit page. When there was only one unit in OED this was not an issue. As soon as a new choice is selected the menus on the page must be updated. There is logic on the meter page that has the right structure but how the choices are made will change. As a result, the arrows in the current group edit page will be removed and this eliminates [issue #413](https://github.com/OpenEnergyDashboard/OED/issues/413) once completed.
 
 The compatible units of a group has impacts as discussed below. Note this only applies to admins since they are the only ones who can make changes. This will naturally happen since the page only displays these items if an admin. There are two cases:
 
-1. A meter/group is removed from the group. This either leaves the compatible units of the group the same or adds compatible units. This case does not cause any of the problems below so the checks are not needed.
+1. A meter/group is removed from the group. This either leaves the compatible units of the group the same or adds compatible units. This case does not cause any of the problems below so the checks are not needed.??don't we still need to update the menus - better describe menu look vs update??
 2. A meter/group is added to the group. This could reduce the compatible units of the group and can lead to the issues described below. Thus, the following checks only need to be done on adding a meter/group.
 
 The dropdown menus of meters and groups will change so they are listed as follows (note all non-null units are compatible with the default graphic unit if it is "no unit" (-99).):
@@ -1145,9 +1210,31 @@ The dropdown menus of meters and groups will change so they are listed as follow
 
 3. The meter/group will cause the compatible units for the group to be empty. This means it would be impossible to graph this group and OED does not want such groups since they are not interesting to OED. Thus, this meter/group is grayed out and cannot be selected.
 
+Testing can be done by considering the the test data loaded into OED and described on the test data developer page. (Until the resourceGeneralization branch is merged with development, it is not on the normal developer pages and is located [here](https://huss.github.io/OpenEnergyDashboard.github.io/developer/testData.html).) The table under group data shows sample data and the meter table helps understand the compatible units for the underlying meters of a group. To determine the compatible units, you take the columns of the meter table that are not NA for any meter in the group.
+
+As an example, consider the group "Electric Utility 1-5 + Natural Gas Dollar Euro" with "Euro" as the default graphic unit. (The examples don't include the AMP meters/groups nor the sq meter/groups.) The underlying meters are "Electric Utility kWh" & "Natural Gas Dollar". Looking at these two meters in the meter table show that the units compatible with both are: kWh, BTU, MJ. M3, Gas, 100 W bulb, US Dollar, Euro, kg of CO2, EMetric ton of CO2. Thus, any meter that does not have NA for one of these units is compatible. These are Electric Utility kWh, Electric Utility kWh 2-6, Electric Utility kWh in BTU, Electric Utility kWh in MTon CO2, Electric Utility kWh not displayable, Natural Gas BTU, Natural Gas BTU in Dollar, Natural Gas Cubic Meters, Natural Gas Dollar. Note that the meter that is not displayable is still included. Here is how the meters would be listed by case:
+
+case 1: Electric Utility kWh, Electric Utility kWh 2-6, Electric Utility kWh in BTU, Electric Utility kWh in MTon CO2, Electric Utility kWh not displayable, Natural Gas BTU, Natural Gas BTU in Dollar, Natural Gas Cubic Meters  
+case 2.1  Natural Gas Dollar (because it is compatible with the default graphic unit of Euro)  
+case 2.2 (empty)  
+case 3. Electric kW, Electric kW 2-6, Temp Fahrenheit 0-212, Temp Fahrenheit in Celsius, Trash Kg, Water Gallon, Water Gallon flow 1-5 per minute
+
+If the default graphic unit had been something other than money (kWh, kg of CO2, etc.) then Natural Gas Dollar would move from case 2.1 to 2.2 since it is no longer compatible with the default graphic unit. This would be the case if the group being edited was "Electric Utility 1-5 + 2-6 kWh".
+
+The groups would be in these cases:
+
+case 1: Electric Utility 1-5 + 2-6 Dollar, Electric Utility 1-5 + 2-6 kWh, Electric Utility 1-5 kWh not displayable, Natural Gas Dollar Euro  
+case 2.1 (empty)  
+case 2.2 (empty)  
+case 3 Electric kW + 2-6 kW
+
+If we were editing group "Electric Utility 1-5 + 2-6 kWh" with kWh as the default graphic unit, then group "Electric Utility 1-5 + Natural Gas Dollar Euro" would be in case 2.2 since it is not compatible with kWh but all are with money units.
+
+If were were editing group "Electric Utility 1-5 + 2-6 Dollar" with US Dollar as the default graphic unit, then group "Natural Gas Dollar Euro" would be in case 2.1 since it is compatible with US Dollar but it reduces the allowed graphic units to only monetary units.
+
 Unlike the dropdown menus, the meters/groups will not be separated by which of the four options just described apply. They will be displayed in alphabetical order. The menus should be searchable as with the meter/group dropdown menus for graphing.
 
-The pseudocode for setting the meter/group menus is (see [compatible unit code](#determining-compatible-units) on functions called) follows. The value gid is the group id of the group being worked on.
+The pseudocode for setting the meter/group menus is (see [compatible unit code](#determining-compatible-units) on functions called) follows. The value gid is the group id of the group being worked on. Looking at src/client/app/components/ChartDataSelectComponent.tsx, esp. the getMeterCompatibilityForDropdown and equivalent group function will show how the graphing dropdown menus work and some ideas of how to do this.
 
     // Determine compatibility of meter/group to the current group being worked on (currentGroup)
     // Get the currentGroup's compatible units.
@@ -1232,7 +1319,7 @@ The pseudocode for setting the meter/group menus is (see [compatible unit code](
       }
     }
 
-If this group is contained in another group (recursively) then either possibility of 2) chosen by the admin could change the compatibility units of the other group. The cases here are the same as the ones just described but the action taken is different:
+If this group is contained in another group (recursively) then either possibility of 2) chosen by the admin could change the compatibility units of the other group. This can only happen when a group is edited (a new group cannot be in another group). The cases here are the same as the ones just described but the action taken is different:
 
 1. The change in this group's compatible units does not change the compatible units of the other group. This is a safe change so nothing needs to be done.
 2. The change in this group's compatible units does change the compatible units of the the other group. This has two subgroups:
@@ -1294,7 +1381,9 @@ This check is made before the selected meter/group is changed but after the chec
 
 If this turns out to be expensive and takes time then the second set of checks can be done after all selections are made and when the changes are saved if any meter/group was added. This will make it harder for the admin to know the overall impact since they could overlap. It may also be the case that the changes from one add will conflict with another change and overlap, be wrong and other potential problems. Thus, it would be best to avoid doing this. For the first shot, we will do each time, esp. given this only applies to admin edits and not something done all the time. This means the change to a group happens as each meter/group is chosen and cancelling means the admin must undo rather than a cancel button. If needed, after the initial implementation, a better idea is to cache the compatible units of all groups that contain this group when the check is first done and reuse on subsequent checks. Note that setting up the menus should already have all the group info but it needs to be updated per changes and that is similar to this code. This assumes OED has not already stored this information. There are some notes in the pseudocode about where this might be done but don't need to go into actual code.
 
-Note that changing the underlying meters of a group can make groups currently displayed on a graphic become undisplayable since they are no longer compatible with the graphic unit. The same effect happens to groups changed indirectly. Since the changes are stored to the database, it is possible a user will make a request that is not longer valid. This shouldn't happen very often and will be cleared up on a page reload. Given there is no easy fix, the admin documentation should note this and esp. warn that it is much easier for this to happen to the admin.
+Note that when a group is created or edited, the Redux state must be updated to reflect these changes.
+
+Note that changing the underlying meters of a group can make groups currently displayed on a graphic become undisplayable since they are no longer compatible with the graphic unit. The same effect happens to groups changed indirectly. Since the changes are stored to the database, it is possible a user will make a request that is no longer valid. This shouldn't happen very often and will be cleared up on a page reload. Given there is no easy fix, the admin documentation should note this and esp. warn that it is much easier for this to happen to the admin.
 
 A feature that would be desirable is to list all the compatible units for a group on the group viewing page (for everyone). As with the desired feature to see all the underlying meters of a group (now done), this will make it easier for any user to figure out allowed combinations for graphing. Note this should be the same as when the user selects just this group and then sees the allowed graphic units so it is not absolutely required but would be nice at some point.
 
@@ -1388,7 +1477,7 @@ To fix all this up, the export feature will be changed so each meter or group is
 - The file name should include the word "meter" or "group" (it is possible to have a meter and group with the same name - ugh) and the meter or group name.
 - The header row at the top will include information about the meter and the unit. These will be added after the headers for the data in each row where the first one is a string identifying the item and the second is the item. Thus, the added columns in the first header row will be:
   - "Meter identifier"
-  - actual meter name for reading data in this file. We should put this in quotes just in case there is a comma in the meter/group name.
+  - actual meter identifier for reading data in this file. We should put this in quotes just in case there is a comma in the meter/group identifier.
   - "Unit"
   - actual unit for reading data in this file. We should put this in quotes just in case there is a comma in the unit identifier.
 
@@ -1400,9 +1489,38 @@ reading, start_timestamp, end_timestamp, Meter name, "my meter", Unit, "liters p
 .....
 </pre>
 
+The current code can export both graph data and raw data as seen here:
+
+![export area](exportItem.png "export area")
+
+A few other items that will be addressed as part of this work are:
+
+- We need to decide how to dump groups of raw data and if we want to do that.
+- When we do issue 665 we could use the frequency of reading to estimate the number of points expected. Decide if good idea or speed increase not worth potential error in value.
+- Change the name of the "Export raw graph data" button to "Export graph meter data" (make sure done for all languages).
+
+The impacted code (found so far) is (has not been converted to React hooks):
+
+- src/client/app/components/ExportComponent.tsx: Does actual export. Not sure why we need to sort the data here and not directly in DB?
+- src/client/app/containers/ExportContainer.ts: paired container for export.
+- src/client/app/utils/api/MetersApi.ts: Uses lineReadingsCount to get the number of readings. The limit would now be the sum of all the meters/groups exported.
+- src/server/routes/readings.js starts the server side code to deal with getting counts (called from MetersApi above).
+
 ### chartlink
 
-The chart link that appears on each graphic page needs to be enhanced to include the unit of graphic display and the seconds in rate (if needed). We should check to make sure there are no other needed values to recreate the new graphics.
+TODO The chart link that appears on each graphic page needs to be enhanced to include the unit of graphic display and the seconds in rate (if needed). We should check to make sure there are no other needed values to recreate the new graphics. An example of the current chart link is:
+
+![chart link](chartlinkItem.png "chart link")
+
+The code involved is located in (note it has not been converted to React hooks; not sure have all files):
+
+- src/client/app/components/ChartLinkComponent.tsx: Defines the state/props and the item on the graphics pages.
+- src/client/app/containers/ChartLinkContainer.ts: Matching component that constructs the link.
+- src/client/app/components/InitializationComponent.tsx: Has some chartlink code commented out. It may be fine but we need to verify if okay to remove and be sure it does not cause any problems. It was commented out during the conversion to React hooks.
+- src/client/app/actions/graph.ts: Seems related to commented out code and reacts to chart links.
+- src/client/app/components/RouteComponent.tsx: Another file that seems related.
+- src/client/app/containers/RouteContainer.ts: I think this updates the links on changes.
+- src/client/app/components/InitializationComponent.tsx (6411668)
 
 ### multiple-edits
 
