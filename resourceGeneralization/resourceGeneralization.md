@@ -1090,9 +1090,9 @@ When a meter or group is selected and it is the first one so the graphing unit w
 
 ### meter-viewing-page
 
-TODO We now allow no unit/-99 for meters. We need to update the viewing page description and logic so this always work. This is normally only set this way when OED automatically creates a new meter but cannot determine the unit.
+We now allow no unit/-99 for meters. We need to update the viewing page description and logic so this always work. This is normally only set this way when OED automatically creates a new meter but cannot determine the unit.
 
-TODO(unsure status) If an admin is viewing the page then the new items in the [database schema](#database-changes-for-units) for meters should be displayed where the ids are converted to identifier for the units. These values are editable and are displayed with a dropdown menu where it is set to the current value when loading this page. The values listed in the unit_id menu are any unit in the unit table with type_of_unit = unit (not meter or suffix). The values for the [default_graphic_unit](#default_graphic_unit) are the list of all units compatible with the current unit_id unit. This can be found by:
+If an admin is viewing the page then the new items in the [database schema](#database-changes-for-units) for meters should be displayed where the ids are converted to identifier for the units. These values are editable and are displayed with a dropdown menu where it is set to the current value when loading this page. The values listed in the unit_id menu are any unit in the unit table with type_of_unit = unit (not meter or suffix). The values for the [default_graphic_unit](#default_graphic_unit) are the list of all units compatible with the current unit_id unit. This can be found by:
 
     Set allowedDefaultGraphicUnit = unitsCompatibleWithUnit(unit_id)
 
