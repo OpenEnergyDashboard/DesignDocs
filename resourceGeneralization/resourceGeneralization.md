@@ -12,10 +12,6 @@ This is a working document (started Nov 2020 but includes previous work/ideas) t
 
 Note: The equations in this document should render in Visual Studio Markdown Preview window. They are in LaTex format. Unfortunately, you have to use a URL and cannot use $ on GitHub (yes, it works in Visual Studio). This is how it is done in this document but note there is no background set so if you use dark mode they are basically invisible. I'm sorry to say you need to turn that off to see the equations. Also note that a heading must be lowercase and words separated by - to allow links so this is used throughout this document.
 
-# important-note-for-developers
-
-## **All work on resource generalization will be done from the resourceGeneralization branch. You should branch from resourceGeneralization and do pull requests back to the branch on the main OED repository. This is done to avoid the changes impacting other developers during the extensive work that will be done. This may change after April 2022 if we can get it all merged back with development as basic graphing is working.**
-
 ## table-of-contents
 
 - [overview](#overview)
@@ -51,6 +47,7 @@ Note: The equations in this document should render in Visual Studio Markdown Pre
   - [export](#export)
   - [chartlink](#chartlink)
   - [multiple-edits](#multiple-edits)
+- [when-update-pik-refresh-readings](#when-update-pik-refresh-readings)
 - [other-code-changes](#other-code-changes)
   - [autocreated-meters](#autocreated-meters)
   - [graphs](#graphs)
@@ -1525,6 +1522,33 @@ The code involved is located in (note it has not been converted to React hooks; 
 ### multiple-edits
 
 OED has never protected against two different admin pages simultaneously changing the same item or items that could be in conflict. Some conflicts are relatively benign such as both changing a preference where the last one would stay. Some might cause an internal error, such as deleting a group that another page tries to access but probably would not hurt OED in the long-term. Some, not analyzed, might cause OED issues in what is in the database. The chance of this happening now seems greater given the added complexities of units. For now, admins will be warned not to do this to avoid potential issues. How easy a good fix will be and if it is needed is left for the future.
+
+## when-update-pik-refresh-readings
+
+Note values can change by creation, editing or deletion. If Cik is changed then Pik needs to be updated. For now, this is only done for the admin making the change.
+
+We need to carefully test the code to make sure these ideas are correct.
+
+### units
+
+- If the type of unit (meter, unit, suffix) changes then Cik changes. If it changes between meter and unit then the unit shifts between a row and a column. If it changes to a suffix then new units and conversions can be created/removed. Note a meter unit isn't really used until it is linked to a meter but to keep all the menus straight it is updated when the unit is done.
+  - If it leaves as a suffix then units/conversions can be removed. Need to verify if that handled correctly.
+- If the unit represents (quantity, flow, raw, unused) changes then Cik is not effected. However, the value is used in the DB code and impacts the reading views which may need to be refreshed. If the unit represents enter or leaves the set of (flow, raw) then the views must be refreshed. It also impacts the line reading values returned.
+- The seconds_in_rate impacts the reading views along with line reading values. The seconds in rate only matter for flow and raw in unit represents.
+
+### conversions
+
+- If a conversion slope, intercept or bidirectional is changed then Cik changes. The reading values are all impacted. The reading views are not impacted.
+
+### meters-groups
+
+Since meters are linked to a unit, changing the meter unit does not change Cik and no updates are needed. Since groups are linked to meter they should also be fine.
+
+TODO We need to check if someone tries to graph a new meter where a refresh of the views has never happened. It might cause an error. This would not be a new issue and the fix is unclear (refreshing might do not fix this if there is no data). There is a PR that tried to address the graph labeling in this case.
+
+### readings
+
+As is already done, the reading views must be updated when new readings are added to see them.
 
 ## other-code-changes
 
