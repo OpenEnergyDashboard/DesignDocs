@@ -1,37 +1,159 @@
 # Documentation on how website data is created
 
+## Creating the CSV data readings files
+
+The files to do this are in the webData/ directory. If you are not creating new meter data then they should already be there. webMeter.ods can generate random meter data. It is a LibreOffice file spreadsheet file with formulas. You get get the meter data by setting the following cells:
+
+- B2 is the first date/time for a reading. It is normally in YYYY-MM-DD HH-MM-SS format where HH is in 24 hour time.
+- E2 sets the minutes between readings.
+- E5 is the initial reading value for the first reading. It is often in the middle of the min and max reading allowed.
+- E8 is the minimum value for a reading. If the random values go below this then then the random shift is reversed to keep it above this value.
+- E11  is the maximum value for a reading. If the random values go above this then then the random shift is reversed to keep it below this value.
+- E14 is the random variation for the next reading. It can go up or down by this amount as long as it does not go outside the bounds allowed.
+
+No other cells should be edited. Note Column D is random values generated to do the calculations. You do not normally touch this column. D2 does not need a value. Note it changes whenever you reopen the spreadsheet or touch cells in the sheet.
+
+After setting the values and creating the values in the three needed columns (A, B, C) you can create a CSV for import as described later by:
+
+1) Selecting the entire columns of A-C or any set of rows that have the dates desired. If you only take a subset of the rows then make sure the separately copy to first header row of columns A-C.
+2) Copy the values selected.
+3) Open a new spreadsheet.
+4) If you are copying all the rows or the header row then click in cell A1. If you have already put in the header row and are now copying the rows with meter data then click in cell A2.
+5) Do a special paste by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas.
+6) Select all of columns B & C. Then do Format -> Cells ... or control/command 1. In Category select date and then in Format select  1999-12-31 13:37:46. This formats the columns as dates in the canonical format. You may need to make the columns wider to see the values (esp. if you see ### instead of date/time).
+7) Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name at the top. Then click the Save button.
+
+Later in this document is the standard values used for the website where this process is done once for each meter desired.
+
+## Entering the website data
+
+The steps for putting the data into a website are
+
+1) Generally you start from a clean version of OED so only the website data is present.
+    - An alternative is to delete the current data. In a psql shell you can do: `delete from readings; delete from groups_immediate_meters; delete from groups_immediate_children; delete from groups; delete from meters; delete from conversions; delete from units;`
+2) Copy the CSV file from webData/ in devDocs/ to src/server/data/webData.
+3) Get OED running if it is not already up.
+4) Open a shell in the web terminal.
+5) In the shell run: `npm run webData`.
+    - This will likely take some time to run as it needs to load a lot of data from CSV files.
+6) Open new or refresh you localhost:3000 in a web browser. All the units, conversions, meters and groups should be present.
+7) It is important that you delete the files you added to your OED src/ tree since these should **never** be committed to the OED repository.
+
+Copy the websiteData.js file to src/server/data/websiteData.js.
+
+## Test data description
+
+The CSV files for meters and readings are in the subdirectory oedData/. The readings.ods file has some of the calculations to get a reading of a desired value. The issue is that you cannot set a given reading to what you want to see on the graph when you plot it on a daily basis. This is complicated because the synthetic data spans many days (a step function) and the times were chosen to stop at varying times in the day.
+
+### Meters
+
+At the current time, the end data is 2022-10-16 10:45:00 or the nearest rounded down. Some useful values:
+
+- If start date is 2019-08-15 10:30:00 with 15 minute readings then 2022-10-16 10:45:00 is in C111170.
+- If start date is 2019-08-15 10:30:00 with 20 minute readings then 2022-10-16 10:30:00 is in C83377.
+- If start date is 2019-08-15 10:30:00 with 23 minute readings then 2022-10-16 10:33:00 is in C72502.
+- If start date is 2019-08-18 00:00:00 with 10080 minute readings then 2022-10-16 00:00:00 is in C166.
+
+You can easily select all for copy/paste is to enter the location of the last reading in the top, left of LibreOffice Calc (Name Box), hit enter, and then go to the top of the sheet and shift-click in A1 to select them all for copy.
+
+| Name                          | Unit                    | Default Graphic Unit | GPS         | Displayable | ID    | Cell B2             | Reading Increment | Initial Reading | Min Reading | Max Reading | Random Variation | Description |
+| :---------------------------: | :---------------------: | :------------------: | :---------: | :---------: | :---: | :-----------------: | :---------------: | :-------------: | :---------: | :---------: | :--------------: | :---------: |
+| Dining Hall Electric          | Electric_Utility        | kWh                  |             | true        | 10012 | 2019-08-15 10:30:00 | 15                | 40              | 10          | 70          | 5                | ~3 years    |
+| Dining Hall Gas               | Natural_Gas_BTU         | BTU                  |             | true        | 10013 | 2019-08-15 10:30:00 | 15                | 35000           | 17000       | 50000       | 1000             | ~3 years    |
+| Dining Hall Water             | Water_Gallon            | Gallon               |             | true        | 10014 | 2020-01-07 14:00:00 | 60                | 100             | 10          | 200         | 20               | ~3: years but less than others |
+| Dining Hall Electric Power    | Electric_kW             | kW                   |             | false       | 10015 | 2020-01-07 14:00:00 | 5                 | 160             | 40          | 280         | 20               | ~3: years but less than others |
+| Theater Electric              | Electric_Utility        | kWh                  |             | true        | 10016 | 2019-08-15 10:30:00 | 20                | 100             | 20          | 200         | 15               | ~3 years    |
+| Theater Gas                   | Natural_Gas_M3          | BTU                  |             | true        | 10017 | 2019-08-15 10:30:00 | 20                | 5.5             | 2           | 12          | 0.5              | ~3 years    |
+| Theater Electric Power        | Electric_kW             | kW                   |             | false       | 10018 | 2019-08-15 10:30:00 | 20                | 400             | 100         | 700         | 50               | ~3 years    |
+| Theater Temperature           | Temperature_Celsius     | Fahrenheit           |             | true        | 10019 | 2019-08-15 10:30:00 | 20                | 23              | 20          | 24.5        | 0.5              | ~3 years    |
+| Library Electric              | Electric_Utility        | kWh                  |             | true        | 10020 | 2019-08-15 10:30:00 | 23                | 20              | 5           | 40          | 3                | ~3 years    |
+| Library Temperature           | Temperature_Fahrenheit  | Fahrenheit           |             | true        | 10021 | 2019-08-15 10:30:00 | 20                | 75              | 68          | 76          | 1                | ~3 years    |
+| Great Dorm 1st floor Electric | Electric_Solar          | kWh                  |             | true        | 10022 | 2019-08-15 10:30:00 | 20                | 10              | 5           | 20          | 3                | ~3 years    |
+| Great Dorm 2nd floor Electric | Electric_Solar          | kWh                  |             | true        | 10023 | 2019-08-15 10:30:00 | 20                | 15              | 10          | 30          | 3                | ~3 years    |
+| Great Dorm Gas                | Natural_Gas_BTU         | BTU                  |             | true        | 10024 | 2019-08-15 10:30:00 | 20                | 45000           | 25000       | 65000       | 2000             | ~3 years    |
+| Great Dorm Water              | Water_Liter             | Gallon               |             | true        | 10025 | 2019-08-15 10:30:00 | 15                | 150             | 75          | 300         | 50               | ~3 years    |
+| Campus Recycling              | Ton                     | Pound                |             | true        | 10026 | 2019-08-16 00:00:00 | 10080             | 1               | 0.25        | 1.8         | 0.25             | ~3 years, 7 days per reading |
+
+### Groups
+
+| Name                            | Default Graphic Unit | GPS         | Displayable | Meters                                                       | Groups                                       | ID    | Description |
+| :-----------------------------: | :------------------: | :---------: | :---------: | :----------------------------------------------------------: | :------------------------------------------: | :---: | :---------: |
+| Dining Hall Energy              | kWh                  |             | true        | Dining Hall Electric, Dining Hall Gas                        |                                              | 10012 |             |
+| Dining Hall All                 | Ton of CO2           |             | true        | Dining Hall Water                                            | Dining Hall Energy                           | 10013 |             |
+| Theater Energy                  | kWh                  |             | true        | Theater Electric, Theater Gas                                |                                              | 10014 |             |
+| Theater All                     | Ton of CO2           |             | true        |                                                              | Theater Energy                               | 10015 |             |
+| Dining & Theater Electric Power | kW                   |             | false       | Dining Hall Electric Power, Theater Electric Power           |                                              | 10016 |             |
+| Library Electric                | kWh                  |             | true        | Library Electric                                             |                                              | 10017 |             |
+| Great Dorm Electric             | kWh                  |             | true        | Great Dorm 1st floor Electric, Great Dorm 2nd floor Electric |                                              | 10018 |             |
+| Great Dorm Energy               | kWh                  |             | true        | Great Dorm Gas                                               | Great Dorm Electric                          | 10019 |             |
+| Great Dorm All                  | Ton of CO2           |             | true        | Great Dorm water                                             | Great Dorm Energy                            | 10020 |             |
+| Campus Electric                 | kWh                  |             | true        | Dining Hall Electric, Theater Electric, Library Electric     | Great Dorm Electric                          | 10021 |             |
+| Campus Gas                      | BTU                  |             | true        | Dining Hall Gas, Theater Gas, Great Dorm Gas                 |                                              | 10022 |             |
+| Campus Energy                   | kWh                  |             | true        |                                                              | Campus Electric, Campus Gas                  | 10023 |             |
+| Campus All                      | Ton of CO2           |             | true        | Dining Hall Water, Great Dorm Water                          | Campus Energy                                | 10024 |             |
+| Campus All - Another            | Ton of CO2           |             | false       | Library Electric, Dining Hall Electric                       | Dining Hall All, Theater All, Great Dorm All | 10025 | Same as Campus All, also duplicates D.H. Electric |
+
+## Items for website update
+
+### Overall site
+
+* Check that the site is named “OED Demo Site”.
+* Make sure you log out as admin so it looks as a normal user would see unless doing an admin page.
+* Unless you want to show the dropdown menus, click off of them.
+* Remember to hover over values for many graphs.
+* Looking at the current image can help in making the new one. The HTML has the file names that make it easier to name the new screenshots.
+* When you want a box around an item, use the border color of 0000FF in web colors. The second, light blue box, is color 3399FF in web colors.
+
+### Update all pages as needed
+
+* If done correctly, all PRs and issues for this milestone are listed in the milestone so you can figure out what needs updating.
+* Don’t forget that features.html on the main website also has OED images of many features.
+* Sometimes changes impact the developer pages.
+* Compare & map values change when re-graph so need to check values in text
+
+### Details on special website pages
+
+* The adminMap.html file discusses calibration issues by changing the inputted GPS value +/: a given amount. Unfortunately I did not record the exact values for each point. However, it was probably +/-/+ for the three points but may be different signs.
+* Before doing images for the useAcademic.html, rename the site "My University".
+
+### HTML is valid
+
+Go to [https://validator.w3.org/](https://validator.w3.org/) and enter URL. Seems must do one page at a time.
+
+### check CSS if valid
+
+[https://jigsaw.w3.org/css-validator/](https://jigsaw.w3.org/css-validator/)
+
+Did the only page of css/main.css and no issues found.
+
+### Check links are valid
+
+Go to [https://validator.w3.org/checklink], enter web address, check summary only, set the depth of linked documents recursion to 10 to check all the linked pages. (Note tried checking Hide redirects but it did not help.) It takes a little while but it finds and checks them all.
+
+* Cannot check email links so get at least one warning on each page for contact
+* Complains about MPL link on footer of each page but it does seem fine.
+* [https://www.learn-js.org/](https://www.learn-js.org/) generally gives an error but the link seems fine.
+* [https://help.github.com/](https://help.github.com/) and  [https://docs.github.com/get-started/quickstart/fork-a-repo](https://docs.github.com/get-started/quickstart/fork-a-repo) gives redirect warning but want the redirect since selecting language automatically.
+* [https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform](https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform) gives warning on not checked to to robot exclusion but okay.
+* Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "http://mozilla.org/MPL/2.0/" -e "https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform" -e "https://www.learn-js.org/" -e "https://help.github.com/" -e "https://docs.github.com/get-started/quickstart/fork-a-repo"” for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
+* All okay with warning noted above as of 210807.
+
+### Check accessibility
+
+Not yet done/figured out.
+
+## **After this needs update and inclusion in new system**
+## Uses of meters/readings
+
+* Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter&gt; is step function data.
+  * Meter A-C are modest values that can be used together.
+  * Meter D is deliberately larger values to show issue of how others values become hard to see.
+  * Meters C-D demonstrate what happens when you have missing intervals of values. Deliberately chose to only have time missing at start/end because OED draws a line over the missing time if it is in the middle of the graph. (Maybe we will do something about that some day ;-)
+* Meter 1-4 are real data to show something more realistic. This is designed for overview graphics. Thus, Meter # is real data.
+* Meters 7-8 & All the Dorm ones are for comparison and having current readings. They are real data that is the same as Meters 1-4 but shifted in time.
+
 ## Steps to load all needed data
 
-* What follows assumes OED is up and running for a number of the steps.
-* Login as admin and make site named “OED Demo Site” on admin page.
-* Load the website data from CSV files and also create the meters needed. Note that the meter name and identifier will not have the starting M or D but that is added later when another script is run. The ones starting with D are for the useAcademic.html page.
-  * cd to the directory with the websiteSetup.sh script. This is often in your clone of the DevDocs repo in the website/ directory. It is assumed that the oedData/ directory is a subdirectory of this directory and it has all the CSV data files for the website.
-  * Run the script with: ./websiteSetup.sh
-  * If all goes well you will get 9 SUCCESS notices as:\
-&lt;h1&gt;SUCCESS&lt;/h1&gt;Successfully inserted the meters.&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;&lt;h1&gt;SUCCESS&lt;/h1&gt;&lt;h2&gt;It looks like the insert of the readings was a success.&lt;/h2&gt;
-  * Note this CSV file sets the GPS values so they work for the map below:
-    * (M)eter 7 and (D)orm A Residents: (84, 419) GPS (40.00419, -87.99916) which is Play Place
-    * (M)eter 8 and (D)orm B Residents: (250, 270) GPS (40.0027, -87.9975) which is Theater
-  * You can verify the meters on the meter page in OED if you want.
-* Create desired groups. Note all group names do not have the G or D in front as the script will fix this up.
-  * Go to the meter page so the new meters are known.
-  * Go to the groups page as an admin.
-  * Create “roup 1 & 2” that has eter 1, eter 2 in it. Give it GPS coordinates  40.00202, -87.99915 so it will be in the middle of Cafeteria. This was (85, 202) on the calibration coordinates.
-  * Create “roup 7 & 8” that has eter 7, eter 8 in it.
-  * Create a new group named “roup 1 & 2 & 7 & 8” that contains eter 1, eter 2 and roup 7 & 8.
-  * Create a new group name "orm A" with orm A Residents and orm A Other. Give GPS of 40.00419, -87.99916 so it is at Dorm A.
-  * Create a new group name "orm B" with orm B Residents and orm B Other. Give GPS of 40.0027, -87.9975 so it is at Dorm B.
-* Run script to set the desired meter and group ids. This is done so that they always have the same id which means the same color each time this is done. The meters go from 10012-10025 and groups go from 10012-10016. This also puts the M or D in front of meter name/identifier and G or D in front of group name. See script for why use these ids.
-  * In a terminal, cd to the main OED directory.
-  * docker exec -i &lt;DB container name&gt; psql -U oed &lt; &lt;path to script&gt;/websiteData.sql
-    * &lt;DB container name&gt; found by going to the start of the console output where you install/ran OED and getting the database container name. The line will be:\
-Container &lt;mydir&gt;-database-1  Created\
-where &lt;mydir&gt; is usually the directory name where you have OED running.
-    * &lt;path to script&gt; is the Linux path to where the script is and normally in your devDoc directory that is normally the same place as what you did above for the websiteSetup.sh script.
-  * The expected output is shown below since it is many lines.
-  * Note that this changes the meter and group info and readings so you need to do the following:
-    * Prepare the readings for viewing by doing this in the terminal in main OED directory: docker compose exec web npm run refreshAllReadingViews
-    * Make sure the groups and readings are available in the website going to the main OED page (Home) and reloading that page in the web browser.
 * Get 6 meters with current data for compare and other uses on academicUse.html (try to do right before create those images).:
   * Get the timezone of your local machine by doing this in the terminal: date +%Z. For what follows the timezone is assumed to be CST/CDT but you should change if your timezone differs.
   * cd to the main OED directory
@@ -52,14 +174,14 @@ where &lt;mydir&gt; is usually the directory name where you have OED running.
   * Shift dates so last end_timestamp is nearest to current hour. Note you have to do it in 2 places in the following command. Need to do for two different types of meters since they have different quantities of data.
     * Meters 7 & 8
       * Get the time shift
-        * select date_trunc('hour', clock_timestamp() at time zone 'cst') - max(end_timestamp) as shift from readings where meter_id = (select id from meters where name = 'Meter 7');
+        * select date_trunc('hour', clock_timestamp() at time zone 'cst') : max(end_timestamp) as shift from readings where meter_id = (select id from meters where name = 'Meter 7');
         * use cdt if appropriate
       * Now shift the readings by this amount (both start and end timestamp where you will shift all readings in the 2 new meters). Replace the '680 days 15:00:00' with whatever you got for the shift above.  So do:
         * update readings set start_timestamp = start_timestamp + interval '680 days 15:00:00', end_timestamp = end_timestamp + interval '680 days 15:00:00' where meter_id in (select id from meters where name in ('Meter 7', 'Meter 8'));
           * 4368 rows
     * Dorm A Residents, Dorm A Other, Dorm B Residents & Dorm B Other
       * Get the time shift
-        * select date_trunc('hour', clock_timestamp() at time zone 'cst') - max(end_timestamp) as shift from readings where meter_id = (select id from meters where name = 'Dorm A Other');
+        * select date_trunc('hour', clock_timestamp() at time zone 'cst') : max(end_timestamp) as shift from readings where meter_id = (select id from meters where name = 'Dorm A Other');
         * use cdt if appropriate
       * Now shift the readings by this amount (both start and end timestamp where you will shift all readings in the 2 new meters). Replace the '408 days 16:00:00' with whatever you got for the shift above.  So do:
         * update readings set start_timestamp = start_timestamp + interval '408 days 16:00:00', end_timestamp = end_timestamp + interval '408 days 16:00:00' where meter_id in (select id from meters where name in ('Dorm A Residents', 'Dorm A Other', 'Dorm B Residents', 'Dorm B Other'));
@@ -103,211 +225,3 @@ After 3 points had error: x: 0.566%, y: 0.429% so save the DB.
   3. in psql: delete from meters where id in (select id from meters where name in ('Meter 1', 'Meter 2', 'Meter A', 'Meter B', 'Meter C', 'Meter D', 'Meter 7', 'Meter 8', 'Dorm A Residents', 'Dorm A Other', 'Dorm B Residents', 'Dorm B Other', 'Meter 3', 'Meter 4'));
       * gives: DELETE 14
 
-Expected output from the websiteDate.sql script:??
-
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 2 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 8712 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 2 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 8712 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 5 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 5 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 3 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 5 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 8712 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 8712 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 2 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 1 \
-UPDATE 0 \
-UPDATE 2 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 1 \
-UPDATE 2 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 2 \
-DELETE 1 \
-INSERT 0 1 \
-UPDATE 0 \
-UPDATE 0 \
-UPDATE 2 \
-DELETE 1
-
-## Items for website update
-
-### Overall site
-
-* Check that the site is named “OED Demo Site”.
-* Make sure you log out as admin so it looks as a normal user would see unless doing an admin page.
-* Unless you want to show the dropdown menus, click off of them.
-* Remember to hover over values for many graphs.
-* Looking at the current image can help in making the new one. The HTML has the file names that make it easier to name the new screenshots.
-* When you want a box around an item, use the border color of 0000FF in web colors. The second, light blue box, is color 3399FF in web colors.
-
-### Update all pages as needed
-
-* If done correctly, all PRs and issues for this milestone are listed in the milestone so you can figure out what needs updating.
-* Don’t forget that features.html on the main website also has OED images of many features.
-* Sometimes changes impact the developer pages.
-* Compare & map values change when re-graph so need to check values in text
-
-### Details on special website pages
-
-* The adminMap.html file discusses calibration issues by changing the inputted GPS value +/- a given amount. Unfortunately I did not record the exact values for each point. However, it was probably +/-/+ for the three points but may be different signs.
-* Before doing images for the useAcademic.html, rename the site "My University".
-
-### HTML is valid
-
-Go to [https://validator.w3.org/](https://validator.w3.org/) and enter URL. Seems must do one page at a time.
-
-### check CSS if valid
-
-[https://jigsaw.w3.org/css-validator/](https://jigsaw.w3.org/css-validator/)
-
-Did the only page of css/main.css and no issues found.
-
-### Check links are valid
-
-Go to [https://validator.w3.org/checklink], enter web address, check summary only, set the depth of linked documents recursion to 10 to check all the linked pages. (Note tried checking Hide redirects but it did not help.) It takes a little while but it finds and checks them all.
-
-* Cannot check email links so get at least one warning on each page for contact
-* Complains about MPL link on footer of each page but it does seem fine.
-* [https://www.learn-js.org/](https://www.learn-js.org/) generally gives an error but the link seems fine.
-* [https://help.github.com/](https://help.github.com/) and  [https://docs.github.com/get-started/quickstart/fork-a-repo](https://docs.github.com/get-started/quickstart/fork-a-repo) gives redirect warning but want the redirect since selecting language automatically.
-* [https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform](https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform) gives warning on not checked to to robot exclusion but okay.
-* Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "http://mozilla.org/MPL/2.0/" -e "https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform" -e "https://www.learn-js.org/" -e "https://help.github.com/" -e "https://docs.github.com/get-started/quickstart/fork-a-repo"” for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
-* All okay with warning noted above as of 210807.
-
-### Check accessibility
-
-Not yet done/figured out.
-
-## Test data description
-
-The CSV files for meters and readings are in the subdirectory oedData/. The readings.ods file has some of the calculations to get a reading of a desired value. The issue is that you cannot set a given reading to what you want to see on the graph when you plot it on a daily basis. This is complicated because the synthetic data spans many days (a step function) and the times were chosen to stop at varying times in the day.
-
-## Meters
-
-| Name             | ID    | Description |
-| ---------------- | ----- | ----------- |
-| Meter A          | 10012 | Full year 2020, step function, 5 steps (1-3.5 on line graph) |
-| Meter B          | 10013 | Full year 2020, step function, 5 steps (2.5-5 on line graph) |
-| Meter C          | 10014 | Year 2020 missing start and end, step function, 3 steps (5.5-9.2 on line graph) |
-| Meter D          | 10015 | Year 2020 missing start and end but different start/stop than Meter 3, step function, 5 steps (72-101 on line graph), big values compared to others |
-| Meter 1          | 10016 | Full Year 2020, read integer data (~4-30.25 on line graph) |
-| Meter 2          | 10017 | Full Year 2020, read integer data (~22.5-82.7 on line graph) |
-| Meter 3          | 10024 | Full Year 2020, read integer data (~22-37.5 on line graph) |
-| Meter 4          | 10025 | Full Year 2020, read integer data (~61-104 on line graph) |
-| Meter 7          | 10018 | 3 months from current date, same values as first 3 months from Meter 1, see above on how this is created as not in readings.csv |
-| Meter 8          | 10019 | 3 months from current date, same values as first 3 months from Meter 1, see above on how this is created as not in readings.csv |
-| Dorm A Residents | 10020 | 12 months from current date, same values as Meter 1, see above on how this is created as not in readings.csv |
-| Dorm A Other     | 10021 | 12 months from current date, same values as Meter 2, see above on how this is created as not in readings.csv |
-| Dorm B Residents | 10022 | 12 months from current date, same values as Meter 1, see above on how this is created as not in readings.csv |
-| Dorm B Other     | 10023 | 12 months from current date, same values as Meter 2, see above on how this is created as not in readings.csv |
-
-Note I trimmed the time to stop on Dec. 28 so the last bar was virtually full. Otherwise you get one more bar for each meter with small values due to an issue in using regular bars.
-
-## Uses of meters/readings
-
-* Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter&gt; is step function data.
-  * Meter A-C are modest values that can be used together.
-  * Meter D is deliberately larger values to show issue of how others values become hard to see.
-  * Meters C-D demonstrate what happens when you have missing intervals of values. Deliberately chose to only have time missing at start/end because OED draws a line over the missing time if it is in the middle of the graph. (Maybe we will do something about that some day ;-)
-* Meter 1-4 are real data to show something more realistic. This is designed for overview graphics. Thus, Meter # is real data.
-* Meters 7-8 & All the Dorm ones are for comparison and having current readings. They are real data that is the same as Meters 1-4 but shifted in time.

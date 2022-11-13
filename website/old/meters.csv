@@ -1,0 +1,15 @@
+name,ipaddress,enabled,displayable,meter_type,default_timezone_meter,gps,identifier
+eter 1,,FALSE,TRUE,other,,,eter 1
+eter 2,,FALSE,TRUE,other,,,eter 2
+eter 3,,FALSE,TRUE,other,,,eter 3
+eter 4,,FALSE,TRUE,other,,,eter 4
+eter 7,,FALSE,TRUE,other,,"40.00419, -87.99916",eter 7
+eter 8,,FALSE,TRUE,other,,"40.0027, -87.9975",eter 8
+eter A,,FALSE,TRUE,other,,,eter A
+eter B,,FALSE,TRUE,other,,,eter B
+eter C,,FALSE,TRUE,other,,,eter C
+eter D,,FALSE,TRUE,other,,,eter D
+orm A Residents,,FALSE,TRUE,other,,"40.00419, -87.99916",orm A Residents
+orm A Other,,FALSE,TRUE,other,,,orm A Other
+orm B Residents,,FALSE,TRUE,other,,"40.0027, -87.9975",orm B Residents
+orm B Other,,FALSE,TRUE,other,,,orm B Other
