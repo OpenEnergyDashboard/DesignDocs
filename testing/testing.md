@@ -14,7 +14,7 @@ The following table gives the test readings created so far. The fields are:
 4) "File name" is the input file name holding the data for testing that has these fields where all fields are separated by "_":
     - The first field is what the file is. "readings" is the input readings.
     - "ri" stands for reading increment. It is followed by the minutes between readings, e.g., ri_15.
-    -"days" stands for the number of days that there are readings. It is followed by a number, e.g., days_75.
+    - "days" stands for the number of days that there are readings. It is followed by a number, e.g., days_75.
 5) "Description" is a description of the data.
 6) "Cell range" is used in generating the data as described below.
 
@@ -42,7 +42,7 @@ The following table gives information about the expected readings returned for a
     1) The first field is what the file is. "expected" is the readings from a request to the DB.
     2) "ri" is the same as readings file.
     3) "mu" stands for the meter unit. It is followed by the unit name, e.g., mu_kWh.
-    4) "gu" stands for the graphic unit. It is followed by the unit name, e.g., mg_BTU.
+    4) "gu" stands for the graphic unit. It is followed by the unit name, e.g., gu_BTU.
     5) "st" stands for start time. It is followed by the start time for the readings request from the DB where "inf" is short for infinity and "-inf" is negative infinity. It can also be a date/time such as "2022-09-22%13#00#00". Note what is normally a space becomes % and what is normally a : becomes a #. This is to avoid issues with various file systems.
     6) "et" is similar to "st" but the end time for the readings request.
 
@@ -85,12 +85,11 @@ After setting the values and creating the values in the three needed columns (A,
 1) Select the range indicated for "Cell range" for your test in the readings table (not the expected table).
 2) Copy the values selected.
 3) Open a new spreadsheet.
-4) Do a special paste starting in cell A2 by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas. Resizing the columns will likely make the values easier to see. The rows should now have the desired readings to input into the meter.
-5) Do a special paste by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas.
-6) Select all of columns B & C. Then do Format -> Cells ... or control/command 1. In Category select date and then in Format select  1999-12-31 13:37:46. This formats the columns as dates in the canonical format. You may need to make the columns wider to see the values (esp. if you see ### instead of date/time).
-7) Go back to the readings.ods spreadsheet and select A4:C4. Copy these values for the header.
-8) Go back to the readings spreadsheet you are creating and paste starting in A1. You now have the header row for the CSV.
-9) Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name for the row for the readings you are creating. Then click the Save button.
+4) Do a special paste starting in cell A2 by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift v. In the popup, click the Values Only button on the left because you don't want to get the formulas. Resizing the columns will likely make the values easier to see. The rows should now have the desired readings to input into the meter.
+5) Select all of columns B & C. Then do Format -> Cells ... or control/command 1. In Category select date and then in Format select  1999-12-31 13:37:46. This formats the columns as dates in the canonical format. You may need to make the columns wider to see the values (esp. if you see ### instead of date/time).
+6) Go back to the readings.ods spreadsheet and select A4:C4. Copy these values for the header.
+7) Go back to the readings spreadsheet you are creating and paste starting in A1. You now have the header row for the CSV.
+8) Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name for the row for the readings you are creating. Then click the Save button.
 
 ### Generating expected result from OED
 
@@ -110,13 +109,13 @@ After setting the values and creating the values in the three needed columns (A,
 5) Enter the values for A2, B2, C2 and D2 from the expected table above for the test you want to create. These are, respectively, slope, intercept and min/reading. Note F2 will automatically be calculated and should be the number of rows of the readings in columns A-C per reading returned by the database.
 6) Select the range indicated for "Cell range" for your test in the expected table (not the input table). Copy these values that should be the expected output from querying the DB for the line readings.
 7) Open a new spreadsheet.
-8) Do a special paste starting in cell A2 by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas. Resizing the columns will likely make the values easier to see. This should now have the expected readings for the desired date/time range but see below if you are doing any partial readings at the start/end.
+8) Do a special paste starting in cell A2 by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift v. In the popup, click the Values Only button on the left because you don't want to get the formulas. Resizing the columns will likely make the values easier to see. This should now have the expected readings for the desired date/time range but see below if you are doing any partial readings at the start/end.
 9) Go back to the readings spreadsheet and select A1:C1. Copy these values for the header.
 10) Go back to the expected spreadsheet you are creating and paste starting in A1. You now have the header row for the CSV.
 11) Do File -> Save or control/command s. In File type: select Text CSV (.csv) and enter a file name for the desired test in the expected table. Then click the Save button.
 
 ### Partial readings
 
-A \* in the expected table for the "Cell range" indicates that the first/last reading from the DB is calculated where some expected readings are not present. Usually this test is seeing if the range begins/ends during the day or hour. Use the two ranges in the description and sum them to get the needed valuesTake the values in the comment and use them in a formula similar to this (in I5 in expected.ods) where this is an example: \
+A \* in the expected table for the "Cell range" indicates that the first/last reading from the DB is calculated where some expected readings are not present. Usually this test is seeing if the range begins/ends during the day or hour. Use the two ranges in the description and sum them to get the needed values. Take the values in the comment and use them in a formula similar to this (in I5 in expected.ods) where this is an example: \
 = SUM(A6821:A6873) / ( (C6873 - C6821) * 24) \
 Note you can put the cells in the first sum the other way around but LibreOffice will invert after entering. You do this for each partial reading and then paste that value into the expected file you are creating for that time range. What this does is sum the readings for the times you want (excluding times outside the range asked for from the DB) and divide by the number of hours in that range.
