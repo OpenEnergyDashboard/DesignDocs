@@ -59,6 +59,7 @@ The following table gives information about the expected readings returned for a
 | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 60          | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | 15 days barely gives hourly points & middle readings |
 | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 15          | E3269:G4612   | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days barely gives raw points & middle readings |
 | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1440        | E7:G76 \*     | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily: 292:227, 6873:6821 |
+| readings_ri_15_days_75.csv |  kW         | kW           | 1          | 0         | 1440        | E5:G79        | -infinity               | +infinity             | expected_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | gives daily points of all readings |
 
 \* indicates you need to fix up the first/last readings due to partial times. See below.
 
@@ -98,6 +99,7 @@ The file expected.ods can calculate the expected values. It currently does it fo
 - A2 should be the slope for the conversion from the meter unit to the graphing unit. It is given in the expected table above as "slope".
 - B2 should be the intercept for the conversion from the meter unit to the graphing unit. It is normally 0 (temperature is an exception). It is given in the expected table above as "intercept".
 - C2 should be the time in minutes between readings returned by the DB. It is given in the table above as "min/reading". The most common are 60 for hourly and 1440 for daily readings.
+- D2 is true if the meter is a quantity (kWh, liters, C02, ...) and false if not, e.g., flow or raw (kW, Fahrenheit, ...). When you click on the cell you get a dropdown menu to choose one of these two choices.
 
 After setting the values and creating the values in the three needed columns (A, B, C) you can create a CSV for testing usage by:
 
@@ -105,7 +107,7 @@ After setting the values and creating the values in the three needed columns (A,
 2) Open the file with the input readings. Select the "Cell range" given in the input table (not the expected table) for row you are creating.
 3) Copy the values selected.
 4) Go back to the expected values spreadsheet, click in cell A5 and paste these values. (Note if you are copying directly from expected.ods - not common - then you will need to do a special paste.) These should now have the reading value and start/end time.
-5) Enter the values for A2, B2 and C2 from the expected table above for the test you want to create. These are, respectively, slope, intercept and min/reading. Note E2 will automatically be calculated and should be the number of rows of the readings in columns A-C per reading returned by the database.
+5) Enter the values for A2, B2, C2 and D2 from the expected table above for the test you want to create. These are, respectively, slope, intercept and min/reading. Note F2 will automatically be calculated and should be the number of rows of the readings in columns A-C per reading returned by the database.
 6) Select the range indicated for "Cell range" for your test in the expected table (not the input table). Copy these values that should be the expected output from querying the DB for the line readings.
 7) Open a new spreadsheet.
 8) Do a special paste starting in cell A2 by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas. Resizing the columns will likely make the values easier to see. This should now have the expected readings for the desired date/time range but see below if you are doing any partial readings at the start/end.
