@@ -128,6 +128,9 @@ After setting the values and creating the values in the three needed columns (A,
 
 The spreadsheet uses these formula:
 
+- "rows/reading from DB (calculated)" in F2 uses: \
+= ROUND($C$2 / (($C$5 - $B$5) * 24 * 60), 0) \
+This takes the difference in time for the first readings ($C$5 - $B$5) where it is assumed all readings are the same length, converts it from days to minutes ( * 24 * 60 since that is the number of minutes in a day) and divides this into "min/reading from DB" (C2). This gives per reading which is the number of rows each line reading will include. The ROUND makes it have no decimal part since it must be a whole number. This was needed because the calculation was not exact and lead to small deviation from the desired value.
 - Each reading in column E uses: \
 = IF(($D$2), (SUM(INDIRECT("A" & ((ROW() - 5) * $F$2  + 5)):INDIRECT("A" & ((ROW() - 4) * $F$2  + 4)))  / ($C$2 / 60) * $A$2 + $B$2),(AVERAGE(INDIRECT("A" & ((ROW() - 5) * $F$2  + 5)):INDIRECT("A" & ((ROW() - 4) * $F$2  + 4))) * $A$2 + $B$2)) \
 which does the following:
