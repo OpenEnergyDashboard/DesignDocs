@@ -91,6 +91,18 @@ After setting the values and creating the values in the three needed columns (A,
 7) Go back to the readings spreadsheet you are creating and paste starting in A1. You now have the header row for the CSV.
 8) Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name for the row for the readings you are creating. Then click the Save button.
 
+The spreadsheet uses these formula:
+
+- Each reading in column A uses: \
+= RAND() * ($C$2 - $B$2) + $B$2 \
+which takes a random value and scales it to be between the min (B2) and the max (C2)
+- Each start time in column B (except the first that is set with the initial value in B5) uses: \
+= $B$5 +  (ROW() - 5) * $A$2 / (24 * 60) \
+which takes the first start time and shifts it by the "reading time increment in minutes" value in A2 multiplied by how many readings down it is. Since the readings start in row 5, the value of the ROW() is shifted back by 5. It is divided by 24 * 60 since this is the number of minutes in a day.
+- Each end time in column C uses (this is for row 5 so is B5 and would be B6 for row 6, etc.\
+= B5 +  $A$2 / (24 * 60) \
+which takes the start time of the same row and shifts it by the "reading time increment in minutes" value in A2 which is divided by minutes in the day (24 * 60).
+
 ### Generating expected result from OED
 
 The file expected.ods can calculate the expected values. It currently does it for fixed reading time steps that evenly divide one hour (15 minute, 20 minutes, etc.). Note you have to set special formulas when the first/last readings are not aligned with the times returned by the DB. Set the following to get the desired result:
@@ -113,6 +125,24 @@ After setting the values and creating the values in the three needed columns (A,
 9) Go back to the readings spreadsheet and select A1:C1. Copy these values for the header.
 10) Go back to the expected spreadsheet you are creating and paste starting in A1. You now have the header row for the CSV.
 11) Do File -> Save or control/command s. In File type: select Text CSV (.csv) and enter a file name for the desired test in the expected table. Then click the Save button.
+
+The spreadsheet uses these formula:
+
+- Each reading in column E uses: \
+= IF(($D$2), (SUM(INDIRECT("A" & ((ROW() - 5) * $F$2  + 5)):INDIRECT("A" & ((ROW() - 4) * $F$2  + 4)))  / ($C$2 / 60) * $A$2 + $B$2),(AVERAGE(INDIRECT("A" & ((ROW() - 5) * $F$2  + 5)):INDIRECT("A" & ((ROW() - 4) * $F$2  + 4))) * $A$2 + $B$2)) \
+which does the following:
+    - The IF changes the formula depending on whether the data is quantity or not.
+    - INDIRECT("A" & ((ROW() - 5) * $F$2  + 5)) determines a cell. It it in column A where the row is the current row minus 5 since the values start in row 5. It is multiplied by "rows/reading from DB (calculated)" in F2 since that is how many rows each point will average from the input readings. For example, if the readings are every 15 minutes and F2 is 96, then you average 96 rows which is 96 * 15 min = 1440 min (24 hour or 1 day). It then shifts back by + 5 to get to the needed row.
+    - INDIRECT("A" & ((ROW() - 4) * $F$2  + 4)) is very similar but shifts by 1 less so it goes one move block of readings down.
+    - The two INDIRECT commands are put together with a : to give a cell range. The number of cells is the value in F2 because the shifts differ by 1.
+    - If the data is quantity (true for D2) then you sum all the readings (which are quantities). These are divided by $C$2 / 60 because C2 is the "min/reading from DB" and dividing by 60 gives the hours/reading from the DB. You normalize by hours since OED returns a rate for line readings that is per hour. This value is multiplied by slope (A2) and added by the intercept (B2) to get it into the desired unit.
+    - If the data is flow/raw (false for D2) then you average all the readings. Everything else is the same as the quantity case except there is no normalization by time. This is because OED returns the average value in this case and the readings were already a rate.
+- Each start time in column E uses: \
+= INDIRECT("B" & ((ROW() - 5) * $F$2)  + 5) \
+This calculates the row in column B where the first meter reading that was included in line reading is and its start time is the one for the line point. The ((ROW() - 5) * $F$2)  + 5 is the same as first part of the range as described in the reading forumula above.
+- Each end time in column F uses: \
+= INDIRECT("C" & ((ROW() - 4) * $F$2)  + 4) \
+which is very similar to the start time but finds the end time (in column C) of the last meter reading used so it is the end time of the line reading returned.
 
 ### Partial readings
 
