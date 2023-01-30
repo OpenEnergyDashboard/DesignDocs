@@ -1,4 +1,4 @@
-# Documentation on how testing data is created
+# Documentation on how testing data is created and used
 
 The directory readingsData/ has all the files used.
 
@@ -66,6 +66,11 @@ The following table gives information about the expected readings returned for a
 
 \* indicates you need to fix up the first/last readings due to partial times. See below.
 
+TODO
+- other units to test conversions
+- missing readings: probably need to do calculation by hand
+- readings where length is not divisible into hour/day
+
 ### Bar readings
 
 The values in this table are similar to the ones for line readings except:
@@ -81,6 +86,8 @@ The values in this table are similar to the ones for line readings except:
 |      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 365       | I5:K5         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_365.csv                              | 365 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
 
 Note that bar readings have yet to be done for these types of tests. Thus, a few are given to see if the results match. More tests for time ranges and different units are needed that are similar to line. If a developer does at least one of these then let the project know if it works so more will be created.
+
+TODO other time frames, units, missing readings, etc. similar to line
 
 ### Compare readings
 
