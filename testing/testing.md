@@ -38,19 +38,22 @@ The following table gives information about the expected readings returned for a
 - "End time for readings" is the date/time for the ending of the readings requested from the DB.
 - "Expected readings file name" is the file that can be used to compare to the readings from the DB. The name has these fields where all fields are separated by "_":
 
-    1) The first field is what the file is. "expected" is the readings from a request to the DB.
+    1) The first field is what the file is. "expected" is the readings from a request to the DB. This will be followed by the type of readings (line, bar, compare, map).
     2) "ri" is the same as readings file.
     3) "mu" stands for the meter unit. It is followed by the unit name, e.g., mu_kWh.
     4) "gu" stands for the graphic unit. It is followed by the unit name, e.g., gu_BTU.
     5) "st" stands for start time. It is followed by the start time for the readings request from the DB where "inf" is short for infinity and "-inf" is negative infinity. It can also be a date/time such as "2022-09-22%13#00#00". Note what is normally a space becomes % and what is normally a : becomes a #. This is to avoid issues with various file systems.
     6) "et" is similar to "st" but the end time for the readings request.
+    7) For bar readings there will be "bd" which stands for bar duration. It is followed by the number of days for the requested bar graphic. For example, bd_1, bd_7, etc.
 
 - "Description" gives information on this row.
 
 **TODO The dates needed for expected data need to change after the DB functions for getting data are updated to go raw then hourly then daily.**
 
-| Done | Readings file              | Meter unit  | Graphic unit | slope      | intercept | min/reading | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                    | Description                                 |
-| :--: | :------------------------: | :---------: | :----------: | :--------: | :-------: | :---------: | :-----------: |:----------------------: | :-------------------: | :----------------------------------------------------------------------------: | :-----------------------------------------: |
+### Line readings
+
+| Done | Readings file              | Meter unit  | Graphic unit | slope      | intercept | min/reading | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                 |
+| :--: | :------------------------: | :---------: | :----------: | :--------: | :-------: | :---------: | :-----------: |:----------------------: | :-------------------: | :---------------------------------------------------------------------------------: | :-----------------------------------------: |
 | x    | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1440        | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf.csv                                | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
 | x    | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1440        | E5:G79        | 2022-08-18 00:00:00     | 2022-11-01 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-18%00#00#00_et_2022-11-01%00#00#00.csv | should have daily points for 15 minute reading intervals and quantity units with explicit start/end time & kWh as kWh |
 | x    | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1440        | E12:G72       | 2022-08-25 00:00:00     | 2022-10-25 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-25%00#00#00.csv | should have daily points for middle readings of 15 minute for a 61 day period and quantity units with kWh as kWh |
@@ -58,9 +61,34 @@ The following table gives information about the expected readings returned for a
 |      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 60          | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | 15 days barely gives hourly points & middle readings |
 |      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 15          | E3269:G4612   | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days barely gives raw points & middle readings |
 |      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1440        | E7:G76 \*     | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily: 292:227, 6873:6821 |
-|      | readings_ri_15_days_75.csv |  kW         | kW           | 1          | 0         | 1440        | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & kW as kW |
+| x    | readings_ri_15_days_75.csv |  kW         | kW           | 1          | 0         | 1440        | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & kW as kW |
+| x    | readings_ri_15_days_75.csv |  C          | C            | 1          | 0         | 1440        | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | should have daily points for 15 minute reading intervals and raw units with +-inf start/end time & C as C |
 
 \* indicates you need to fix up the first/last readings due to partial times. See below.
+
+### Bar readings
+
+The values in this table are similar to the ones for line readings except:
+- There is no "min/reading" as this can be any reasonable value.
+- "Bar width" gives the number of days for each bar in the requested graphic. Standard OED values are 1, 7 & 28 but any value from 1 to 365 is valid.
+
+| Done | Readings file              | Meter unit  | Graphic unit | slope      | intercept | Bar width | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                 |
+| :--: | :------------------------: | :---------: | :----------: | :--------: | :-------: | :-------: | :-----------: |:----------------------: | :-------------------: | :---------------------------------------------------------------------------------: | :-----------------------------------------: |
+|      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 1         | I5:K79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_1.csv                                | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+|      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 7         | I5:K15        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_7.csv                                | 7 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+|      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 28        | I5:K7         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_28.csv                               | 28 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+|      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 13        | I5:K10        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_13.csv                               | 13 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+|      | readings_ri_15_days_75.csv |  kWh        | kWh          | 1          | 0         | 365       | I5:K5         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_365.csv                              | 365 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+
+Note that bar readings have yet to be done for these types of tests. Thus, a few are given to see if the results match. More tests for time ranges and different units are needed that are similar to line. If a developer does at least one of these then let the project know if it works so more will be created.
+
+### Compare readings
+
+TODO
+
+### Map readings
+
+TODO
 
 ## Generating test data
 
@@ -160,12 +188,12 @@ Note you can put the cells in the first sum the other way around but LibreOffice
 
 Set the following to get the desired result:
 
-- A2, B2, C2 & D2 are the same as described for line readings.
-- I2 should be the number of days in each bar for the graphic values you want.
+- A2, B2, C2 & D2 are the same as described for line readings. The value of C2 should be set but should not change the bar result.
+- I2 should be the number of days in each bar for the graphic values you want. This is the value in column "Bar width" in the table above.
 
 Note that J2, K2 & L2 should be automatically calculated and correct.
 
-The readings values used are the same as the description for the line readings. Generally, they are the same as a line reading example and can be reused. Some formulas used assume the line reading span the same time as the bar so they need to be set.
+The readings values used are the same as the description for the line readings. Generally, they are the same as a line reading example and can be reused. Some formulas used assume the line reading span the same time as the bar so they need to be set. The cell range will be in columns I to K for bar readings.
 
 The spreadsheet uses these formula. Since the DB returns bars starting with the most recent time, it has to work from the last reading backward.:
 
