@@ -78,6 +78,7 @@ The following tables give information about the expected readings returned for a
 - "slope" is the slope of the conversion from meter unit to graphic unit.
 - "intercept" is the intercept of the conversion from meter unit to graphic unit. It is typically zero (temperature unit is an exception).
 - "min/reading" is the minutes/reading that is returned by the database when the readings are requested. For example, if expect to get hourly readings then it is 60 and 1440 for daily readings.
+- "Quantity" is true if this is a quantity unit. Placed in the "Quantity data?" in expected result.
 - "Cell range" is the range of cells holding the first start time to the last end time stamp for the expected readings. It is used as described below.
 - "Start time for readings" is the date/time for the beginning of the readings requested from the DB.
 - "End time for readings" is the date/time for the ending of the readings requested from the DB.
@@ -128,7 +129,6 @@ The following tables give information about the expected readings returned for a
 \* indicates you need to fix up the first/last readings due to partial times. See below.
 
 TODO
-- meter to unit is not slope 1
 - could add for flow with conversion but should be same as raw already done
 - missing readings: probably need to do calculation by hand
 - readings where length is not divisible into hour/day
