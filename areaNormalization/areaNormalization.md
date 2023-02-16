@@ -7,6 +7,7 @@ This is a first, rough draft of these ideas where more work is anticipated.
 Resource usage is likely to scale with the size of the building where the area represents the size. For example, if two buildings are equally efficient then one that is twice the area should use twice the resources. To account for this, OED wants to allow an option that the user can select that would take the values shown in any graphic and normalize by area. Thus, this would include meters and groups. OED already has DB and admin edit ability for an area field for meters and groups.
 
 There are other items that cause resource usage to vary. These include weather, baseline and cost; OED is interested in doing this in the future. Some are additive factors (baseline), some are multiplicative (cost) and some may involve a formula (weather). A system that would accommodate this would be great.
+One main difference between these resources and area is that these are "global", in that they are shared between meters. Area value is specific to each meter or group. This means that the handling of these may be different.
 
 ## Meters
 
@@ -40,12 +41,14 @@ Hopefully this can be done with reuse or similar code to what maps do.
 
 ## Area and units
 
-At the current time there is a single area value for a meter/group. This implies that the unit is the same for all meters/groups but the actual unit is unknown. It would be nice to upgrade this given OED now understands units. Thus, the following is proposed:
+At the current time there is a single area value for a meter/group. This implies that the unit is the same for all meters/groups but the actual unit is unknown. Area units should be a feature, as allowing for conversions between measurement systems is useful.
+Thus, the following is proposed:
 
 - OED will provide (at least) two standard area units: sq. meter & sq. foot. (Alright, now meter has another meaning but hopefully clear from context :-) The conversion between them will also be provided. Any area unit (as described below) is okay to use for the area of a meter/group.
 - The DB and menus for area will be modified so they include all area units. The ones for meter/group editing should be clear. There will also be one associated with choosing the normalize graphics by area. The thought was to have a checkbox to enable this with a menu nearby that allows the user to select any area unit. OED will need to do a conversion if the area unit of the meter/group differs from the one chosen for display. This is the same process done for the graphic unit in OED and should be handled similarly. As such, it will be done in the DB on the server. This seems an okay choice given the user isn't likely to change the unit very often. The Redux state will need to handle this and the normalized area readings.
 - The admin preferences will have another menu to set the site default area unit as is done for language, graphic, etc. This will also require it to be added to the DB. All the menus for area (meter/group editing and user selected area unit for graphic normalization) will have this as the default value when it comes up before the user may change it.
-- Each of the three places that need an area unit choice will have to decide which units are allows (hopefully using the same code). This will be determined by whether a unit can be converted from sq. meters. This means any unit that has true in the Pik row with sq. meters. src/client/app/utils/determineCompatibleUnits.ts function unitsCompatibleWithUnit() can do this. This will allow admins to add more area units for normalization by creating a bidirectional conversion to any existing area unit.
+- Each of the three places that need an area unit choice will have to decide which units are allowed (hopefully using the same code). This will be determined by whether a unit can be converted from sq. meters. This means any unit that has true in the Pik row with sq. meters. src/client/app/utils/determineCompatibleUnits.ts function unitsCompatibleWithUnit() can do this. This will allow admins to add more area units for normalization by creating a bidirectional conversion to any existing area unit.
+- Area units will be added as a new unit type. This will allow them to be distinguished from other unit types, but still use many of the existing functions and features of OED units.
 
 ## Area varying with time
 
@@ -63,6 +66,6 @@ value, start date/time, end date/time \
 125, 1/1/2022 00:00:00, inf/some special value \
 where the value to represent all time before or after needs to be worked out. Given current code we could create a group of the original meter and this one to get the net value for additive changes (such as baseline). The code would need to be changed for multiplicative changes. I think the current code requires these new meters to be put into the views tables which means a lot of identical points would be created. An open question is whether this could be avoided while still allowing for fast calculations (seems possible but not analyzed).
 
-Another idea is to modify the current units (or create special new ones) that can vary with time. It would clearly allow a combination of multiplicative and additive factors. It is unclear if that is needed but should be done if easy (including any other idea used).  How that would work has not been thought out.
+Another idea is to modify the current units (or create special new ones) that can vary with time. It would clearly allow a combination of multiplicative and additive factors. It is unclear if that is needed but should be done if easy (including any other idea used). See [design document](../unitVaryTime/conversionsVaryTime.md) for more on this option.
 
-A final idea is another idea yet to be thought of!
+**After some discussion**, it has been decided that allowing area to vary with time is not worth it, because area is specific to each meter. Other units which vary with time are shared between multiple meters, and thus require less conversions to be stored.
