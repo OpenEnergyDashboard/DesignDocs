@@ -1,6 +1,6 @@
 # Conversions that vary with time
 
-This is a preliminary draft to start discussions on this idea. It is being pushed out for a meeting and has not been reviewed at this time.
+Unlike some of the design documents, this one proposes avenue to try so the final solution can be determined.
 
 ## Introduction
 
@@ -8,9 +8,10 @@ The current resourceGeneralization designed conversions between units that did n
 
 There are conversions that sites want to vary by time including:
 
+- Area normalization (see [design document](../areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side. This is a completed feature.
+- Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also changed periodically. This means lots of time variations which is unlike the first two uses. Fixed costs are part of the units work for v1.0.
 - Baselines (which may be doable by units) which can change if a building is changed.
-- Area normalization (see [design document](../areaNormalization/areaNormalization.md)) where values can vary with building changes.
-- Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also changed periodically. This means lots of time variations which is unlike most other uses.
+- Weather. Normalize usage by the weather. In a common way, the degree heating/cooling for each day is determined from local weather and then used to normalize the usage. Other ways are possible. This usage has similarities to cost in the frequency of variation but there is no regular pattern. This is a planned feature that is not yet done in OED.
 
 ## Potential solution
 
@@ -50,6 +51,12 @@ create table conversions (
 
 The basic idea to apply the time varying conversion in a similar way that readings area averaged by determining the overlap in time and properly applying. Note that an actual solution would do a slope (rate above) and an intercept (not above).
 
+Note OED has an hourly and daily table so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for the DB functions. It may be valuable to see the description in the devDocs for resource generalization that describes how the older functions worked (see section other-database-considerations, note this is only available to OED developers at this time).
+
+The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that uses holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below).
+
+How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed.
+
 ## Conversion ideas
 
 The current ideas in resource generalization are mapped to the new system by setting the start/end timestamp (valid_for in Simon's code) to -inf and inf (or some appropriate value) to indicate they apply to all time. These effectively create conversions that do not vary with time.
@@ -69,24 +76,54 @@ Here the admin will enter all the conversion values for various time ranges.
 For conversion creation, the admin will set the source/destination units (and the other information currently needed). Once OED has the source/destination, it will need to check if there is any other conversion involving these two units. There are two cases:
 
 1. This is the first conversion for this pair of units. OED will automatically set the start/end timestamp to be -inf and inf (or whatever value is decided). This means that the page is not substantively changed and it is easy for an admin to do the case where conversions do not vary with time.
-2. There are already conversion for this unit pair. In this case OED will need to get the start time for the new conversion. The detail need to be decided. The start time will be used to split the current conversion that includes that time. An example may help:
+2. There are already conversion for this unit pair. In this case OED will need to get the start time for the new conversion. The details need to be decided. The start time will be used to split the current conversion that includes that time. An example may help:
 
-- If this is the second conversion for this unit pair, the first will have time of -inf, inf with a value of 10 (for example). If a start time for the new conversion is 1/1/2022 with a value of 20 then there will now be two conversions:
+    - If this is the second conversion for this unit pair, the first will have time of -inf, inf with a value of 10 for the slope and 0 for the intercept (for example). If a start time for the new conversion is 1/1/2022 with a value of 20 (ignoring slope that is usually 0) then there will now be two conversions:
 
-1. -inf, 1/1/2022 with value 10
-2. 1/1/2022, inf with value 20
+      1. -inf, 1/1/2022 with value 10
+      2. 1/1/2022, inf with value 20
 
 This idea can be applied to any existing conversion. Note the admin should be able to enter -inf as the start time to split from the beginning of time.
 
 A special case is if the start time is on the end time of a current conversion. This will not be allowed as it is effectively an edit of the conversion. Note the description is the end time. This means it does not exclude -inf which can only be a start time. For all other values (except inf which the admin is not allowed to enter), there will be an end time of one conversion and the start time of another conversion that matches because gaps are not allowed. One question is whether the edit should just be done here rather than on a separate page.
 
-To facilitate entering conversions, it may be useful for OED to display the current conversion with the entered source/destination. This could be a table and/or a graph of them.
+To facilitate entering conversions, it may be useful for OED to display the current conversion with the entered source/destination. This could be a table and/or a graph of them. Another option that may make sense is to have a card for each one that is similar to the look of other admin pages. The cards would be sorted by start time so the next time follows the first.
 
 For conversion editing, OED needs to list all the current conversions (see comment above). The admin can then select a conversion (decide how) and the values can be edited. The values for the start/end time must be controlled by these rules:
 
 - -inf/inf cannot be changed so the conversions continue to span all time.
-- If the start/end time is changed then the conversion that has the matching end/start time must be modified to have the same value so the conversions continue to abut and span all time. Think about if this is the best way to do this.
+- If the start/end time is changed then the conversion that has the matching end/start time must be modified to have the same value so the conversions continue to abut and span all time. We need to consider if this is the best way to do this.
 
 ### Repeating values
 
-Needs to be worked out.
+Needs to be worked out. First lets see if how the other cases pan out.
+
+## Implementation plan
+
+There are a number of open questions so this will be done step-by-step where the result is used to decide the best way to continue. **As such, regular contact with the OED project is anticipated.**
+
+### 1. Database
+
+As described in the "Potential solution" section, the database functions need to be modified to handle conversions that vary with time. The envisioned steps are:
+
+1. Modify the DB tables and functions to work with conversions that vary with time. This will not necessarily do all needed changes but the ones needed for testing.
+2. The validity of the changes will be tested via a moderate level of testing. It is envisioned that this will be done via a Postgres command line to allow for each changes and quick tests during this phase.
+3. The speed of the DB queries will be tested for conversions that mimic the two types described in "Introduction" section. Thus, conversions that vary infrequently (a handful of conversions over time) and ones that vary frequently (trying every day and then every hour). Doing line graph data will be good for these tests.
+
+   As a special case, the new code with only one value (so it does not really vary with time) will be compared with the current conversion code to see the impact of treating non-varying conversions as a special case of varying. This will indicate if all the conversions can use the new system.
+
+   The timings will also indicate if the new system is viable for deploying. The OED project can help with tool recommendations to perform this analysis. This may be an iterative process until the performance is deemed acceptable.
+4. Once the performance is acceptable, test code will be written to try a range of cases that can be incorporated into the standard OED testing set to be certain that now and in the future the functions work as expected. This testing will be more systematic and careful than in step 2.
+5. Any additional DB functions to deal with other graphics will be created. It is hoped this is minimal. New test code is needed for any changes or the current tests need to be modified for conversions that vary with time.
+
+### Routing
+
+The current graphics route back data from the server to the client and into Redux state. It is hoped that the new system will have conversions that are similar to the current system (with an id for each conversion even if it varies with time) so there are not many changes in this area.
+
+### Graphics
+
+Unless there are performance differences that are of concern, the plan is to treat all conversions similarly so they will show on the same user graphics as they currently do. The fact that a conversion varies with time does not change any of the calculations concerning its compatibility for menus/graphics. Thus, the hope is for minimal changes in this area.
+
+### Admin conversion page
+
+If all goes well, then the new UI for the conversion page needs to be created. The "Entering conversions" section has ideas on this. It may be most practical to start with the non-repeating case and then do repeating after that. This is going to be significant work that will be settled once the underlying system is well understood.
