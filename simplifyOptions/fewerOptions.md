@@ -38,7 +38,7 @@ The map graphic page will be similar as shown in this image:
 
 ![map graphic page options](./mapPageOptions.png)
 
-The other pages do not have options so they are unchanged.
+The other pages do not have options so they are unchanged. This is [issue #900](https://github.com/OpenEnergyDashboard/OED/issues/900).
 
 ## React hooks
 
