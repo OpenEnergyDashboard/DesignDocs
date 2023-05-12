@@ -11,6 +11,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [unitVaryTime/conversionsVaryTime.md](/unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
 - [simplifyOptions/fewerOptions.md](./simplifyOptions/fewerOptions.md): Move many of the current options for users into a modal popup.
 - [3DGraphic/3DGraphic.md](./3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
+- [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
 
 ## Information
 
