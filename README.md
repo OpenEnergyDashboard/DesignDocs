@@ -13,6 +13,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
 - [radar/radar.md](./radar/radar.md): A new graphic to show in clock/radar form.
+- [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic. 
 
 ## Information
 
