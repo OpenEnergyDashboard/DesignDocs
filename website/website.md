@@ -158,13 +158,7 @@ Note that GPS is backward due to how OED expects it for a CSV file.
 
 ### Setting the web browser window size
 
-First I made the window a size and zoom that allowed long menu choices to show completely (Great Dorm 1st Floor is a long one). I then did the sizing below and by trial and error, determined that 1200x950 was a good size. I used 1200 as that is the number of pixels for the max page size in OED.
-
-This is old info that is just kept for now:
-
-By trial and error, determined that 2048x1400 was a good size. I made the zoom as big as possible without losing the full names on the compare and map graphic. The Great Dorm ones are likely the longest. It also does not require any scrolling to see the full height.
-
-needed 950 pixel height to see a full OED screen. This allowed seeing all of the graphic pages without scrolling and also allowed seeing most admin pages without scrolling. This was for a given monitor so you may find other values. You can then set the width to be something wide enough to be a size you like and not dock the menus. For now used 1024 since it looks good and this is a good minimum width on a monitor. Note the website (css/main.css) currently sets the max-width to 1200px and a padding if 25px for a max area of 1150px so 1024 less so it will fit. You can set the desired size as follows:
+First I made the window a size and zoom that allowed long menu choices to show completely (Great Dorm 1st Floor is a long one). I then did the sizing below and by trial and error, determined that 1200x830 was a good size. I used 1200 as that is the number of pixels for the max page size in OED per css/main.css.
 
 - Open the developer tools (F12 or right click on windows and choose Inspect).
 
