@@ -15,13 +15,13 @@ No other cells should be edited. Note Column D is random values generated to do 
 
 After setting the values and creating the values in the three needed columns (A, B, C) you can create a CSV for import as described later by:
 
-1) Selecting the entire columns of A-C or any set of rows that have the dates desired. If you only take a subset of the rows then make sure the separately copy to first header row of columns A-C.
-2) Copy the values selected.
-3) Open a new spreadsheet.
-4) If you are copying all the rows or the header row then click in cell A1. If you have already put in the header row and are now copying the rows with meter data then click in cell A2.
-5) Do a special paste by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas.
-6) Select all of columns B & C. Then do Format -> Cells ... or control/command 1. In Category select date and then in Format select  1999-12-31 13:37:46. This formats the columns as dates in the canonical format. You may need to make the columns wider to see the values (esp. if you see ### instead of date/time).
-7) Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name at the top. Then click the Save button.
+1. Selecting the entire columns of A-C or any set of rows that have the dates desired. If you only take a subset of the rows then make sure the separately copy to first header row of columns A-C.
+2. Copy the values selected.
+3. Open a new spreadsheet.
+4. If you are copying all the rows or the header row then click in cell A1. If you have already put in the header row and are now copying the rows with meter data then click in cell A2.
+5. Do a special paste by either doing Edit -> Special Paste -> Special Paste ... or control/command-shift-v. In the popup, click the Values Only button on the left because you don't want to get the formulas.
+6. Select all of columns B & C. Then do Format -> Cells ... or control/command 1. In Category select date and then in Format select  1999-12-31 13:37:46. This formats the columns as dates in the canonical format. You may need to make the columns wider to see the values (esp. if you see ### instead of date/time).
+7. Do File -> Save As ... or control/command-shift S. In File type: select Text CSV (.csv) and enter a file name at the top. Then click the Save button.
 
 Later in this document is the standard values used for the website where this process is done once for each meter desired.
 
@@ -29,25 +29,31 @@ Later in this document is the standard values used for the website where this pr
 
 The steps for putting the data into a website are
 
-1) Generally you start from a clean version of OED so only the website data is present.
+1. Generally you start from a clean version of OED so only the website data is present.
     - An alternative is to delete the current data. In a psql shell you can do: \
     `delete from readings; delete from groups_immediate_meters; delete from groups_immediate_children; delete from groups; delete from meters; delete from conversions; delete from units;`
-2) Copy the CSV file from webData/ in devDocs/ to src/server/data/webData.
-3) Get OED running if it is not already up.
-4) Open a shell in the web terminal.
-5) In the shell run: `npm run webData`.
+2. Link the CSV file from webData/ in devDocs/ to src/server/data/webData. This hard link does not copy the file but creates a link to the inode of the original file so it saves a little disk space. It is okay to delete the link and the original file will not be changed. This is done in a Linux shell/terminal on your machine and not in the web or database shell in an OED container; you can open a terminal in VSC to do this. It must be done in the main OED directory and have your devDocs starting the the directory above or you need to modify the path to the DevDocs/ in the following command: \
+  `mkdir src/server/data/webData; cp -l ../DevDocs/website/webData/*.csv src/server/data/webData/`
+3. Get OED running if it is not already up.
+4. Open a shell in the web terminal.
+5. In the shell run: \
+  `npm run webData`
     - This will likely take some time to run as it needs to load a lot of data from CSV files.
-6) Open new or refresh you localhost:3000 in a web browser. All the units, conversions, meters and groups should be present.
-7) It is important that you delete the files you added to your OED src/ tree since these should **never** be committed to the OED repository.
+6. Open new or refresh you localhost:3000 in a web browser. All the units, conversions, meters and groups should be present.
 
-Copy the websiteData.js file to src/server/data/websiteData.js.
+Note that as of now (this was written on 6/28/23), the area of groups is not being set automatically. Thus, you will need to enter the area unit (sq. meters) and area via the admin group page for each group.
 
 ### Compare data
 
-The comparison page needs current data. To achieve this, you can use a web terminal and do: `node -e 'require("./src/server/data/websiteData.js").webShift("cst")` where you replace the "cst" with the code for the timezone for the web browser you are going to use. Get the timezone of your local machine by doing this in the terminal (in Linux/MacOS): date +%Z. Note this is in a terminal on your local machine and not in the web or database container in OED.
+The comparison page needs current data. To achieve this, you can use a web terminal in the main OED directory and do: \
+`node -e 'require("./src/server/data/websiteData.js").webShift("CST")'` \
+where you replace the "cst" with the code for the timezone for the web browser you are going to use. Get the timezone of your local machine by doing the following. This is done in a Linux shell/terminal on your machine and not in the web or database shell in an OED container; you can open a terminal in VSC to do this. \
+`date +%Z` \
 
-    - An older list of Postgres acceptable timezones (they don't usually change) is at [Postgres Timezones](https://www.postgresql.org/docs/7.2/timezones.html).
-    - You can also use the Postgres SQL command (in a database shell inside `psql -U oed`) of: `select * FROM pg_timezone_names;`. Note you can do this as often as you wish to keep the readings current (note it take a little time to execute). Since it brings the readings to current time, the compare graphs will vary unless you do it at the same day of the week and the same hour of the day.
+- An older list of Postgres acceptable timezones (they don't usually change) is at [Postgres Timezones](https://www.postgresql.org/docs/7.2/timezones.html).
+- You can also use the Postgres SQL command (in a database shell inside `psql -U oed`) of: \
+`select * FROM pg_timezone_names;` \
+Note you can do this as often as you wish to keep the readings current (note it take a little time to execute). Since it brings the readings to current time, the compare graphs will vary unless you do it at the same day of the week and the same hour of the day.
 
 You can verify you have the correct timezone code by doing `select clock_timestamp() at time zone 'cst';` in the Postgres shell (see above). Replace 'cst' with the timezone you want to use. The time should match the one on your computer's clock.
 
@@ -55,10 +61,14 @@ There are meters and groups listed in the table below. They mirror another meter
 
 ### Map data
 
-Create the needed maps. This was done once and then reused.
+#### Create the needed maps
 
-- I used a LibreOffice Drawing document to do this. It is a simple, stylized map. Note I used the grid to create a box that was 9x15 (width x height). The OED map system places a 300x500 grid on the uploaded map. Thus, having an aspect ratio of 3:5 makes it fit without any whitespace. I placed the building on the map and inside the box. I then make the box white and sent it to the back (behind the buildings). I then selected the box and buildings and placed in a group (it seemed I needed select(?) buildings first but not sure why). I selected the group, File→export, choose png and click for selection for save, then it automatically gave the size as 4.5”x7.5” (3:5 ratio) so just used it. The final file is with the other web page info in campus.png and campus.odg. You see the while box when you open the PNG with dark mode but not in OED.
+This was done once and then reused.
+
+- I used a LibreOffice Drawing document to do this. It is a simple, stylized map. Note I used the grid to create a box that was 9x15 (width x height). The OED map system places a 300x500 grid on the uploaded map. Thus, having an aspect ratio of 3:5 makes it fit without any whitespace. I placed the building on the map and inside the box. I then make the box white and sent it to the back (behind the buildings). I then selected the box and buildings and placed in a group (it seemed I needed select(?) buildings first but not sure why). I selected the group, File→export, choose png and click for selection for save, then it automatically gave the size as 4.5”x7.5” (3:5 ratio) so just used it. The final file is campus.png and campus.odg. You see the while box when you open the PNG with dark mode but not in OED.
 - Now create the 30 degree rotated map. Select the group, Format -> Position and Size, then click the Rotation tab and set the angle to 330 degrees. Resize the bounding box to fit the rotated map but make sure the keep the aspect ratio the same where it is not rotated. I did 12x20 so still 3:5 and center horizontally over image but lots of extra vertical space on bottom. Reform group of all items. Export as before. It is in campus30Deg.png (and .odg).
+
+#### Place map in OED
 
 The following steps are done each time the data is redone from scratch. Note if you are changing the images for map calibration then you can do this as part of that process to save doing it twice.
 
@@ -73,13 +83,13 @@ longitude = -88 + x \* 10<sup>-5</sup> \
     - Note (40.00035, -87.99900) would be perfect but want a little error to show for example. \
 After 3 points had error: x: 1.202%, y: 0.25% so save the DB.
 - Now see on admin map page. Click Show and then "Save map edits" to get Display Enabled.
-- You should now see the meters/groups as is logical for its name and as shown in the tables below.
+- You should now see the meters/groups as is logical for its name and as shown in the tables below. Note that the Gym building has no data and not used on the map.
 - You can also use the Campus30Deg.png for a rotated map where it could be named "Campus 30 Deg". The angle to use is 30. The GPS values are the same but the coordinates on the map are different (but you click on the same logical location on the map):
-  - top, right corner of Gym: (291, 386) GPS to enter: 40.00461, -87.99723
-  - top, left corner of Dining Hal (49, 331) GPS to enter: 40.00238, -87.99966
-  - bottom, left corder of Great Dorm (15, 174) GPS to enter: 40.00034, -87.99901
+  - top, right corner of Gym: (291, 382) GPS to enter: 40.00461, -87.99723
+  - top, left corner of Dining Hall (43, 327) GPS to enter: 40.00238, -87.99966
+  - bottom, left corder of Great Dorm (7,166) GPS to enter: 40.00034, -87.99901
     - Note (40.00035, -87.99900) would be perfect but want a little error to show for example. \
-After 3 points had error: x: 0.566%, y: 0.429% so save the DB.
+After 3 points had error: x: 1.224%, y: 0.136% so save the DB.
   - The circles should show at the same place on buildings as with the zero degree map.
 - TODO You need to redo this process where the image is the myUniversity.png at zero degree and the names were changed so Play Place is Dorm A, Theater is Dorm B and Housing is Academic Building. While basically the same, the names were changed for the academic use example.
   See the map page on how the calibration discussion was created.
@@ -101,48 +111,113 @@ You can easily select all for copy/paste is to enter the location of the last re
 
 Note that GPS is backward due to how OED expects it for a CSV file.
 
-| Name                             | Unit                    | Default Graphic Unit | GPS (long, lat)     | Displayable | ID    | Cell B2             | Reading Increment | Initial Reading | Min Reading | Max Reading | Random Variation | Description |
-| :------------------------------: | :---------------------: | :------------------: | :-----------------: | :---------: | :---: | :-----------------: | :---------------: | :-------------: | :---------: | :---------: | :--------------: | :---------: |
-| Dining Hall Electric             | Electric_Utility        | kWh                  | -87.99913, 40.002   | true        | 10012 | 2019-08-15 10:30:00 | 15                | 40              | 10          | 70          | 5                | ~3 years    |
-| "Dining Hall Electric "          | Electric_Utility        | kWh                  | -87.99913, 40.002   | false       | 10247 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
-| Dining Hall Gas                  | Natural_Gas_BTU         | BTU                  | -87.99913, 40.002   | true        | 10013 | 2019-08-15 10:30:00 | 15                | 35000           | 17000       | 50000       | 1000             | ~3 years    |
-| Dining Hall Water                | Water_Gallon            | gallon               | -87.99913, 40.002   | true        | 10014 | 2020-01-07 14:00:00 | 60                | 100             | 10          | 200         | 20               | ~3: years but less than others |
-| Dining Hall Electric Power       | Electric_kW             | kW                   | -87.99913, 40.002   | false       | 10015 | 2020-01-07 14:00:00 | 5                 | 160             | 40          | 280         | 20               | ~3: years but less than others |
-| Theater Electric                 | Electric_Utility        | kWh                  | -87.9975, 40.0027   | true        | 10016 | 2019-08-15 10:30:00 | 20                | 100             | 20          | 200         | 15               | ~3 years    |
-| "Theater Electric "              | Electric_Utility        | kWh                  | -87.9975, 40.0027   | true        | 10251 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
-| Theater Gas                      | Natural_Gas_M3          | BTU                  | -87.9975, 40.0027   | true        | 10017 | 2019-08-15 10:30:00 | 20                | 5.5             | 2           | 12          | 0.5              | ~3 years    |
-| Theater Electric Power           | Electric_kW             | kW                   | -87.9975, 40.0027   | false       | 10018 | 2019-08-15 10:30:00 | 20                | 400             | 100         | 700         | 50               | ~3 years    |
-| Theater Temperature              | Temperature_Celsius     | Fahrenheit           |                     | true        | 10019 | 2019-08-15 10:30:00 | 20                | 23              | 20          | 24.5        | 0.5              | ~3 years    |
-| Library Electric                 | Electric_Utility        | kWh                  | -87.99916, 40.00419 | true        | 10020 | 2019-08-15 10:30:00 | 23                | 20              | 5           | 40          | 3                | ~3 years    |
-| "Library Electric "              | Electric_Utility        | kWh                  | -87.99916, 40.00419 | true        | 10255 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
-| Library Temperature              | Temperature_Fahrenheit  | Fahrenheit           |                     | true        | 10021 | 2019-08-15 10:30:00 | 20                | 75              | 68          | 76          | 1                | ~3 years    |
-| Great Dorm 1st floor Electric    | Electric_Solar          | kWh                  | -87.99817, 40.00057 | true        | 10022 | 2019-08-15 10:30:00 | 20                | 10              | 5           | 20          | 3                | ~3 years    |
-| "Great Dorm 1st floor Electric " | Electric_Solar          | kWh                  | -87.99817, 40.00057 | true        | 10257 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
-| Great Dorm 2nd floor Electric    | Electric_Solar          | kWh                  | -87.99817, 40.00057 | true        | 10023 | 2019-08-15 10:30:00 | 20                | 15              | 10          | 30          | 3                | ~3 years    |
-| "Great Dorm 2nd floor Electric " | Electric_Solar          | kWh                  | -87.99817, 40.00057 | true        | 10258 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
-| Great Dorm Gas                   | Natural_Gas_BTU         | BTU                  | -87.99817, 40.00057 | true        | 10024 | 2019-08-15 10:30:00 | 20                | 45000           | 25000       | 65000       | 2000             | ~3 years    |
-| Great Dorm Water                 | Water_Liter             | gallon               | -87.99817, 40.00057 | true        | 10025 | 2019-08-15 10:30:00 | 15                | 150             | 75          | 300         | 50               | ~3 years    |
-| Campus Recycling                 | Ton                     | pound                |                     | true        | 10026 | 2019-08-16 00:00:00 | 10080             | 1               | 0.25        | 1.8         | 0.25             | ~3 years, 7 days per reading |
+| Name                             | Unit                    | Default Graphic Unit | GPS (long, lat)     | area   | Displayable | ID    | Cell B2             | Reading Increment | Initial Reading | Min Reading | Max Reading | Random Variation | Description |
+| :------------------------------: | :---------------------: | :------------------: | :-----------------: | :----: | :---------: | :---: | :-----------------: | :---------------: | :-------------: | :---------: | :---------: | :--------------: | :---------: |
+| Dining Hall Electric             | Electric_Utility        | kWh                  | -87.99913, 40.002   | 1000   | true        | 10012 | 2019-08-15 10:30:00 | 15                | 40              | 10          | 70          | 5                | ~3 years    |
+| "Dining Hall Electric "          | Electric_Utility        | kWh                  | -87.99913, 40.002   | 1000   | false       | 10247 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
+| Dining Hall Gas                  | Natural_Gas_BTU         | BTU                  | -87.99913, 40.002   | 1000   | true        | 10013 | 2019-08-15 10:30:00 | 15                | 35000           | 17000       | 50000       | 1000             | ~3 years    |
+| Dining Hall Water                | Water_Gallon            | gallon               | -87.99913, 40.002   | 1000   | true        | 10014 | 2020-01-07 14:00:00 | 60                | 100             | 10          | 200         | 20               | ~3: years but less than others |
+| Dining Hall Electric Power       | Electric_kW             | kW                   | -87.99913, 40.002   | 1000   | false       | 10015 | 2020-01-07 14:00:00 | 5                 | 160             | 40          | 280         | 20               | ~3: years but less than others |
+| Theater Electric                 | Electric_Utility        | kWh                  | -87.9975, 40.0027   | 10000  | true        | 10016 | 2019-08-15 10:30:00 | 20                | 100             | 20          | 200         | 15               | ~3 years    |
+| "Theater Electric "              | Electric_Utility        | kWh                  | -87.9975, 40.0027   | 10000  | true        | 10251 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
+| Theater Gas                      | Natural_Gas_M3          | BTU                  | -87.9975, 40.0027   | 10000  | true        | 10017 | 2019-08-15 10:30:00 | 20                | 5.5             | 2           | 12          | 0.5              | ~3 years    |
+| Theater Electric Power           | Electric_kW             | kW                   | -87.9975, 40.0027   | 10000  | false       | 10018 | 2019-08-15 10:30:00 | 20                | 400             | 100         | 700         | 50               | ~3 years    |
+| Theater Temperature              | Temperature_Celsius     | Fahrenheit           |                     |        | true        | 10019 | 2019-08-15 10:30:00 | 20                | 23              | 20          | 24.5        | 0.5              | ~3 years    |
+| Library Electric                 | Electric_Utility        | kWh                  | -87.99916, 40.00419 | 100000 | true        | 10020 | 2019-08-15 10:30:00 | 23                | 20              | 5           | 40          | 3                | ~3 years    |
+| "Library Electric "              | Electric_Utility        | kWh                  | -87.99916, 40.00419 | 100000 | true        | 10255 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
+| Library Temperature              | Temperature_Fahrenheit  | Fahrenheit           |                     |        | true        | 10021 | 2019-08-15 10:30:00 | 20                | 75              | 68          | 76          | 1                | ~3 years    |
+| Great Dorm 1st floor Electric    | Electric_Solar          | kWh                  | -87.99817, 40.00057 | 5000   | true        | 10022 | 2019-08-15 10:30:00 | 20                | 10              | 5           | 20          | 3                | ~3 years    |
+| "Great Dorm 1st floor Electric " | Electric_Solar          | kWh                  | -87.99817, 40.00057 | 5000   | true        | 10257 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
+| Great Dorm 2nd floor Electric    | Electric_Solar          | kWh                  | -87.99817, 40.00057 | 5000   | true        | 10023 | 2019-08-15 10:30:00 | 20                | 15              | 10          | 30          | 3                | ~3 years    |
+| "Great Dorm 2nd floor Electric " | Electric_Solar          | kWh                  | -87.99817, 40.00057 | 5000   | true        | 10258 |                     |                   |                 |             |             |                  | compare that reuses CSV above |
+| Great Dorm Gas                   | Natural_Gas_BTU         | BTU                  | -87.99817, 40.00057 | 10000  | true        | 10024 | 2019-08-15 10:30:00 | 20                | 45000           | 25000       | 65000       | 2000             | ~3 years    |
+| Great Dorm Water                 | Water_Liter             | gallon               | -87.99817, 40.00057 | 10000  | true        | 10025 | 2019-08-15 10:30:00 | 15                | 150             | 75          | 300         | 50               | ~3 years    |
+| Campus Recycling                 | Ton                     | pound                |                     |        | true        | 10026 | 2019-08-16 00:00:00 | 10080             | 1               | 0.25        | 1.8         | 0.25             | ~3 years, 7 days per reading |
 
 ### Groups
 
-| Name                            | Default Graphic Unit | GPS                 | Displayable | Meters                                                             | Groups                                       | ID    | Description |
-| :-----------------------------: | :------------------: | :-----------------: | :---------: | :----------------------------------------------------------------: | :------------------------------------------: | :---: | :---------: |
-| Dining Hall Energy              | kWh                  | -87.99913, 40.002   | true        | Dining Hall Electric, Dining Hall Gas                              |                                              | 10012 |             |
-| Dining Hall All                 | ton of CO2           | -87.99913, 40.002   | true        | Dining Hall Water                                                  | Dining Hall Energy                           | 10013 |             |
-| Theater Energy                  | kWh                  | -87.9975, 40.0027   | true        | Theater Electric, Theater Gas                                      |                                              | 10014 |             |
-| Theater All                     | ton of CO2           | -87.9975, 40.0027   | true        |                                                                    | Theater Energy                               | 10015 |             |
-| Dining & Theater Electric Power | kW                   |                     | false       | Dining Hall Electric Power, Theater Electric Power                 |                                              | 10016 |             |
-| Library Electric                | kWh                  | -87.99916, 40.00419 | true        | Library Electric                                                   |                                              | 10017 |             |
-| Great Dorm Electric             | kWh                  | -87.99817, 40.00057 | true        | Great Dorm 1st floor Electric, Great Dorm 2nd floor Electric       |                                              | 10018 |             |
-| "Great Dorm Electric "          | kWh                  | -87.99817, 40.00057 | true        | "Great Dorm 1st floor Electric ", "Great Dorm 2nd floor Electric " |                                              | 10253 | compare to mirror other |
-| Great Dorm Energy               | kWh                  | -87.99817, 40.00057 | true        | Great Dorm Gas                                                     | Great Dorm Electric                          | 10019 |             |
-| Great Dorm All                  | ton of CO2           | -87.99817, 40.00057 | true        | Great Dorm water                                                   | Great Dorm Energy                            | 10020 |             |
-| Campus Electric                 | kWh                  |                     | true        | Dining Hall Electric, Theater Electric, Library Electric           | Great Dorm Electric                          | 10021 |             |
-| Campus Gas                      | BTU                  |                     | true        | Dining Hall Gas, Theater Gas, Great Dorm Gas                       |                                              | 10022 |             |
-| Campus Energy                   | kWh                  |                     | true        |                                                                    | Campus Electric, Campus Gas                  | 10023 |             |
-| Campus All                      | ton of CO2           |                     | true        | Dining Hall Water, Great Dorm Water                                | Campus Energy                                | 10024 |             |
-| Campus All - Another            | ton of CO2           |                     | false       | Library Electric, Dining Hall Electric                             | Dining Hall All, Theater All, Great Dorm All | 10025 | Same as Campus All, also duplicates D.H. Electric |
+| Name                            | Default Graphic Unit | GPS                 | area   | Displayable | Meters                                                             | Groups                                       | ID    | Description |
+| :-----------------------------: | :------------------: | :-----------------: | :----: | :---------: | :----------------------------------------------------------------: | :------------------------------------------: | :---: | :---------: |
+| Dining Hall Energy              | kWh                  | -87.99913, 40.002   | 1000   | true        | Dining Hall Electric, Dining Hall Gas                              |                                              | 10012 |             |
+| Dining Hall All                 | ton of CO2           | -87.99913, 40.002   | 1000   | true        | Dining Hall Water                                                  | Dining Hall Energy                           | 10013 |             |
+| Theater Energy                  | kWh                  | -87.9975, 40.0027   | 10000  | true        | Theater Electric, Theater Gas                                      |                                              | 10014 |             |
+| Theater All                     | ton of CO2           | -87.9975, 40.0027   | 10000  | true        |                                                                    | Theater Energy                               | 10015 |             |
+| Dining & Theater Electric Power | kW                   |                     | 11000  | false       | Dining Hall Electric Power, Theater Electric Power                 |                                              | 10016 |             |
+| Library Electric                | kWh                  | -87.99916, 40.00419 | 100000 | true        | Library Electric                                                   |                                              | 10017 |             |
+| Great Dorm Electric             | kWh                  | -87.99817, 40.00057 | 10000  | true        | Great Dorm 1st floor Electric, Great Dorm 2nd floor Electric       |                                              | 10018 |             |
+| "Great Dorm Electric "          | kWh                  | -87.99817, 40.00057 | 10000  | true        | "Great Dorm 1st floor Electric ", "Great Dorm 2nd floor Electric " |                                              | 10253 | compare to mirror other |
+| Great Dorm Energy               | kWh                  | -87.99817, 40.00057 | 10000  | true        | Great Dorm Gas                                                     | Great Dorm Electric                          | 10019 |             |
+| Great Dorm All                  | ton of CO2           | -87.99817, 40.00057 | 10000  | true        | Great Dorm water                                                   | Great Dorm Energy                            | 10020 |             |
+| Campus Electric                 | kWh                  |                     | 121000 | true        | Dining Hall Electric, Theater Electric, Library Electric           | Great Dorm Electric                          | 10021 |             |
+| Campus Gas                      | BTU                  |                     | 121000 | true        | Dining Hall Gas, Theater Gas, Great Dorm Gas                       |                                              | 10022 |             |
+| Campus Energy                   | kWh                  |                     | 121000 | true        |                                                                    | Campus Electric, Campus Gas                  | 10023 |             |
+| Campus All                      | ton of CO2           |                     | 121000 | true        | Dining Hall Water, Great Dorm Water                                | Campus Energy                                | 10024 |             |
+| Campus All - Another            | ton of CO2           |                     | 121000 | false       | Library Electric, Dining Hall Electric                             | Dining Hall All, Theater All, Great Dorm All | 10025 | Same as Campus All, also duplicates D.H. Electric |
+
+## Images from OED
+
+### Setting the web browser window size
+
+First I made the window a size and zoom that allowed long menu choices to show completely (Great Dorm 1st Floor is a long one). I then did the sizing below and by trial and error, determined that 1200x950 was a good size. I used 1200 as that is the number of pixels for the max page size in OED.
+
+This is old info that is just kept for now:
+
+By trial and error, determined that 2048x1400 was a good size. I made the zoom as big as possible without losing the full names on the compare and map graphic. The Great Dorm ones are likely the longest. It also does not require any scrolling to see the full height.
+
+needed 950 pixel height to see a full OED screen. This allowed seeing all of the graphic pages without scrolling and also allowed seeing most admin pages without scrolling. This was for a given monitor so you may find other values. You can then set the width to be something wide enough to be a size you like and not dock the menus. For now used 1024 since it looks good and this is a good minimum width on a monitor. Note the website (css/main.css) currently sets the max-width to 1200px and a padding if 25px for a max area of 1150px so 1024 less so it will fit. You can set the desired size as follows:
+
+- Open the developer tools (F12 or right click on windows and choose Inspect).
+
+#### For Chrome
+
+- Note you need to resize the window and zoom to show what you want with longest menu choice before you do the following. I made the screen about 1200px wide (compared to OED website text width and used zoom of 67%).
+- Toggle device toolbar (click on icon in top, left of developer tools area that looks like a monitor/phone or control/command-shift-M). This should cause a ribbon above the webpage that has Dimensions and other info.
+- Click the dropdown menu after Dimensions: which lists the device types and choose Edit... a the bottom.
+- The developer tools area will change to show Settings with the Devices tab selected. Under Emulated Devices click Add custom device....
+- In the input area for the new device use the name "website" (or whatever you want) and use the dimensions you want. In the sample monitor it is 1500 and 735. Under User agent string use the dropdown and select desktop since that is the target. Finally, click add to save it. You can "X" out of the Settings to go back to the normal developer tools if you want.
+  - If you ever want to edit this, hover over the device name in Settings and click the pencil to edit similarly to creating it.
+- If not already selected, choose website from the dropdown menu next to Dimensions. It should now set the pixels as desired.
+- You can use the % dropdown menu to make the actual size shown to be larger or smaller. Also used the ability to scroll the developer tools area to be smaller to see the entire emulated monitor. Resized to be big enough to see the entire screen of OED.
+- After the first time you can simply Toggle device toolbar and select this device if not already selected.
+
+#### For Firefox
+
+This did not work and the website would not load after a refresh. Not sure at this time.
+
+- Use Responsive Design Mode by clicking the different sized phone icons in the top, right corner of the developer tools or control/command-shift-M in the original web window. This should cause a ribbon above the webpage that has Dimensions and other info.
+- Use the first dropdown menu to create a new device similarly to Chrome. You can also directly change the dimensions for the current device.
+
+### Editing images
+
+Use whatever image editing program you want to highlight items and crop. Areas are highlighted by putting a blue (standard blue color: #3282F6 or Red 50 / Green 130 / Blue 246) rectangle with 3px size lines (squared edges). Each image was put into the website with this command where you change the information to your image:
+
+```<p><img alt="Graphic unit menu" src="./images/graphicUnitMenu.png"></p>```
+
+You need the paragraph for two reasons. First, the img tag is not in the CSS because the it is used for the icon on the pages. Second, this constrains to the text width (set to 1200) rather than the full browser window as desired. Sometimes different widths or min-width might be used if needed by putting in the style to override the CSS such as:
+
+```<p><img alt="Graphic unit menu" src="./images/graphicUnitMenu.png" style="width: 800px; min-width: 400px;"></p>```
+
+
+## Images from LibreOffice
+
+The graphics are generally done in LibreOffice Draw as an .odg file. It is then exported as follows:
+
+1. Select all
+2. File -> Export ... or icon
+3. On export popup
+
+    - click checkbox for Selection
+    - Save as type: PNG
+
+4. In PNG options popup:
+
+    - Under Size use Modify dimensions
+    - Use pixels
+    - If the width is more than 1024 then set to 1024 which is same size as used for OED images above
+    - When you click outside this input box (or tab) then the height should automatically change to keep the aspect ratio
+    - Click OK to save the image to the file
+
+Note that the width sometimes seems to be a pixel off but that is not a big issue.
 
 ## Items for website update
 
@@ -186,7 +261,7 @@ Go to [https://validator.w3.org/checklink], enter web address, check summary onl
 - [https://www.learn-js.org/](https://www.learn-js.org/) generally gives an error but the link seems fine.
 - [https://help.github.com/](https://help.github.com/) and  [https://docs.github.com/get-started/quickstart/fork-a-repo](https://docs.github.com/get-started/quickstart/fork-a-repo) gives redirect warning but want the redirect since selecting language automatically.
 - [https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform](https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform) gives warning on not checked to to robot exclusion but okay.
-- Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "http://mozilla.org/MPL/2.0/" -e "https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform" -e "https://www.learn-js.org/" -e "https://help.github.com/" -e "https://docs.github.com/get-started/quickstart/fork-a-repo"” for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
+- Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "<http://mozilla.org/MPL/2.0/>" -e "<https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform>" -e "<https://www.learn-js.org/>" -e "<https://help.github.com/>" -e "<https://docs.github.com/get-started/quickstart/fork-a-repo"”> for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
 - All okay with warning noted above as of 210807.
 
 ### Check accessibility
@@ -194,11 +269,15 @@ Go to [https://validator.w3.org/checklink], enter web address, check summary onl
 Not yet done/figured out.
 
 ## **After this needs update and inclusion in new system**
+
 ## Uses of meters/readings
 
-* Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter&gt; is step function data.
+- Meter A-D are step functions that make it easier to see the value of a group is correct. Thus, Meter &lt;letter&gt; is step function data.
+
 - Meter A-C are modest values that can be used together.
 - Meter D is deliberately larger values to show issue of how others values become hard to see.
 - Meters C-D demonstrate what happens when you have missing intervals of values. Deliberately chose to only have time missing at start/end because OED draws a line over the missing time if it is in the middle of the graph. (Maybe we will do something about that some day ;-)
-* Meter 1-4 are real data to show something more realistic. This is designed for overview graphics. Thus, Meter # is real data.
-* Meters 7-8 & All the Dorm ones are for comparison and having current readings. They are real data that is the same as Meters 1-4 but shifted in time.
+
+- Meter 1-4 are real data to show something more realistic. This is designed for overview graphics. Thus, Meter # is real data.
+
+- Meters 7-8 & All the Dorm ones are for comparison and having current readings. They are real data that is the same as Meters 1-4 but shifted in time.
