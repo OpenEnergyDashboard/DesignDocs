@@ -29,3 +29,12 @@ If this goes well, then the next step would be to try the other possibilities. F
 Once this is finalized, the chart links should be updated so it would properly recreate the graphic shown on the radar page.
 
 A final step would be allowing the admin to set the default behavior for these graphic pages as done for other graphics.
+
+### Partial implementation
+
+This work was started with these notes: Two big issues we came across when considering the goals in this document https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/radar/radar.md
+
+1. The line SQL will not work for all the data we need in the radar graph. Line SQL only has hourly and daily data, radar requires these and monthly data as well. Yes, we can probably calculate monthly in the frontend but it's better to just give radar its own SQL to avoid future issues.
+2. The radar graph cannot handle as much data as the bar or line graph. The radar graph has a fixed diameter and can only bring points closer to each other. This causes the labels to start overlapping. This means we have to limit the user's options when viewing data.
+
+More testing and analysis is needed to see exactly what is left to do.
