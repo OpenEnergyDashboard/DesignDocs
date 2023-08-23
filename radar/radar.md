@@ -32,9 +32,11 @@ A final step would be allowing the admin to set the default behavior for these g
 
 ### Partial implementation
 
-This work was started with these notes: Two big issues we came across when considering the goals in this document https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/radar/radar.md
+This work was started with these notes: Two big issues we came across when considering the goals in this document:
 
 1. The line SQL will not work for all the data we need in the radar graph. Line SQL only has hourly and daily data, radar requires these and monthly data as well. Yes, we can probably calculate monthly in the frontend but it's better to just give radar its own SQL to avoid future issues.
 2. The radar graph cannot handle as much data as the bar or line graph. The radar graph has a fixed diameter and can only bring points closer to each other. This causes the labels to start overlapping. This means we have to limit the user's options when viewing data.
 
 More testing and analysis is needed to see exactly what is left to do.
+
+The repo is [here](https://github.com/Elias0127/OED/tree/radar_graph).
