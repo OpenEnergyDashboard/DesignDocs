@@ -2,6 +2,8 @@
 
 The directory readingsData/ has all the files used.
 
+TODO Need to update for new 3D test.
+
 ## Input values
 
 The following table gives the test readings created so far. The fields are:
