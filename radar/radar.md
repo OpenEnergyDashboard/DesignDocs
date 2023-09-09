@@ -39,4 +39,26 @@ This work was started with these notes: Two big issues we came across when consi
 
 More testing and analysis is needed to see exactly what is left to do.
 
-The repo is [here](https://github.com/Elias0127/OED/tree/radar_graph).
+The repo is [here](https://github.com/Elias0127/OED/tree/radar_graph). See below for a more recent version of the code.
+
+#### Steve's thoughts on the partial implementation
+
+I merged in development and put a version on myGithub repos. See the [radar_graph branch](https://github.com/huss/OED/tree/radar_graph) and this should be used as the starting point for future work.
+
+- Since this effort began the 3D graphic was done. (3D should be available sometime in September 2023 via development and is available from a fork otherwise. The 3D code should be valuable for both the date picker but also have samples for limiting dates, etc.) We can use the date picker from this graphic to choose a range of dates. I'm not sure the number of days that should be allowed but we could try 1440 which is the limit for the number of points returned by a line graphic. Looking at the graph produced has shown that a year is clearly visible so we can try longer to see what it looks like.
+- After the general dates are done we may want to add buttons for the standard cases listed above where they would go from the last date that is currently being used to the time in the past that is requested.
+- The data gotten currently is the default for line. It needs to be the correct time increment and not the automatic one chosen by line. For example, if you have a meter that has limited time range then it currently returns the meter readings or raw values and it should return either hourly or daily depending on what is appropriate. The following figure shows two points for June 2nd because that is the raw data.
+![current radar graph data](radarData.png "current radar graph data")
+It also needs to deal with the case when the meter frequency is greater than the desired display frequency. For example in the figure a little below it only has data every 4 days and that is what should be graphed instead of daily since OED does not want to interpolate data that does not exist in reality. We need to think about how this will be done and what is the proper labels. Normally we do this in the database so we may need separate code for radar.
+
+- The current graphic labels the dates for each point. We need to label it according to the frequency in the description of cases above. For example, if you are doing yearly then it should be each month in the year. The following figure shows that with four day data it puts a label every four days. It also shows that the labels are being cut off at the top and bottom of the graphic. Also note that the labels do not change appropriately with the language selection as is done in other graphics.
+![current radar graph labels](radarLabels.png "current radar graph labels")
+
+- Given that it appears a large number of points can be graphed, it may make sense to allow the user to display the meter readings directly instead of hourly when they are looking at a single day.
+- Groups are not working with radar.
+- While it appears the Redux state was set up it is not being used for the radar graphics and line state is being used since this was a demonstration.
+- The web browser console is showing a warning. It begins "Selector unknown returned a different result when called with the same parameters". I think this started showing up due to radar but have not checked it out.
+- Chart links for radar has not been started.
+- At least some of the text for radar has not been internationalized.
+- OED probably will not support export of radar data so that button can be removed from the radar graphic page as it is on several other graphic pages.
+- Need the help link and the help file for radar (Steve will do when the work is mostly done).
