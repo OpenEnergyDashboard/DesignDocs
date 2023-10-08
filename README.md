@@ -17,7 +17,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 ## Information
 
-None yet.
+- [website/website.md](./website/website.md): Describes how the OED website data and images are created.
 
 ## Historical
 
