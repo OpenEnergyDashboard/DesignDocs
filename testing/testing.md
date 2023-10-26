@@ -1,9 +1,5 @@
 # Documentation on how testing data is created and used
 
-The directory readingsData/ has all the files used.
-
-TODO Need to update for new 3D test.
-
 ## Creating a new test
 
 - The section on "Generating test data" describes how the test data is generated. Normally the needed files are generate by someone else in the project and provided here.
@@ -122,7 +118,7 @@ The following tables give information about the expected readings returned for a
 
 - "Description" gives information on this row.
 
-**TODO The dates needed for expected data need to change after the DB functions for getting data are updated to go raw then hourly then daily.**
+\* indicates one needs to fix up the first/last readings due to partial times. See below.
 
 ### Line reading tests
 
@@ -139,13 +135,13 @@ These are located in the file src/server/test/web/readingsLineMeterQuantity.js.
 | L5  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 60          | true     | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | should barely have hourly points for middle readings of 15 minute for a 15 day + 15 min period and quantity units with kWh as kWh |
 | L7  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 1440        | true     | E7:G76        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily gives only full days |
 | L10 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ |
-| L11 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1,                            | 3.6          | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion |
-| L12 | x    | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c2, c3                 | 3412.08    | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained |
+| L11 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c6                         | 3.6          | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion |
+| L12 | x    | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c2, c3                 | 3412.08    | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity            | expected_line_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained |
 | L13 | x    | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c6, c3                | 3412.08    | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained with reverse conversion |
 | L18 |      | readings_ri_15_days_75.csv | Electric_Utility | kg of CO₂         | u2, u10, u12, c11, c12                     | 0.709      | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_kgCO2_st_-inf_et_inf.csv                              | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kg of CO2 |
 | L19 | x    | readings_ri_15_days_75.csv | Electric_Utility | metric ton of CO₂ | u2, u10, u11, u12, c11, c12, c13           | 7.09e-4    | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MTonCO2_st_-inf_et_inf.csv                              | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as metric ton of CO2 & chained |
 | L20 |      | readings_ri_15_days_75.csv | Electric_Utility | lbs of CO₂        | u2, u10, u11, u12, u13, c11, c12, c13, c14 | 1.5598     | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_lbsCO2_st_-inf_et_inf.csv                              | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as lbs of CO2 & chained & reversed |
-| L21 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 60          | true     | E173:G1612    | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv                                 | should have hourly points for middle readings of 15 minute for a 60 day period and quantity units & kWh as MJ |
+| L21 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 60          | true     | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24 00:00:00   | expected_line_ri_15_mu_kWh_gu_MJ_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv                                 | should have hourly points for middle readings of 15 minute for a 60 day period and quantity units & kWh as MJ |
 
 #### Raw meter
 
@@ -159,26 +155,20 @@ These are located in the file src/server/test/web/readingsLineMeterRaw.js.
 | L15 | x    | readings_ri_15_days_75.csv | Degrees          | F                 | u6, u7, u8, c5, c8                         | 1.8        | 32        | 15 minutes   | 1440        | false    | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_C_gu_F_st_-inf_et_inf.csv                                    | should have daily points for 15 minute reading intervals and raw units with +-inf start/end time & C as F with intercept reverse conversion |
 | L16 | x    | readings_ri_15_days_75.csv | Degrees          | Widget            | u6, u7, u8, u9, c5, c7, c9                 | 9          | 163       | 15 minutes   | 1440        | false    | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_C_gu_Widget_st_-inf_et_inf.csv                               | should have daily points for 15 minute reading intervals and raw units with +-inf start/end time & C as Widget with intercept & chained |
 | L17 | x    | readings_ri_15_days_75.csv | Degrees          | Widget            | u6, u7, u8, u9, c5, c8, c10                | 9          | 163       | 15 minutes   | 1440        | false    | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_C_gu_Widget_st_-inf_et_inf.csv                               | should have daily points for 15 minute reading intervals and raw units with +-inf start/end time & C as Widget  with intercept & chained & reverse conversions |
-| L22 | x    | readings_ri_15_days_75.csv | Degrees          | F                 | u6, u7, u8, c5, c7                         | 1.8        | 32        | 15 minutes   | 60          | false    | E173:G1612    | -infinity               | +infinity             | expected_line_ri_15_mu_C_gu_F_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv                                    | should have hourly points for middle readings of 15 minute for a 60 day period and raw units & C as F with intercept |
-| L23 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 15          | true     | E3269:G4612  | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv                                 | should have raw points for middle readings of 15 minute for a 14 day period and quantity units & kWh as MJ |
-| L24 | x    | readings_ri_15_days_75.csv | Degrees          | F                 | u6, u7, u8, c5, c7                         | 1.8        | 32        | 15 minutes   | 15          | false    | E3269:G4612  | -infinity               | +infinity             | expected_line_ri_15_mu_C_gu_F_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv                                    | should have raw points for middle readings of 15 minute for a 14 day period and raw units & C as F with intercept |
+| L22 | x    | readings_ri_15_days_75.csv | Degrees          | F                 | u6, u7, u8, c5, c7                         | 1.8        | 32        | 15 minutes   | 60          | false    | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24  00:00:00  | expected_line_ri_15_mu_C_gu_F_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv                                    | should have hourly points for middle readings of 15 minute for a 60 day period and raw units & C as F with intercept |
+| L23 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 15          | true     | E3269:G4612  | 2022-09-21 00:00:00      | 2022-10-05 00:00:00   | expected_line_ri_15_mu_kWh_gu_MJ_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv                                 | should have raw points for middle readings of 15 minute for a 14 day period and quantity units & kWh as MJ |
+| L24 | x    | readings_ri_15_days_75.csv | Degrees          | F                 | u6, u7, u8, c5, c7                         | 1.8        | 32        | 15 minutes   | 15          | false    | E3269:G4612  | 2022-09-21 00:00:00      | 2022-10-05 00:00:00   | expected_line_ri_15_mu_C_gu_F_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv                                    | should have raw points for middle readings of 15 minute for a 14 day period and raw units & C as F with intercept |
 
 #### flow meter
+
+Flow and raw should act the same in the code. At some point we could add more test that are similar to raw but not now.
 
 These are located in the file src/server/test/web/readingsLineMeterFlow.js.
 
 | ID  | Done | Readings file              | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | reading freq | min/reading | Quantity | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                              |
 | :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :----------: | :---------: | :------: | :-----------: |:---------------: | :-------------------: | :---------------------------------------------------------------------------------: | :------------------------------------------------------: |
 | L8  | x    | readings_ri_15_days_75.csv | Electric         | kW                | u4, u5, c4                                 | 1          | 0         | 15 minutes   | 1440        | false    | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & kW as kW |
-| L25 | x    | readings_ri_15_days_75.csv |  Thing_36        | thing unit         | u14, u15, c15                              | 100        | 0         | 15 minutes   | 1440        | false    | E5:G79       | -infinity               | +infinity             | expected_line_ri_15_mu_Thing36_gu_thing_st_-inf_et_inf.csv                             | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & thing as thing where rate is 36 |
-
-\* indicates one needs to fix up the first/last readings due to partial times. See below.
-
-TODO
-
-- could add for flow with conversion but should be same as raw already done
-- missing readings: probably need to do calculation by hand
-- readings where length is not divisible into hour/day
+| L25 | x    | readings_ri_15_days_75.csv |  Thing_36        | thing unit         | u14, u15, c15                              | 100        | 0         | 15 minutes   | 1440        | false    | E5:G79       | -infinity               | +infinity             | expected_line_ri_15_mu_Thing36_gu_thing_st_-inf_et_inf.csv                          | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & thing as thing where rate is 36 |
 - groups: sin^2 + cos^2, other ones similar to meters, ones where combine different units
 
 ### Bar reading tests
@@ -187,23 +177,32 @@ The values in this table are similar to the ones for line readings except:
 
 - There is no "min/reading" as this can be any reasonable value.
 - "Bar width" gives the number of days for each bar in the requested graphic. Standard OED values are 1, 7 & 28 but any value from 1 to 365 is valid.
+- You cannot graph raw units as a bar chart.
 
 #### Quantity meter
 
 These are located in the file src/server/test/web/readingsBarMeterQuantity.js.
 
-| ID  | Done | Readings file              | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Bar width | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                 |
-| :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :-------: | :-----------: |:----------------------: | :-------------------: | :---------------------------------------------------------------------------------: | :-----------------------------------------: |
-| B1  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 1         | I5:K79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_1.csv                            | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
-| B2  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 7         | I5:K15        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_7.csv                            | 7 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
-| B3  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 28        | I5:K7         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_28.csv                           | 28 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
-| B4  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 13        | I5:K10        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_13.csv                           | 13 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
-| B5  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 75        | I5:K5         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_75.csv                           | 75 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
-| B6  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 365       | I5:K5         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_75.csv                           | 365 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh (same as 75 days) |
+| ID  | Done | Readings file              | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Bar width | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                 | Notes         |
+| :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :-------: | :-----------: |:----------------------: | :-------------------: | :------------------------------------------------------------------------: | :-----------------------------------------: | :---: |
+| B1  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B2  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 7         | L5:N15        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_7.csv                                  | 7 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B3  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 28        | L5:N7         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_28.csv                                 | 28 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B4  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 13        | L6:N10        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_13.csv                                 | 13 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B5  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 75        | L5:N5         | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_75.csv                                 | 75 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B6  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 76        | no values     | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kWh_st_-inf_et_inf_bd_76.csv                                 | 76 day bars (no values) for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| B7  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 13        | L6:N10        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_bar_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28_bd_13.csv | 13 day bars for 15 minute reading intervals and quantity units with reduced, partial days & kWh as kWh | must overwrite cell N2 with 6820 and put back to original formula when done: = (MATCH(0, $F:$F, 0) - 5) * $F$2 + 4 |
+| B8  |      | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ | |
+| B9  |      | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c6                         | 3.6        | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion | |
+| B10  |      | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c2, c3                | 3414.142   | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU | |
+| B11  |      | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c6, c3                | 3414.142   | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU  reverse conversion| |
+| B12 |      | readings_ri_15_days_75.csv | Electric_Utility | kg of CO₂         | u2, u10, u12, c11, c12                     | 0.709      | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_kgCO2_st_-inf_et_inf_bd_1.csv                              | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as kg of CO2 | |
+| B13 |      | readings_ri_15_days_75.csv | Electric_Utility | metric ton of CO₂ | u2, u10, u11, u12, c11, c12, c13           | 7.09e-4    | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_MTonCO2_st_-inf_et_inf_bd_1.csv                              | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as metric ton of CO2 & chained | |
+| B14 |      | readings_ri_15_days_75.csv | Electric_Utility | lbs of CO₂        | u2, u10, u11, u12, u13, c11, c12, c13, c14 | 1.5598     | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_ri_15_mu_kWh_gu_lbsCO2_st_-inf_et_inf_bd_1.csv                              | 1 day bars for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as lbs of CO2 & chained & reversed | |
 
-Note that bar readings have yet to be done for these types of tests. Thus, a few are given to see if the results match. More tests for time ranges and different units are needed that are similar to line. If a developer does at least one of these then let the project know if it works so more will be created.
+#### flow meter
 
-TODO other time frames, units, missing readings, etc. similar to line
+TODO
 
 ### Compare readings
 
@@ -212,6 +211,14 @@ TODO
 ### Map readings
 
 TODO
+
+### Radar
+
+TODO Tests when that feature is added.
+
+### 3D
+
+TODO Need to update for new 3D test that will be in PR for that feature.
 
 ## Generating test data
 
@@ -352,3 +359,9 @@ This gets the end time of this reading and then subtracts the days for each bar.
 - Each end time in column K uses: \
 = INDIRECT("C" & ($K$2 - (($L$2 - ROW() + 5) * $J$2))) \
 which is very similar to the start time but finds the end time (in column C) of the last meter reading used so it is the end time of the bar reading returned. It works because it does + 5 instead of + 6 so it is one bars days earlier.
+
+## TODO
+
+- missing readings: probably need to do calculation by hand
+- readings where length is not divisible into hour/day
+- group
