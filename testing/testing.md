@@ -11,11 +11,11 @@
  Generally you can find a similar test that is already done as an example of how the code should be structured. Directions for creating reading tests:
 
 1) These tests are designed to be done by an early developer working on OED to get experience. As such, a single developer or team normally does 1-2 tests before moving on to other work. If you wish to do more than two test then you need to contact the project first. This guarantees that there are tests for lots of people.
-2) If you want to do test "LXX" (where you replace "LXX" with the actual ID of the test you awant to do), verify it is not marked done in the table below.
+2) If you want to do test "LXX" (where you replace "LXX" with the actual ID of the test you want to do), verify it is not marked done in the table below.
 3) Go to [GitHub issue #962](https://github.com/OpenEnergyDashboard/OED/issues/962).  Check that there is not already a comment indicating the test is in progress. If not, put in a comment such as: "I am working on test LXX". Others now know you are working on this test so you should have exclusive rights to create the test. Note the project reserves the right to remove the allocation of a test if a pull request is not created within one month of a comment allocating the test. One may edit the original comment to extend the time with a reason why. What follows is the steps to create the code.
 4) There should be a comment in the indicated file of: \
 // Add LXX here \
-**Replace** this with the desired testing code.
+**Replace** this with the desired testing code. Note the comment would be LGXX for line group, BXX for bar meter, etc.
 5) Define arrays of data for units, conversions and test meter(s)/group using testing csv. The tables below have the items needed for the code.
 6) Load these arrays by invoking prepareTest(**defined data arrays**) function.
 7) Create an array of values using the expected values csv by calling parseExpectedCsv on the file and assigning the return value. In general, you need to copy the file from the design document testing/readingsData/ directory to the src/server/test/web/readingsData/ directory since the expected files are not included in th eOED code until a test is written. If it is already there then you don't need to copy it again.
@@ -134,7 +134,7 @@ These are located in the file src/server/test/web/readingsLineMeterQuantity.js.
 | L4  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 60          | true     | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv | should have hourly points for middle readings of 15 minute for a 60 day period and quantity units with kWh as kWh |
 | L5  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 60          | true     | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | should barely have hourly points for middle readings of 15 minute for a 15 day + 15 min period and quantity units with kWh as kWh |
 | L6  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 15          | true     | E3269:G4612   | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days barely gives raw points & middle readings |
-| L7  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 1440        | true     | E7:G76        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily gives only full days |
+| L7  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 minutes   | 1440        | true     | E8:G75        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_ri_15_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily gives only full days |
 | L10 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ |
 | L11 | x    | readings_ri_15_days_75.csv | Electric_Utility | MJ                | u1, u2, u3, c1, c6                         | 3.6        | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion |
 | L12 | x    | readings_ri_15_days_75.csv | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | 15 minutes   | 1440        | true     | E5:G79        | -infinity               | +infinity            | expected_line_ri_15_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained |
@@ -170,6 +170,28 @@ These are located in the file src/server/test/web/readingsLineMeterFlow.js.
 | L8  | x    | readings_ri_15_days_75.csv | Electric         | kW                | u4, u5, c4                                 | 1          | 0         | 15 minutes   | 1440        | false    | E5:G79        | -infinity               | +infinity             | expected_line_ri_15_mu_kW_gu_kW_st_-inf_et_inf.csv                                  | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & kW as kW |
 | L25 | x    | readings_ri_15_days_75.csv |  Thing_36        | thing unit         | u14, u15, c15                              | 100        | 0         | 15 minutes   | 1440        | false    | E5:G79       | -infinity               | +infinity             | expected_line_ri_15_mu_Thing36_gu_thing_st_-inf_et_inf.csv                          | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & thing as thing where rate is 36 |
 - groups: sin^2 + cos^2, other ones similar to meters, ones where combine different units
+
+#### Quantity group
+
+These are located in the file src/server/test/web/readingsLineGroupQuantity.js. These use standard meters and group found in code.
+
+| ID   | Done | Group (meters)                                                         | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | reading freq | min/reading | Quantity | Cell range    | Start time for readings | End time for readings | Expected readings file name                                                         | Description                                              |
+| :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :----------: | :---------: | :------: | :-----------: |:---------------: | :-------------------: | :---------------------------------------------------------------------------------: | :------------------------------------------------------: |
+| LG1  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf.csv                                | should have daily points for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh |
+| LG2  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | 2022-08-18 00:00:00     | 2022-11-01 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-18%00#00#00_et_2022-11-01%00#00#00.csv | should have daily points for 15 + 20 minute reading intervals and quantity units with explicit start/end time & kWh as kWh |
+| LG3  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E12:G72       | 2022-08-25 00:00:00     | 2022-10-25 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-25%00#00#00.csv | should have daily points for middle readings of 15 + 20 minute for a 61 day period and quantity units with kWh as kWh |
+| LG4  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv | should have hourly points for middle readings of 15 + 20 minute for a 60 day period and quantity units with kWh as kWh |
+| LG5  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | should barely have hourly points for middle readings of 15 + 20 minute for a 15 day + 15 min period and quantity units with kWh as kWh |
+| LG6  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E821:G1156    | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days still gives hourly points & middle readings |
+| LG7  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E8:G75        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily gives only full days |
+| LG10 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ |
+| LG11 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | MJ                | u1, u2, u3, c1, c6                         | 3.6        | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion |
+| LG12 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity            | expected_line_group_ri_15-20_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained |
+| LG13 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | BTU               | u1, u2, u3, u16, c1, c6, c3                | 3412.08    | 0         | 15 & 20 min   | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_BTU_st_-inf_et_inf.csv                                | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as BTU chained with reverse conversion |
+| LG18 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kg of CO₂         | u2, u10, u12, c11, c12                     | 0.709      | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_kgCO2_st_-inf_et_inf.csv                              | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kg of CO2 |
+| LG19 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | metric ton of CO₂ | u2, u10, u11, u12, c11, c12, c13           | 7.09e-4    | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_MTonCO2_st_-inf_et_inf.csv                              | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as metric ton of CO2 & chained |
+| LG20 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | pound of CO₂      | u2, u10, u11, u12, u13, c11, c12, c13, c14 | 1.5598e-6  | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_lbsCO2_st_-inf_et_inf.csv                              | should have daily points for 15 & 20 minute reading intervals and quantity units with +-inf start/end time & kWh as lbs of CO2 & chained & reversed |
+| LG21 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 & 20 min  | 60          | true     | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_MJ_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv                                 | should have hourly points for middle readings of 15 + 20 minute for a 60 day period and quantity units & kWh as MJ |
 
 ### Bar reading tests
 
@@ -214,7 +236,7 @@ TODO
 
 ### Radar
 
-TODO Tests when that feature is added.
+Radar uses the line reading data from Redux state so does not need separate tests.
 
 ### 3D
 
@@ -310,6 +332,19 @@ The readings.ods was used to generate the test data. If you are not creating new
 - C2  is the maximum value for a reading.
 
 No other cells should be edited. Note the readings change whenever you reopen the spreadsheet or touch cells in the sheet. To keep the same value they are copied to another CSV file as only values (see next).
+
+There are two files that are used for meter data. Both has B5 as 2022-08-18 00:00:00.
+
+- The first is the standard one with the readings in readings_ri_15_days_75.csv
+  - A2 is 15
+  - B2 is 1
+  - C2 is 100
+  - The cell range to select is B5:C7204
+- The second meter is used for groups and deliberately has a different frequency to test combining groups with different values. It also has a different range of values. Note the meters do align on each day so there are no missing/partial reading for the dates selected. The readings are in readings_ri_20_days_75.csv.
+  - A2 is 20
+  - B2 is 27
+  - C2 is 73
+  - The cell range to select is B5:C5404
 
 After setting the values and creating the values in the three needed columns (A, B, C) you can create a CSV for testing usage by:
 
@@ -432,9 +467,29 @@ This gets the end time of this reading and then subtracts the days for each bar.
 = INDIRECT("C" & ($K$2 - (($L$2 - ROW() + 5) * $J$2))) \
 which is very similar to the start time but finds the end time (in column C) of the last meter reading used so it is the end time of the bar reading returned. It works because it does + 5 instead of + 6 so it is one bars days earlier.
 
+#### 3D readings
+
+3D is a special case of line readings. As such, it is very similar to line readings with an added parameter "hours/point" which gives the number of hours for each point in the day in the requested graphic. This is called hp in the file names. This times 60 is the min/reading from DB used to create the data. As such, C2 is set to hp * 60 to generate the expected values in a similar way to line data.
+
+#### Group data
+
+Since groups combine the data from meters, the expected value is a combination (addition) of multiple meters. To make testing simpler, only two meters are placed in a group used for testing. The meters used are:
+
+- The first meter is the standard one with readings in readings_ri_15_days_75.csv.
+- The second meter is the other meter with readings are in readings_ri_20_days_75.csv.
+
+The group readings are created as follows:
+
+- The spreadsheet readings_group.ods is used.
+- A2 is set to the reading increment for the first meter (15).
+- E2 is set to the reading increment for the second meter (20).
+- The readings for the first meter are pasted starting in A5. This is done as values when pasted.
+- The readings for the second meter are pasted starting in E5. This is done as values when pasted.
+- I2 is true if the groups are quantity data and false if not (flow or raw). **Note it is important to redo for the two types of data or the expected result will be wrong. This means recopying the data for the steps below whenever changed.**
+- The values in I5:K1804 have the hourly readings for the group. Note you cannot do raw readings for groups so hourly allows doing both hourly and daily result points. This is 75 days * 24 points/day = 1800 points.
+- The values for the hourly group readings are copied starting in A5 in spreadsheet expected_group.ods. This is done as values when pasted. This is similar to expected.ods but has the group data.
+
 ## TODO
 
 - missing readings: probably need to do calculation by hand
 - readings where length is not divisible into hour/day
-- group
-  - add how did data creation
