@@ -21,6 +21,10 @@ Here are some possible sources where more may exist. The value and appropriatene
 - [question about getting weather data but dated](https://opendata.stackexchange.com/questions/7578/historical-weather-forecast-api)
 - others are available if needed and find with a web search
 
+## Admin control of weather data
+
+Admins need to be able to set if and how (if needed) weather data is acquired. The exact design depends on how weather data is acquired. Its page may be the general admin panel if it is simple or a newly linked page.
+
 ## Use weather data to normalize values
 
 Once appropriate weather data is available, it needs to be used to normalize the meter data. Here are some sources of information on using weather data to normalize usage with basic ideas to modeling. Others are available. The possibilities need to be analyzed, a choice made, tested against real data and implemented within OED.
