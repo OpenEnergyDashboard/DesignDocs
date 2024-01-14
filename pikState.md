@@ -80,3 +80,189 @@ It is likely these overlap the next item and that items are missing. Hopefully t
   - update the DB for this: src/server/sql/unit/get_by_unit_index_meter.sql, src/server/sql/unit/get_by_unit_index_unit.sql, src/server/sql/unit/insert_new_unit.sql, src/server/sql/unit/update_unit.sql, src/server/sql/unit/create_units_table.sql
 - src/server/models/Unit.js needs it removed. getByUnitIndexMeter & getByUnitIndexUnit seem only used for testing and can go.
 - src/server/services/graph/createConversionArrays.js can remove assignIndex.
+
+## Integrating cik
+
+Once the code is switched to cik, the code can be modified to take advantage of the existence of cik rather than pik.
+
+### Avoid reloading OED
+
+As noted in the introduction, certain changes modified pik and the unit_index that necessitated a window reload. With the change to cik, the DB id is used as the key and these do not change. It also removes the unit_index. This means it is should no longer be necessary to do a window reload for this reason. There are two cases discussed for each current reload that need to be addressed:
+
+1. Some changes to cik will mean that some currently graphed meters/groups can no longer be valid for the admin. The admin state should be updated to reflect the new values in cik whenever cik is updated. This can also happen to a current user working on OED but this is just one of many cases where changes by an admin can impact a user so is not addressed at this time. Once conversions are done on the client side, this will mean that previously allowed conversion can still take place until the cik state is updated and new conversions will not be available until cik updates. This should not have serious consequences.
+2. OED also does a reload if the DB views are refreshed since the values being graphed can be impacted. This is not necessary but some actions do need to be taken.
+
+The `window.location.reload()` of interest for these cases are all encapsulated in src/client/app/actions/admin.ts in updateCikAndDBViewsIfNeeded. This function causes the cik update and the DB view refresh. This is used by:
+
+- src/client/app/actions/conversions.ts in add, edit and delete of a conversion.
+  1. Those that shouldRedoCik should now reload the cik state. If you edit or delete a conversion then the selected meters/groups can be impacted. It is possible to check if there is an impact but for now the simpler change of removing all the selected meters/groups and removing all readings state will be taken since this is not common.
+  2. The DB views are never refreshed here.
+- src/client/app/actions/meters.ts when a meter is edited.
+  1. This never refreshes cik so it is okay as is.
+  2. The DB views are refreshed when the meter goes to/from no unit and to/from quantity. In these cases the meters or groups can be impacted. The case of groups should be handled by not allowing a meter to be changed in these ways if it is still used in any group. This is related to the checks in units that stop changes if it is used in a meter. src/client/app/components/meters/EditMeterModalComponent.tsx should be changed to disallow this change. In the case of meters, the cases there that are an issue can be limited by checking if the meter is currently being graphed. If so, then problems could be created so the selected meters and groups are removed from Redux state as is all readings state. It may be possible to avoid this in some cases but that is not done at this time.
+- src/client/app/actions/units.ts when a unit is edited or added.
+  1. Those that shouldRedoCik should now reload the cik state. The case of adding a unit is safe for selected meters/groups since it cannot yet be used. In the case of unit edit it can be complex so all the selected meters/groups are removed from Redux state as well as all reading state. As noted above, some of these removal might not be needed but this is not done now.
+  2. src/client/app/components/unit/EditUnitModalComponent.tsx does the DB view refresh in several cases. First, if what the unit represents changes. However, this is no longer allowed (admin cannot edit) so this part of the check should be removed. Second, if the sec in rate changes. The value of any selected meter/group that uses this unit (including meters included in a selected group) will be impacted. To avoid a complex check in a very unusual case, all the selected meters/groups will be removed from Redux state and all reading state is also removed.
+
+The updateCikAndDBViewsIfNeeded will likely need new parameter(s) to allow finer grain control for these other actions. It seems best to continue to encapsulate the changes there. Also, the reload of cik needs to happen after the cik update is done.
+
+The refresh of the DB views can take some time. It would be nice if the standard bouncing balls were displayed so the admin waits until the process is done. It is believed this was not done before because the reload wiped them out.
+
+### Client-side unit conversions
+
+The original design meant that readings were fetched from the server each time the graphic unit changed. Now that the client knows the conversions in cik Redux state, the client can do the conversions. OED is already doing the area conversions on the client side (and some others in some cases) so the combined conversion can be determined and used to modify all the readings. The changes will be done in two stages: 1) meters and 2) groups.
+
+Note new readings must be fetched if the time range is modified but they will follow the same ideas for the unit used.
+
+#### meters
+
+For a meter to be allowed to graph, it must have a unitId which is the meter unit. If the Redux state does not yet have the readings for this meter then readings are requested for the graphic unit (and time range). See src/client/app/components/ChartDataSelectComponent.tsx at changeSelectedMeters for the start of the process. The readings stored in Redux state will be the ones returned scaled by the inverse of ciks where i = meter unit and k = graphic unit. Each time a meter is graphed (see src/client/app/containers/LineChartContainer.ts for an example), the scaling of the readings will include ciks where i = meter unit and k = graphic unit. This does mean that the first request will convert from graphic unit to meter unit to put into Redux state and then scale the other way to get back the original values from the DB but that is done so it is the same in every case. Note that the meter unit is not absolutely necessary for Redux state key here since there will only be one unit key but it is left so the state layout is not changed and so it mirrors groups that will have multiple unit keys.
+
+#### groups
+
+Groups can have multiple underlying (deep) meters that may or may not be compatible with a single meter unit for a given graphic unit. If the graphic unit is compatible a single meter unit then the readings are stored in that meter unit. The identity conversion graphing unit is used to get the meter data. The needed pseudocode is:
+
+```js
+/**
+ * Returns the id of any unit with the identity conversion for this meterUnit or -1 if does not exist
+ * @param meterUnit The unit of a meter
+ * @returns id or -1 if does not exist
+ */
+function meterIdentityUnit(meterUnit) {
+    // It is not common to have more than one identity conversion. For the needed uses,
+    // any one should work so can just use the first one found. It is important that this
+    // be consistent so the same result is returned each time.
+
+    // Search Redux ciks where i = meterUnit for any k where slope = 1 and intercept = 0
+    // return k if exists or -1 if none
+}
+
+/**
+ * Tells if two values are very close.
+ * @param valueOne The first value to compare
+ * @param valueTwo The second value to compare
+ * @param epsilon The max difference for the two values to differ to be close enough
+ * @returns true if two values are close and false otherwise
+ */
+function close(valueOne, valueTwo, epsilon = 10e-10) {
+    // It is belived that the default epsilon will work fine but it might need to be adjusted.
+    if (valueOne == 0) {
+        valueTwo == 0 < epsilon ? true : false
+    } else {
+        // Use relative check since safe to divide.
+        Math.abs((valueOne - valueTwo) / valueOne) < epsilon ? true : false
+    }
+}
+
+/**
+ * Determines if the meters in the group and the graphic unit are all compatible for storing in Redux state
+ * @param groupId The id of the group being checked
+ * @param graphicUnit The graphic unit of interest
+ * @returns true if compatible or false otherwise
+ */
+groupCompatible(groupId, graphicUnit) {
+    // The deep meters for the group
+    deepMeters = // Redux deep meters for groupId
+    // The first deep meter from Redux state
+    firstDeepMeter = deepMeters[0]
+    // The unit associated with the first deep meter
+    firstMeterUnit = // the unitId of firstDeepMeter from Redux state
+    // Stores index of the graphing unit with identity conversion for firstMeterUnit or -1.
+    firstIdentity = meterIdentityUnit(firstMeterUnit)
+    // The conversion from the first meter's unit to the graphic unit. This should exist if
+    // able to graph this group.
+    firstMeterConversion = // ciks from Redux where i = firstDeepMeter and k = graphic unit.
+    // Stores the index of the meter in the group being considered
+    i = 1
+    // Tells if meters in group are compatible.
+    // If the first deep meter did not have an identity conversion then these are not compatible.
+    // It may be possible to still be compatible but it is unusual that a meter does not have an
+    // identity conversion (at least one) so don't try to fix if not.
+    compatible = firstIdentity === -1 ? false : true
+    // Loop unit there are no more meters in group to consider or the meters are not compatible.
+    // If the first meter is compatible with all other meters then all meters are compatible
+    // with each other by transitive property.
+    while (i < deepMeters.length && compatible) {
+        // The current meter being considered
+        currentDeepMeter = deepMeters[i]
+        // The unit associated with the first deep meter
+        currentMeterUnit = // the unitId of currentDeepMeter from Redux state
+        // Stores index of the graphing unit with identity conversion for current meter or -1. 
+        currentIdentity = meterIdentityUnit(currentMeterUnit)
+        if (currentIdentity === -1) {
+            // If the meter has no identity conversion then it is not compatible.
+            compatible = false
+        } else {
+            // To be compatible, the first and current meter meters must have the same value for the graphic unit.
+            // If not, then the readings for this group cannot be determined from one of the meter units in the
+            // group and must be stored from the actual graphic unit. An example is a group with a kWh and BTU
+            // meters. They are normally compatible in energy units but may not be for money since the cost per
+            // unit differs for these two meters.
+            // The conversion from the current meter's unit to the graphic unit. This should exist if
+            // able to graph this group.
+            currentMeterConversion = // ciks from Redux where i = currentDeepMeter and k = graphic unit
+            // Only compatible if the slope and intercept are very close for two meters which means the ratio is 1.
+            compatible = close(firstMeterConversion.slope, currentMeterConversion.slope) &&
+                close(firstMeterConversion.intercept, currentMeterConversion.intercept)
+            if (compatible) {
+                // The second condition for these two meters to be compatible is that the two meters
+                // must have the same values for the
+                // identity conversion. This means that the two conversions are inverses of each other.
+                // The identity conversion is telling the relation of the meter to its fundamental graphing unit.
+                // It is unusual that these would not be compatbile but check since storing in the meter unit of one
+                // would give different values for the other meter if this is not true.
+                // Conversion for the first meter.
+                firstConversion = // {slope, intercept} of Redux ciks with i = firstDeepMeter and k = currentIdentity or undefined if does not exist
+                // Conversion for the current meter
+                currentConversion = // {slope, intercept} of Redux ciks with i = currentDeepMeter and k = firstIdentity or undefined if does not exist
+                // This checks if the combined slope is close to 1 and the intercept is close to 0 which means that
+                // when combined they are the identity conversion. Close is used to avoid roundoff errors
+                // since very close will not make a practical difference in what the user sees. If the identity then
+                // the meter is compatible.
+                compatible = firstConversion != undefined && currentConversion != undefined &&
+                    close(firstConversion.slope * currentConversion.slope, 1) &&
+                    close (currentConversion.slope * firstConversion.intercept + currentConversion.intercept, 0)
+            }
+            }
+            // Go to next meter.
+            i++
+        }
+    }
+}
+
+
+// For getting state when a group is added for graphing staring in src/client/app/components/ChartDataSelectComponent.tsx
+// with changeSelectedGroups.
+if (compatible(groupId, graphicId)) {
+    // The deep meters for the group
+    deepMeters = // Redux deep meters for groupId
+    // The first deep meter from Redux state
+    firstDeepMeter = deepMeters[0]
+    // The unit associated with the first deep meter
+    firstMeterUnit = // the unitId of firstDeepMeter from Redux state
+    // Stores index of the graphing unit with identity conversion for firstMeterUnit or -1.
+    storeUnit = meterIdentityUnit(firstMeterUnit)
+    // load reading data requesitng readings for storeUnit but place into Redux with
+    // firstMeterUnit as the key for the unit.
+} else {
+    // load reading data requesitng readings for graphicUnit and store with that key.
+    // This should be similar to current code.
+}
+
+
+// For graphing such as in src/client/app/containers/LineChartContainer.ts
+if (compatible(groupId, graphicId)) {
+    // The deep meters for the group
+    deepMeters = // Redux deep meters for groupId
+    // The first deep meter from Redux state
+    firstDeepMeter = deepMeters[0]
+    // The unit associated with the first deep meter
+    firstMeterUnit = // the unitId of firstDeepMeter from Redux state
+    // Stores index of the graphing unit with identity conversion for firstMeterUnit or -1.
+    storeUnit = meterIdentityUnit(firstMeterUnit)
+    unitConversion = // ciks where i = firstMeterUnit and k = graphicUnit
+} else {
+    unitConversion = // 1, 0 so no scaling
+}
+// Update overall scaling by unitConversion to use for modifying reradings
+```
