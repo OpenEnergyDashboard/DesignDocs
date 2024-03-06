@@ -4,8 +4,6 @@ This is a very large document that can be intimidating. Developers can review th
 
 This was a working document (started Nov 2020 but includes previous work/ideas) that gives ideas and details on how to generalize OED resources from electricity to most types. The previous document when we thought we would use a unit conversion package is [available](unitPackageIdeas.md) but is now obsolete. This was updated in late April 2022 after the first round of implementation were done to bring it up to date and prepare for the (hopefully) final round of implementation in the summer of 2022. It was reviewed again in May 2023 as v1.0 was finalized. There are likely differences between the code and this document so the code is now the final say on what OED does.
 
-Note: The equations in this document should render in Visual Studio Markdown Preview window. They are in LaTex format. Unfortunately, you have to use a URL and cannot use $ on GitHub (yes, it works in Visual Studio). This is how it is done in this document but note there is no background set so if you use dark mode they are basically invisible. I'm sorry to say you need to turn that off to see the equations. Also note that a heading must be lowercase and words separated by - to allow links so this is used throughout this document. (This restriction may now be gone on GitHub.)
-
 ## table-of-contents
 
 - [overview](#overview)
@@ -177,9 +175,11 @@ Thus, checking if P<sub>ik</sub> is true tells if there is a path between source
 
 A set of units is compatible with a given unit d if every unit in the set has a conversion to d. This is true if and only if
 
-<img src="https://render.githubusercontent.com/render/math?math=\prod_{i=\rm{units\ in\ set}}C_{id}\ \rm{.slope} \neq \rm{NaN}">
+$$
+\prod_{i={units\ in\ set}}C_{id}\ {.slope} \neq {NaN}
+$$
 
-where <img src="https://render.githubusercontent.com/render/math?math=C_{id}\ \rm{.slope}"> is the slope of the conversion stored at index C<sub>id</sub>. If this product is NaN then unit<sub>d</sub> is not compatible with the set of units. This is true since NaN as either operand in arithmetic operations results in a NaN so the product is NaN if any of the slopes are NaN. OED should be using P<sub>ik</sub> to do this calculation (units are only compatible if P<sub>ik</sub> is true for all so the trick with C<sub>ik</sub> is not really used.
+where $C_{id}\ {.slope}$ is the slope of the conversion stored at index C<sub>id</sub>. If this product is NaN then unit<sub>d</sub> is not compatible with the set of units. This is true since NaN as either operand in arithmetic operations results in a NaN so the product is NaN if any of the slopes are NaN. OED should be using P<sub>ik</sub> to do this calculation (units are only compatible if P<sub>ik</sub> is true for all so the trick with C<sub>ik</sub> is not really used.
 
 When this structure is used by OED, it will often start from a meter name. The name of the meter can be used to get the values associated with the meter (already provided in OED software). One of the new values will be the unit that the meter receives data and the corresponding index in C<sub>ik</sub>.
 
@@ -1614,31 +1614,43 @@ The first two cases (quantity and rate) are labeled the same way (case three was
 
 compressed_readings_2 in src/server/sql/reading/create_compressed_reading_views.sql returns the desired points for graphing readings for the meters selected for the first case above (physical units that are consumed). It uses the values in daily_readings and hourly_readings materialized views. These use the following formula (done cleverly in Postgres SQL):
 
-<img src="https://render.githubusercontent.com/render/math?math=\frac{\sum_\rm{all\ readings\ in\ desired\ time\ frame\ of\ point} \left(\frac\rm{readings\ value}\rm{reading\ length\ in\ hours} \times \rm{number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_\rm{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left(\rm{time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}">
+$$
+\frac{\sum_{all\ readings\ in\ desired\ time\ frame\ of\ point} \left(\frac{readings\ value}{reading\ length\ in\ hours} \times {number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left({time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}
+$$
 
-In the current code the units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\frac{\rm{kWh} \equiv \rm{kWhours}}\rm{hours} \times \rm{seconds}} \rm{seconds} = \rm{kW}">. This is a unit of power which is what you want for the line graphic.
+$$
+\frac{\sum_{all\ readings\ in\ desired\ time\ frame\ of\ point} \left(\frac{readings\ value}{reading\ length\ in\ hours} \times {number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left({time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}
+$$
+
+In the current code the units are: $\frac{\frac{{kWh} \equiv {kWhours}}{hours} \times {seconds}} {seconds} = {kW}$. This is a unit of power which is what you want for the line graphic.
 
 One reason this formula is so complex is to deal with the case where a reading value does not lie completely within the desired time frame of a point for graphing. For example, suppose you have a meter that reads every 23 minutes so the reading would cover 0-23, 23-46, 46-69, etc. Suppose you are graphing points every hour. The second point to graph goes from 60-120 minutes. In this case, the third reading has 9 minutes (60-69) within the second graphic point. For what follows, assume the reading value is 10kWh. What this formula does is:
 
-1. Converts the reading value of kWh to kW with: <img src="https://render.githubusercontent.com/render/math?math=\frac\rm{readings\ value}\rm{reading\ length\ in\ hours}">. For the example this is: <img src="https://render.githubusercontent.com/render/math?math=\frac{10\ \rm{kWh}}{\frac\rm{23\ minutes}{60\ \rm{minutes/hour}}} = 26.09 \rm{kW}">.
-2. The multiplication of this by "number of seconds of reading needed" only includes the energy that this point has within the desired point time frame. For the example, this gives: <img src="https://render.githubusercontent.com/render/math?math=26.09\ \rm{kW} \times (\rm{9\ min} \times \rm{60\ sec/min}) = 14088\ \rm{kWsec}">. Note this is the same as <img src="https://render.githubusercontent.com/render/math?math=10\ \rm{kWh} \times \frac\rm{9\ min}\rm{23 min} \times \rm{3600\ sec/hour}">. The second way might be clearer as it is the fraction of the reading time converted to seconds.
-3. Now divide by the total time for the time frame in seconds. This gives for the example: <img src="https://render.githubusercontent.com/render/math?math=\frac\rm{14088\ kWsec}{9\ \rm{min} \times 60\ \rm{sec/min}} = 26.09 \rm{kW}">. In this case you get the same value as step 1 but the sums in the actual formula would often be over multiple readings with different values so this would not be the case. Also note that we would need to do steps for the readings from 69-92, 92-115 and 115-138 (the 5 minutes that are within 60-120) and then divide by the sum of all these point's time within the interval (60 minutes) in step 3.
+1. Converts the reading value of kWh to kW with: $\frac{readings\ value}{reading\ length\ in\ hours}$. For the example this is: $\frac{10\ {kWh}}{\frac{23\ minutes}{60\ {minutes/hour}}} = 26.09 {kW}$.
+2. The multiplication of this by "number of seconds of reading needed" only includes the energy that this point has within the desired point time frame. For the example, this gives: $26.09\ {kW} \times ({9\ min} \times {60\ sec/min}) = 14088\ {kWsec}$. Note this is the same as $10\ {kWh} \times \frac{9\ min}{23 min} \times {3600\ sec/hour}$. The second way might be clearer as it is the fraction of the reading time converted to seconds.
+3. Now divide by the total time for the time frame in seconds. This gives for the example: $\frac{14088\ kWsec}{9\ {min} \times 60\ {sec/min}} = 26.09 {kW}$. In this case you get the same value as step 1 but the sums in the actual formula would often be over multiple readings with different values so this would not be the case. Also note that we would need to do steps for the readings from 69-92, 92-115 and 115-138 (the 5 minutes that are within 60-120) and then divide by the sum of all these point's time within the interval (60 minutes) in step 3.
 
 It might seem unnecessary to have the sum in the denominator in the formula at top and just use the known time frame for the point. However, consider what happens if there are gaps between the readings. In this case the time summed over in the numerator is only for the time the readings actual cover. Thus, the denominator must only use the sum of these times and not the total time frame that is already known. For example, suppose the reading for time 92-115 was lost so there are 23 less minutes of time in the sums. Note the sums also account for readings of different lengths.
 
 The formula could be simpler if readings did not cross the time frame boundaries so they were always within the time frame and there are never gaps between readings. In this case the "reading length in hours" is the same time as the "number of seconds of reading needed" (ignoring that one is hours and one is seconds) so they cancel except for the conversion of hours to seconds. The denominator can be simplified since the sum is now the time frame for the point which is the same for all points. The algebra shows the final formula is:
 
-<img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{3600\ sec/hour} \times \sum_\rm{all\ readings\ in\ desired\ time\ frame}\rm{reading\ values}}\rm{time\ frame\ of\ points\ in\ sec}">
+$$
+\frac{{3600\ sec/hour} \times \sum_{all\ readings\ in\ desired\ time\ frame}{reading\ values}}{time\ frame\ of\ points\ in\ sec}
+$$
 
 where the units are (sec/hour * kWh) / sec = kW as expected. Note you could just work in hours if you wanted to avoid the conversion of 3600. This formula sums the energy and divides by the time it took to use that energy to get the average rate/power over the time interval of the point. It is probably easier to see what it means from this formula than the one that deals with special cases.
 
 Now let's discuss the second case of rates (flow type in database). The formula for case one can be simplified in this case since you already have the rate and that is part of what the numerator is calculating. Thus, the formula becomes:
 
-<img src="https://render.githubusercontent.com/render/math?math=\frac{\sum_\rm{all\ readings\ in\ desired\ time\ frame\ of\ each\ point} \left(\rm{readings\ value}\times \rm{number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_\rm{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left(\rm{time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}">
+$$
+\frac{\sum_{all\ readings\ in\ desired\ time\ frame\ of\ each\ point} \left({readings\ value}\times {number\ of\ seconds\ of\ reading\ needed}\right)}{\sum_{all\ readings\ in\ desired\ timeframe\ of\ each\ point} \left({time\ for\ reading\ within\ desired\ time\ frame\ in\ seconds}\right)}
+$$
 
-The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: <img src="https://render.githubusercontent.com/render/math?math=\frac{\rm{J/sec} \times \rm{sec}}\rm{sec} = \rm{J/sec}"> which is a rate just as in the first case. Note this will work for any rate unit but OED needs to know the rate unit (per hour, per minute, etc.) so it can properly label and calculate values. See [new-graphic-rate-menu](#new-graphic-rate-menu) for how this will be done. Note OED will store the values of rates in the original rate from the meter in the database. This means the raw data will be in meter units. When rates are sent to the client, they will always be converted to a quantity/hour. If the user wants to graph in a different rate unit then that conversion will be done on the client side. Thus, the only change is in what is returned for reading points for rates and not what is stored in the readings. The daily_readings and hourly_readings views/tables need to be modified for these types of meters so it uses the formula above. Each unit for a meter will have a sec_in_rate that that gives how many seconds are in the unit as explained in [database-changes-for-units](#database-changes-for-units). The value stored in each database table for rates is Quantity / unit time. The value returned by the table is converted to the standard rate unit of 1 hour by:
+The units of each reading for electricity is watts which is power. Note watts are joules/sec or J/sec. Thus, the overall units are: $\frac{{J/sec} \times {sec}}{sec} = {J/sec}$ which is a rate just as in the first case. Note this will work for any rate unit but OED needs to know the rate unit (per hour, per minute, etc.) so it can properly label and calculate values. See [new-graphic-rate-menu](#new-graphic-rate-menu) for how this will be done. Note OED will store the values of rates in the original rate from the meter in the database. This means the raw data will be in meter units. When rates are sent to the client, they will always be converted to a quantity/hour. If the user wants to graph in a different rate unit then that conversion will be done on the client side. Thus, the only change is in what is returned for reading points for rates and not what is stored in the readings. The daily_readings and hourly_readings views/tables need to be modified for these types of meters so it uses the formula above. Each unit for a meter will have a sec_in_rate that that gives how many seconds are in the unit as explained in [database-changes-for-units](#database-changes-for-units). The value stored in each database table for rates is Quantity / unit time. The value returned by the table is converted to the standard rate unit of 1 hour by:
 
-<img src="https://render.githubusercontent.com/render/math?math=\rm{Quantity/unit\ time} \times \frac{3600\ (sec/hour)}{sec\_in\_rate\ (sec/unit\ time)}">
+$$
+{Quantity/unit\ time} \times \frac{3600\ (sec/hour)}{sec\_in\_rate\ (sec/unit\ time)}
+$$
 
 If you work out the units you get Quantity/hour. This means the reading is multiplied by the second term before being returned. Note if quantities have sec_in_rate set to 3600 then this conversion has no effect as desired.
 
