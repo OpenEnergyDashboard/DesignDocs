@@ -12,7 +12,8 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [simplifyOptions/fewerOptions.md](./simplifyOptions/fewerOptions.md): Move many of the current options for users into a modal popup.
 - [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
-- [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic. 
+- [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic.
+- [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 
 ## Information
 
