@@ -181,7 +181,7 @@ These are located in the file src/server/test/web/readingsLineGroupQuantity.js. 
 | LG3  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E12:G72       | 2022-08-25 00:00:00     | 2022-10-25 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-25%00#00#00.csv | should have daily points for middle readings of 15 + 20 minute for a 61 day period and quantity units with kWh as kWh |
 | LG4  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E173:G1612    | 2022-08-25 00:00:00     | 2022-10-24 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-25%00#00#00_et_2022-10-24%00#00#00.csv | should have hourly points for middle readings of 15 + 20 minute for a 60 day period and quantity units with kWh as kWh |
 | LG5  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E821:G1180    | 2022-09-21 00:00:00     | 2022-10-06 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-06%00#00#00.csv | should barely have hourly points for middle readings of 15 + 20 minute for a 15 day + 15 min period and quantity units with kWh as kWh |
-| LG6  | X    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E821:G1156    | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days still gives hourly points & middle readings |
+| LG6  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 60          | true     | E821:G1156    | 2022-09-21 00:00:00     | 2022-10-05 00:00:00   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-09-21%00#00#00_et_2022-10-05%00#00#00.csv | 14 days still gives hourly points & middle readings |
 | LG7  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | 15 & 20 min  | 1440        | true     | E8:G75        | 2022-08-20 07:25:35     | 2022-10-28 13:18:28   | expected_line_group_ri_15-20_mu_kWh_gu_kWh_st_2022-08-20%07#25#35_et_2022-10-28%13#18#28.csv | partial days/hours for daily gives only full days |
 | LG10 | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | MJ                | u1, u2, u3, c1, c2                         | 3.6        | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ |
 | LG11 | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | MJ                | u1, u2, u3, c1, c6                         | 3.6        | 0         | 15 & 20 min  | 1440        | true     | E5:G79        | -infinity               | +infinity             | expected_line_group_ri_15-20_mu_kWh_gu_MJ_st_-inf_et_inf.csv                                 | should have daily points for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as MJ reverse conversion |
@@ -234,9 +234,7 @@ These are located in the file src/server/test/web/readingsBarMeterQuantity.js.
 
 #### flow meter
 
-
 Flow and raw should act the same in the code.
-TODO Need more tests.
 
 These are located in the file src/server/test/web/readingsBarMeterFlow.js.
 
@@ -244,7 +242,6 @@ These are located in the file src/server/test/web/readingsBarMeterFlow.js.
 | :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :-------: | :-----------: |:----------------------: | :-------------------: | :---------------------------------------------------------------------------------: | :------------------------------------------------------: |
 | B15 | x    | readings_ri_15_days_75.csv | Electric         | kW                | u4, u5, c4                                 | 1          | 0         | false    | 13        | L6:N10         | -infinity               | +infinity             | expected_bar_ri_15_mu_kW_gu_kW_st_-inf_et_inf_bd_13.csv                                   | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & kW as kW |
 | B16 |      | readings_ri_15_days_75.csv |  Thing_36        | thing unit         | u14, u15, c15                             | 100        | 0         | false    | 13        | L6:N10         | -infinity               | +infinity             | expected_bar_ri_15_mu_Thing36_gu_thing_st_-inf_et_inf_bd_13.csv                           | should have daily points for 15 minute reading intervals and flow units with +-inf start/end time & thing as thing where rate is 36 |
-
 
 #### Quantity group
 
@@ -254,7 +251,7 @@ These are located in the file src/server/test/web/readingsBarGroupQuantity.js.
 | :--: | :--: | :--------------------------------------------------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :-------: | :-----------: |:----------------------: | :-------------------: | :------------------------------------------------------------------------: | :-----------------------------------------: | :---: |
 | BG1  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 1         | L5:N79        | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_1.csv                                  | 1 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
 | BG2  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 7         | L5:N15        | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_7.csv                                  | 7 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
-| BG3  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 28        | L6:N7         | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_28.csv                                 | 28 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
+| BG3  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 28        | L6:N7         | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_28.csv                                 | 28 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
 | BG4  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 13        | L6:N10        | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_13.csv                                 | 13 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
 | BG5  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 75        | L5:N5         | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_75.csv                                 | 75 day bars for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
 | BG6  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | 76        | no values     | -infinity               | +infinity             | expected_bar_group_ri_15-20_mu_kWh_gu_kWh_st_-inf_et_inf_bd_76.csv                                 | 76 day bars (no values) for 15 + 20 minute reading intervals and quantity units with +-inf start/end time & kWh as kWh | |
@@ -281,7 +278,74 @@ These are located in the file src/server/test/web/readingsBarGroupFlow.js.
 
 ### Compare readings
 
-TODO
+The values in this table are similar to the ones for line readings except:
+
+- There is no "min/reading" as this can be any reasonable value.
+- There is no "Cell range" as only two values are checked in every case.
+- The "Shift" is the number of days the previous start/end is before the current ones. Is in the format of P?D where ? is the number of days as this is the format used in the test code.
+- The start and end time is for compare range of current.
+- "curr use, prev use" gives the expected values. It is instead of "Expected readings file name".
+- You cannot graph raw units as a compare chart.
+
+**While care was taken in creating the following tables, it is difficult to verify the values before the tests are written. If you find that the test fails due to a mismatch in expected value then please contact us so we can double check the values.**
+
+#### Quantity meter
+
+These are located in the file src/server/test/web/readingsCompareMeterQuantity.js.
+
+| ID  | Done | Readings file              | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Shift | Start compare       | End compare         | curr use, prev use                      | Description                                                                                                                     | Notes         |
+| :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :---: | :-----------------: | :-----------------: | :-------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: | :-----------: |
+| C1  | x    | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 5666.35293886656, 5872.41914277899      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                             | |
+| C2  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 7962.23097109771, 8230.447588312        | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                             | |
+| C3  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P28D  | 2022-10-09 00:00:00 | 2022-10-31 17:00:00 | 108269.924822581, 108889.847659507      | 28 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                            | |
+| C4  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-11-01 00:00:00 | 4290.60000224332, 4842.21261747704      | 1 day shift end 2022-11-01 00:00:00 (full day) for 15 minute reading intervals and quantity units & kWh as kWh                  | |
+| C5  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P7D   | 2022-10-30 00:00:00 | 2022-11-01 15:00:00 | 9132.81261972035, 13147.7382388332      | 7 day shift end 2022-11-01 15:00:00 (beyond data) for 15 minute reading intervals and quantity units & kWh as kWh               | Put readings with zero until 2022-11-01 15:00:00 |
+| C6  |      | readings_ri_15_days_75.csv | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P28D  | 2022-10-09 00:00:00 | 2022-10-31 17:12:34 | 108269.924822581, 108889.847659507      | 28 day shift end 2022-10-31 17:12:34 (partial hour) for 15 minute reading intervals and quantity units & kWh as kWh             | Use end in spreadsheet of 2022-10-31 17:00:00 |
+| C8  |      | readings_ri_15_days_75.csv | Electric_Utility |  MJ               | u1, u2, u3, c1, c2                         | 3.6        | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 11232.0660730344, 12123.0051081528      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as MJ                              | |
+| C9  |      | readings_ri_15_days_75.csv | Electric_Utility |  MJ               | u1, u2, u3, c1, c2                         | 3.6        | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 11232.0660730344, 12123.0051081528      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as MJ reverse conversion           | |
+| C10 |      | readings_ri_15_days_75.csv | Electric_Utility |  BTU              | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 10645752.224022, 11490184.2415072       | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as BTU                             | |
+| C11 |      | readings_ri_15_days_75.csv | Electric_Utility |  BTU              | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 10645752.224022, 11490184.2415072       | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as BTU reverse conversion          | |
+| C12 |      | readings_ri_15_days_75.csv | Electric_Utility | kg of CO₂         | u2, u10, u12, c11, c12                     | 0.709      | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 2212.09301271706, 2387.55850602232      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kg of CO2                       | |
+| C13 |      | readings_ri_15_days_75.csv | Electric_Utility | metric ton of CO₂ | u2, u10, u11, u12, c11, c12, c13           | 7.09e-4    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 2.21209301271706, 2.38755850602232      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as metric ton of CO2 & chained     | |
+| C14 |      | readings_ri_15_days_75.csv | Electric_Utility | pound of CO₂      |  u2, u10, u11, u12, u13, c11, c12, c13, c14 | 1.5598e-6 | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 0.00486660462797753, 0.0052526287132491 | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as lbs of CO2 & chained & reversed | |
+
+#### flow meter
+
+These are located in the file src/server/test/web/readingsCompareMeterFlow.js.
+
+| ID  | Done | Readings file              | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Shift | Start compare       | End compare         | curr use, prev use                      | Description                                                                                                                     | Notes         |
+| :-: | :--: | :------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :---: | :-----------------: | :-----------------: | :-------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: | :-----------: |
+| C15 |      | readings_ri_15_days_75.csv | Electric         | kW                | u4, u5, c4                                 | 1          | 0         | false    | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 48.5501888481568, 50.1856560262927 | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and flow units & kW as kW                               | |
+| C16 |      | readings_ri_15_days_75.csv |  Thing_36        | thing unit         | u14, u15, c15                             | 100        | 0         | false    | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 4855.01888481568, 5018.56560262927        | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and flow units & thing as thing where rate is 36         | |
+
+#### Quantity group
+
+These are located in the file src/server/test/web/readingsCompareGroupQuantity.js.
+
+| ID  | Done | Group                                                                   | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Shift | Start compare       | End compare         | curr use, prev use                      | Description                                                                                                                     | Notes         |
+| :-: | :--: | :---------------------------------------------------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :---: | :-----------------: | :-----------------: | :-------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: | :------------: |
+| CG1  | x    | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 5666.35293886656, 5872.41914277899      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                             | |
+| CG2  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 14017.4841100155, 14605.4957015091      | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                             | |
+| CG3  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P28D  | 2022-10-09 00:00:00 | 2022-10-31 17:00:00 | 189951.689612281, 190855.90449004  | 28 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kWh                            | |
+| CG4  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-11-01 00:00:00 | 7820.41927336775, 8351.13117114892      | 1 day shift end 2022-11-01 00:00:00 (full day) for 15 minute reading intervals and quantity units & kWh as kWh                  | |
+| CG5  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P7D   | 2022-10-30 00:00:00 | 2022-11-01 15:00:00 | 16171.5504445167, 23010.8509932843 | 7 day shift end 2022-11-01 15:00:00 (beyond data) for 15 minute reading intervals and quantity units & kWh as kWh               | Put readings with zero until 2022-11-01 15:00:00 |
+| CG6  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kWh               | u1, u2, c1                                 | 1          | 0         | true     | P28D  | 2022-10-09 00:00:00 | 2022-10-31 17:12:34 | 189951.689612281, 190855.90449004      | 28 day shift end 2022-10-31 17:12:34 (partial hour) for 15 minute reading intervals and quantity units & kWh as kWh             | Use end in spreadsheet of 2022-10-31 17:00:00 |
+| CG8  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility |  MJ               | u1, u2, u3, c1, c2                         | 3.6        | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 20398.8705799196, 21140.7089140044      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as MJ                              | |
+| CG9  |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility |  MJ               | u1, u2, u3, c1, c2                         | 3.6        | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 20398.8705799196, 21140.7089140044      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as MJ reverse conversion           | |
+| CG10 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility |  BTU              | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 19334049.5356478, 20037163.9086933      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as BTU                             | |
+| CG11 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility |  BTU              | u1, u2, u3, u16, c1, c2, c3                | 3412.08    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 19334049.5356478, 20037163.9086933      | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as BTU reverse conversion          | |
+| CG12 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | kg of CO₂         | u2, u10, u12, c11, c12                     | 0.709      | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 4017.44423365639, 4163.5451722303       | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as kg of CO2                       | |
+| CG13 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | metric ton of CO₂ | u2, u10, u11, u12, c11, c12, c13           | 7.09e-4    | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 4.01744423365639, 4.1635451722303       | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as metric ton of CO2 & chained     | |
+| CG14 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric_Utility | pound of CO₂      |  u2, u10, u11, u12, u13, c11, c12, c13, c14 | 1.5598e-6 | 0         | true     | P1D   | 2022-10-31 00:00:00 | 2022-10-31 17:00:00 | 0.00883837731404406, 0.00915979937890667 | 1 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and quantity units & kWh as lbs of CO2 & chained & reversed | |
+
+#### flow group
+
+These are located in the file src/server/test/web/readingsCompareGroupFlow.js.
+
+| ID   | Done | Group                                                                  | Meter unit       | Graphic unit      | Units/Conversions                          | slope      | intercept | Quantity | Shift | Start compare       | End compare         | curr use, prev use                      | Description                                                                                                                     | Notes         |
+| :-: | :--: | :---------------------------------------------------------------------: | :--------------: | :---------------: | :----------------------------------------: | :--------: | :-------: | :------: | :---: | :-----------------: | :-----------------: | :-------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: | :------------: |
+| CG15 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) | Electric         | kW                | u4, u5, c4                                 | 1          | 0         | false    | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 341.889856341841, 356.231602475832      | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and flow units & kW as kW                               | |
+| CG16 |      | groupDatakWh (meterDatakWhGroups with meterDatakWh, meterDatakWhOther) |  Thing_36        | thing unit         | u14, u15, c15                             | 100        | 0         | false    | P7D   | 2022-10-30 00:00:00 | 2022-10-31 17:00:00 | 34188.9856341841, 35623.1602475832      | 7 day shift end 2022-10-31 17:00:00 for 15 minute reading intervals and flow units & thing as thing where rate is 36         | |
 
 ### Map readings
 
@@ -519,6 +583,41 @@ This gets the end time of this reading and then subtracts the days for each bar.
 - Each end time in column K uses: \
 = INDIRECT("C" & ($K$2 - (($L$2 - ROW() + 5) * $J$2))) \
 which is very similar to the start time but finds the end time (in column C) of the last meter reading used so it is the end time of the bar reading returned. It works because it does + 5 instead of + 6 so it is one bars days earlier.
+
+#### Compare readings
+
+Copmare readings have many similarities to bar readings but are different. Set the following to get the desired result:
+
+- A2, B2, C2 & D2 are the same as described for line readings. The value of C2 should be set but should not change the compare result.
+- Q2 should be the start date/time of the current compare range. It is normally Sunday at 00:00:00, e.g., the start of the week.
+- R2 is similar to Q2 but the end date/time. This can be at any hour in the day for when the compare was requested.
+- S2 should be the shift in days for the compare. This is the value in column "Days in compare" in the table above but only the value so P7D is 7.
+
+Note that T2, U2 & V2 should be automatically calculated and correct.
+
+The readings values used are the same as the description for the line readings. Generally, they are the same as a line reading example and can be reused.
+
+Compare only has two return values that are in Q5 and R5.
+
+The spreadsheet uses these formula.:
+
+- "rows shift for compare (calculated)" in T2 uses: \
+= ROUND($S$2 / ($C$5 - $B$5), 0) \
+This divides the days of compare shift by the time of each reading and rounds to a whole number to make it an integer. This is the number of rows of readings for the compare shift.
+- "Start row reading for curr_use (calculated)" in U2 uses: \
+= MATCH($Q$2,$B$5:INDIRECT("B"&$N$2),0) + 4 \
+This finds the row with the start date/time (Q2) by searching from B5 to the last row with readings (N2). The + 4 is because MATCH returns a value relative to the search range so must add 4 to get the absolute row in the sheet.
+- "End row reading for curr_use (calculated)" in V2 is similar to U2 but for the end date/time (R2). It searches column C because it is the end. The formula is: \
+= MATCH($R$2,$C$5:INDIRECT("C"&$N$2),0) + 4 \
+- curr_use in Q5 uses: \
+=  IF($D$2, (SUM(INDIRECT("A" & $U$2):INDIRECT("A" & $V$2)) * $A$2 + $B$2) / $E$2, (AVERAGE(INDIRECT("A" & $U$2):INDIRECT("A" & $V$2)) * $A$2 + $B$2) / $E$2) \
+It uses the IF similarly to line on whether quantity readings or not. \
+INDIRECT("A" & $U$2):INDIRECT("A" & $V$2) \
+is the range of values for the readings to be compared for the current time. The SUM or AVERAGE is for quantity or not data to get the final result. Finally, \
+ * $A$2 + $B$2) / $E$2 \
+applies the slope/intercept (A2/B2) and normalizes for area (E2).
+- prev_use in R5 is vary similar to curr_use but each row in the range is shifted by the rows shift for compare (T2) so it is the previous range. The formula is: \
+=  IF($D$2, (SUM(INDIRECT("A" & ($U$2 - $T$2)):INDIRECT("A" & ($V$2 - $T$2))) * $A$2 + $B$2) / $E$2, (AVERAGE(INDIRECT("A" & ($U$2 - $T$2)):INDIRECT("A" & ($V$2 - $T$2))) * $A$2 + $B$2) / $E$2)
 
 #### 3D readings
 
