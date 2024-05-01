@@ -127,3 +127,91 @@ Unless there are performance differences that are of concern, the plan is to tre
 ### Admin conversion page
 
 If all goes well, then the new UI for the conversion page needs to be created. The "Entering conversions" section has ideas on this. It may be most practical to start with the non-repeating case and then do repeating after that. This is going to be significant work that will be settled once the underlying system is well understood.
+
+
+# Update May 2024
+This part of the design document describes a potential solution attempt for issue #896, it involves implementing the needed database function to efficiently allow for a time conversion feature.
+
+
+## Introduction
+As of now, any changes we have made exist in new files with similar names to the current existing files for testing purposes. After testing has been done the current files should be updated.
+We have updated the current conversion table to include a *start_time* and *end_time*, this would replace the *valid_for* in the original table.
+The new *conversions_time* table is found in <code>create_conversions_time_table.sql</code>
+
+The source and destination id's reference units that already exist in the <code>create_units_table.sql</code> By adding a CHECK, the database will prevent duplicate conversions. The slope factor represents the proportional change applied to the original reading.
+
+Bidirectional refers to if the conversion can be done forwards and backwards between the two units. Not all conversions can be bidirectional.
+conversions_time.reading is a placeholder parameter for our testing purposes that may need to be removed after implementation.
+
+We have found that using a '-infinity' and 'infinity' are acceptable timestamp values for start_time and end_time, for conversions that can exist across all time. 
+       
+        CREATE TABLE IF NOT EXISTS conversions_time(
+            conversion_id SERIAL PRIMARY KEY,
+            source_id INTEGER NOT NULL REFERENCES units(id),
+            destination_id INTEGER NOT NULL REFERENCES units(id),
+            reading FLOAT NOT NULL, 
+            bidirectional BOOLEAN NOT NULL,
+            start_timestamp TIMESTAMP, --  TIMESTAMP ‘-infinity’
+            end_timestamp TIMESTAMP, --  TIMESTAMP ‘infinity’
+            slope FLOAT, --this is the rate
+            intercept FLOAT,
+            note TEXT,
+            CHECK (source_id != destination_id)
+        );
+Currently, the dashboard still does not have the front-end functionality for admins to insert the actual conversion information. This is a front-end feature that should be handled by a front-end team.
+For example, the admin would insert a conversion whose time ranges are -infinity to infinity, this front-end functionality should be implemented using <code>insert_new_time_conversion.sql</code> and <code>ConversionsTime.js</code>
+
+        INSERT INTO conversions_time (source_id, destination_id, reading, bidirectional, start_timestamp, end_timestamp, slope, intercept, note)
+        VALUES (1, 2, 10, true, '-infinity', 'infinity', 0.5, 2.0, 'Example conversion');
+
+
+The unit selected by a user can then be converted into another unit, if the time selected by the user exists in a conversion.
+
+Theis is the updated readings table in <code>create_readings_time.sql</code> that now includes a conversion id
+  
+    CREATE TABLE IF NOT EXISTS readings_time (
+    meter_id INT NOT NULL REFERENCES meters(id),
+    reading FLOAT NOT NULL,
+    start_timestamp TIMESTAMP NOT NULL,
+        end_timestamp TIMESTAMP NOT NULL,
+        CHECK (start_timestamp < readings_time.end_timestamp),
+    conversion_id integer references conversions_time(conversion_id),
+    CHECK (start_timestamp < readings_time.end_timestamp),
+    PRIMARY KEY (meter_id, start_timestamp)
+    );
+
+
+This is more example test data we plan to use
+
+    INSERT INTO conversions_time (source_id, destination_id, reading, bidirectional, start_timestamp, end_timestamp, slope, intercept, note)
+    VALUES 
+        (1, 2, 5, true, '2024-04-01 00:00:00', '2024-04-02 00:00:00', 0.5, 2.0, 'Example conversion 1'),
+        (2, 3, 10, false, '2024-04-01 00:00:00', '2024-04-03 00:00:00', 1.0, 0.0, 'Example conversion 2');
+
+
+    INSERT INTO readings_time (meter_id, reading, start_timestamp, end_timestamp, conversion_id)
+    VALUES
+        (1, 50, '2024-04-01 06:00:00', '2024-04-01 12:00:00', 1),
+        (2, 75, '2024-04-01 12:00:00', '2024-04-02 06:00:00', 1),
+        (3, 100, '2024-04-01 06:00:00', '2024-04-02 06:00:00', 2);
+
+
+We have built upon the proposed solution and adjusted it to reflect the new tables. However in the provided SELECT query, there is still no involvement of the intercept column from the conversions_time table in the calculation of the converted readings. The calculation only utilizes the slope column. The result set itself is not stored permanently in the database; it's just used temporarily as part of the query execution process. 
+
+    select
+        readings_time.reading,
+        readings_time.start_timestamp,
+        readings_time.end_timestamp,
+        conversions_time.start_timestamp,
+        conversions_time.end_timestamp,
+        sum( -- Calculate adjusted rate = readings_time.reading * (conversions_time.rate * % of reading that conversion applies for)
+            readings_time.reading * conversions_time.slope
+            * (
+                (readings_time.end_timestamp - readings_time.start_timestamp) * (conversions_time.end_timestamp - conversions_time.start_timstampe))
+                / (conversions_time.end_timestamp - conversions_time.start_timestamp)
+                ) as converted_reading
+    from conversions_time
+    inner join readings_time on readings_time.conversion_id = conversions_time.conversion_id AND (readings_time.end_timestamp - readings_time.start_timestamp) && (conversions_time.end_timestamp - conversions_time.start_timestamp) -- they overlap
+    group by (conversions_time.end_timestamp - conversions_time.start_timestamp) -- unique per reading, need more with meters
+
+We have tested the creation and insertion of the tables and have seen expected results. We have not tested the select query agaist the tables. We expect that when testing a reading that does not vary with time, it should maintain its same reading value. 
