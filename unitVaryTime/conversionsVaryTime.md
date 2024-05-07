@@ -222,6 +222,15 @@ select
 
 We have tested the creation and insertion of the tables and have seen expected results. We have not tested the select query against the tables. We expect that when testing a reading that does not vary with time, it should maintain its same reading value.
 
+## Collaborators
+Cory Greeer @corygreer18
+
+Jennasea Whitworth @jennaseaw
+
+Jessica Bejarano @jessbejarano
+
+Nicolas Mederos @niccm
+
 ### Notes
 
 These notes were added during review but may not be complete:
