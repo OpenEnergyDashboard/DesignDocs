@@ -1,10 +1,31 @@
 # Weather data
 
-As part of [time varying units](../unitVaryTime/conversionsVaryTime.md), OED wants to track weather data and use to normalize reading data.
+As part of [time varying units](../unitVaryTime/conversionsVaryTime.md), OED wants to track weather data and use to normalize reading data. OED may also do graphics where usage and temperature are shown together. This will mean having two different y-axis scales, something being done for line compare.
 
-At a minimum, OED will want to have temperature data. It may want other information. Exactly what needs to be determined.
+At a minimum, OED will want to have temperature data. It may want other information. Exactly what needs to be determined. For now, only temperature is being considered.
 
 ## Getting weather data
+
+Update 7/24: A team created code in this [GitHub repo](https://github.com/9brian/OED/tree/frontend-team) on branch frontend-team to create a weather location and get the temperature data. While working, it needs the following:
+
+- Several translation keys are not done: weather.input.error, weather.failed.to.create.location & weather.successfully.create.location where others should be checked.
+- There is a fetchData npm command in package.json. It is not working, the name should be changed and there should be a way to specify dates. See src/server/services/weather/fetchData.js.
+- A system needs to be set up to get weather data for a location. This should be via a admin interface and cron jobs to do automatically.
+- The code should be reviewed and updated as needed. See src/client/app/components/weather/ for the UI code. Note @huss did a review of one version and their notes can be asked for.
+- The SQL code in src/server/sql/weather_data/ and src/server/sql/weather_location/ does not have a migration in src/server/migrations/1.0.0-1.1.0 (or whatever version is needed).
+
+In addition, the graphic with meter/group data and weather data needs to be done.
+
+It has become clearer that normalizing by temperature is more complex:
+
+- Many resources should not be normalized by temperature (such as mass for recycling). OED needs to work out how admins will set which ones can be done.
+- Normalizing probably requires time of year info since, for example, electricity may differ in hot vs cold months. It is possible a model will automatically take this into account.
+- The model seems to need other information such as building nominal temperature where it does not heat or cool. If so, how will this relate to meters/groups.
+- Many other factors may be needed.
+
+Given this, researching and testing the models will need to happen before it is incorporated into OED. If possible, it is desired to use previous data to create a model to then predict future usage based on temperature. That could be used, for example, to see how much a change in a building actually saved. Currently OED could show this but not taking into account temperature changes between years (for example).
+
+## Original
 
 OED need to acquire weather data to support this feature. In a perfect world, there would be a single source of data for all sites. This may not be possible so having a standard format with modules to talk to different weather sources (similarly to how meter data is done) would be desirable. Demonstrating with two sources (or one if a standard source exists) would be good for the initial work.
 
