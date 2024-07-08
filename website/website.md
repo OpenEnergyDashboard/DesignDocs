@@ -228,7 +228,7 @@ Note that the width sometimes seems to be a pixel off but that is not a big issu
 
 ## Videos
 
-While any screen capture software can be used, the following descripes the use of OBS Studio that is open source and cross platform.
+While any screen capture software can be used, the following describes the use of [OBS Studio](https://obsproject.com/) that is open source and cross platform.
 
 ### Set web browser size for displaying OED
 
@@ -236,7 +236,7 @@ This is similar to the section "Setting the web browser window size" above but a
 
 - Gave name of Video 1024x682
 - Set pixels to 1024 & 682
-  - This is close to 3:2. 4:3 leaves plank space at bottom and 16:9 tends to cut off items. The chosen one cuts off footer on map but works well overall. 
+  - This is close to 3:2. 4:3 leaves blank space at bottom and 16:9 tends to cut off items. The chosen one cuts off footer on map but works well overall.
 - Set User agent string to Desktop choice (very important)
 - Save
 - In size, choose 100% or Fit to window. Auto adjust will probably do 99% and that is okay.
@@ -265,7 +265,7 @@ The next time you can drag the web browser window to be the placement you want i
 
 ### Doing videos
 
-You can record and do the usual OBS functions.
+You can record and do the usual OBS functions. After it is done, do File->Remux Recordings to convert to mp4. The default and preferred .mkv may not easily play in web browsers.
 
 ## Debugging locally
 
