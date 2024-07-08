@@ -1,17 +1,19 @@
 # Conversions that vary with time
 
-Unlike some of the design documents, this one proposes avenue to try so the final solution can be determined.
+Unlike some of the design documents, this one proposes avenues to try so the final solution can be determined.
 
 ## Introduction
 
-The current resourceGeneralization designed conversions between units that did not vary. This document discusses how OED can extend this idea so conversions will vary with time.
+The current [resourceGeneralization](../archive/resourceGeneralization/resourceGeneralization.md) designed conversions between units that did not vary. This document discusses how OED can extend this idea so conversions will vary with time.
 
 There are conversions that sites want to vary by time including:
 
-- Area normalization (see [design document](../areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side. This is a completed feature.
-- Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also changed periodically. This means lots of time variations which is unlike the first two uses. Fixed costs are part of the units work for v1.0.
-- Baselines (which may be doable by units) which can change if a building is changed.
-- Weather. Normalize usage by the weather. In a common way, the degree heating/cooling for each day is determined from local weather and then used to normalize the usage. Other ways are possible. This usage has similarities to cost in the frequency of variation but there is no regular pattern. This is a planned feature that is not yet done in OED.
+- Area normalization (see [design document](../areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side.
+- Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also change periodically. This means lots of time variations which is unlike the first use above.
+- Baselines (which may be doable by units) which can change if a building is changed. OED has yet to implement this feature in any way.
+- Weather. Normalize usage by the [weather](../weather/weather.md). In a common way, the degree heating/cooling for each day is determined from local weather and then used to normalize the usage. Other ways are possible. This usage has similarities to cost in the frequency of variation but there is no regular pattern. OED now has a way to get weather data but not normalize it.
+
+See [issue #896](https://github.com/OpenEnergyDashboard/OED/issues/896) about this.
 
 ## Potential solution
 
@@ -51,19 +53,19 @@ group by hourly_readings.duration -- unique per reading, need more with meters
 
 The basic idea to apply the time varying conversion in a similar way that readings area averaged by determining the overlap in time and properly applying. Note that an actual solution would do a slope (rate above) and an intercept (not above).
 
-Note OED has an hourly and daily table so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for the DB functions. It may be valuable to see the description in the devDocs for resource generalization that describes how the older functions worked (see section other-database-considerations, note this is only available to OED developers at this time).
+Note OED has an hourly and daily table so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for the DB functions. It may be valuable to see the description in the devDocs for [resource generalization](../archive/resourceGeneralization/resourceGeneralization.md) that describes how the older functions worked (see [section other-database-considerations](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/archive/resourceGeneralization/resourceGeneralization.md#other-database-considerations).
 
-The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that uses holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below).
+The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below).
 
-How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed.
+How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed and OED could retain the current non-varying conversion system.
 
 ## Conversion ideas
 
 The current ideas in resource generalization are mapped to the new system by setting the start/end timestamp (valid_for in Simon's code) to -inf and inf (or some appropriate value) to indicate they apply to all time. These effectively create conversions that do not vary with time.
 
-For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in Simon's code) where the primary key would not include the start timestamp as does readings.
+For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in Simon's code) where the primary key would not only include the start timestamp as does readings. The exact primary key needs to be worked out.
 
-To simplify the system and to make it (probably) better, OED will not allow gaps in time for conversions for a given source/destination. This means that all the conversions for a given source/destination must span -inf to inf without any gaps. Clearly the ones that don't vary, as described just above, meet this criterion. The rationale for this is if there are gaps then the conversion will not be applied and the values would probably be misleading. With readings gaps are allowed because the values are generally coming via meters where failures can occur. This is somewhat beyond the control of the admin of the OED system so we deal with them. In this case the reading value show by OED will be impacted but there is not much we can do. OED does account for the missing time to make the average reflect the time for actual points if they partly overlap the reading point being shown. If there is not overlap then no point is shown. While something similar could be done for conversions, it is unclear we should. The main argument is that the conversions are set by the admin so they can enter a value for all times. If it is unknown they can set the slope/intercept to 0 so the value will be forced to the x-axis in the graphic. However, it is unclear why a value would not be known for a part of time and you still want to apply this conversion. This decision needs review and finalization.
+To simplify the system and to make it (probably) better, OED will not allow gaps in time for conversions for a given source/destination. This means that all the conversions for a given source/destination must span -inf to inf without any gaps. Clearly the ones that don't vary, as described just above, meet this criterion. The rationale for this is if there are gaps then the conversion will not be applied and the values would probably be misleading. With readings gaps are allowed because the values are generally coming via meters where failures can occur. This is somewhat beyond the control of the admin of the OED system so we deal with them. In this case the reading value shown by OED will be impacted but there is not much we can do. OED does account for the missing time to make the average reflect the time for actual points if they partly overlap the reading point being shown. If there is not overlap then no point is shown. While something similar could be done for conversions, it is unclear we should. The main argument is that the conversions are set by the admin so they can enter a value for all times. If it is unknown they can set the slope/intercept to 0 so the value will be forced to the x-axis in the graphic. However, it is unclear why a value would not be known for a part of time and you still want to apply this conversion. One case that might cause issues is where conversions are automatically set such as weather or cost. Something needs to be done if there are missing values. This decision needs review and finalization.
 
 ## Entering conversions
 
@@ -76,7 +78,7 @@ Here the admin will enter all the conversion values for various time ranges.
 For conversion creation, the admin will set the source/destination units (and the other information currently needed). Once OED has the source/destination, it will need to check if there is any other conversion involving these two units. There are two cases:
 
 1. This is the first conversion for this pair of units. OED will automatically set the start/end timestamp to be -inf and inf (or whatever value is decided). This means that the page is not substantively changed and it is easy for an admin to do the case where conversions do not vary with time.
-2. There are already conversion for this unit pair. In this case OED will need to get the start time for the new conversion. The details need to be decided. The start time will be used to split the current conversion that includes that time. An example may help:
+2. There are already conversion(s) for this unit pair. In this case OED will need to get the start time for the new conversion. The details need to be decided. The start time will be used to split the current conversion that includes that time. An example may help:
 
     - If this is the second conversion for this unit pair, the first will have time of -inf, inf with a value of 10 for the slope and 0 for the intercept (for example). If a start time for the new conversion is 1/1/2022 with a value of 20 (ignoring slope that is usually 0) then there will now be two conversions:
 
@@ -107,7 +109,7 @@ There are a number of open questions so this will be done step-by-step where the
 As described in the "Potential solution" section, the database functions need to be modified to handle conversions that vary with time. The envisioned steps are:
 
 1. Modify the DB tables and functions to work with conversions that vary with time. This will not necessarily do all needed changes but the ones needed for testing.
-2. The validity of the changes will be tested via a moderate level of testing. It is envisioned that this will be done via a Postgres command line to allow for each changes and quick tests during this phase.
+2. The validity of the changes will be tested via a moderate level of testing. It is envisioned that this will be done via a Postgres command line to allow for each change and quick tests during this phase.
 3. The speed of the DB queries will be tested for conversions that mimic the two types described in "Introduction" section. Thus, conversions that vary infrequently (a handful of conversions over time) and ones that vary frequently (trying every day and then every hour). Doing line graph data will be good for these tests.
 
    As a special case, the new code with only one value (so it does not really vary with time) will be compared with the current conversion code to see the impact of treating non-varying conversions as a special case of varying. This will indicate if all the conversions can use the new system.
@@ -129,6 +131,8 @@ Unless there are performance differences that are of concern, the plan is to tre
 If all goes well, then the new UI for the conversion page needs to be created. The "Entering conversions" section has ideas on this. It may be most practical to start with the non-repeating case and then do repeating after that. This is going to be significant work that will be settled once the underlying system is well understood.
 
 ## Update May 2024
+
+These are mostly notes from a team that did preliminary work on this. They may be useful as the process moves forward.
 
 This part of the design document describes a potential solution attempt for issue #896, it involves implementing the needed database function to efficiently allow for a time conversion feature.
 
