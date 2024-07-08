@@ -15,6 +15,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic.
 - [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 - [parameterOptimization.md](./parameterOptimization/parameterOptimization.md): Proposal to adjust parameters.
+- [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
 
 ## Information
 

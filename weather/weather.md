@@ -4,6 +4,8 @@ As part of [time varying units](../unitVaryTime/conversionsVaryTime.md), OED wan
 
 At a minimum, OED will want to have temperature data. It may want other information. Exactly what needs to be determined. For now, only temperature is being considered.
 
+See [issue #1291](https://github.com/OpenEnergyDashboard/OED/issues/1291) about this.
+
 ## Getting weather data
 
 Update 7/24: A team created code in this [GitHub repo](https://github.com/9brian/OED/tree/frontend-team) on branch frontend-team to create a weather location and get the temperature data. While working, it needs the following:
