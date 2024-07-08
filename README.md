@@ -23,7 +23,10 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 ## Historical
 
-- [databaseMigration/databaseMigration.md](./databaseMigration/databaseMigration.md) gives the development and solution of migrating Postgres from version 10 to 15.
-- [areaNormalization/areaNormalization.md](./areaNormalization/areaNormalization.md): Documents idea on allowing normalization by area but also probably relates to other normalizations to come.
-- [3DGraphic/3DGraphic.md](./3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
-- [radar/radar.md](./radar/radar.md): A new graphic to show in clock/radar form.
+All of these are in this archive/ directory
+
+- [databaseMigration/databaseMigration.md](./archive/databaseMigration/databaseMigration.md) gives the development and solution of migrating Postgres from version 10 to 15.
+- [areaNormalization/areaNormalization.md](./archive/areaNormalization/areaNormalization.md): Documents idea on allowing normalization by area but also probably relates to other normalizations to come.
+- [3DGraphic/3DGraphic.md](./archive/3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
+- [radar/radar.md](./archive/radar/radar.md): A new graphic to show in clock/radar form.
+- [resourceGeneralization/resourceGeneralization.md](./archive/resourceGeneralization/resourceGeneralization.md): Ideas and work from 2020 onward on expanding OED to be able to work with many unit/resource types. This lead to OED V1.0.0.
