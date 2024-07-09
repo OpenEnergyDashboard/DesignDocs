@@ -1,5 +1,7 @@
 # How to add a new tooltip
 
+**This is older documentation so some details/information may be out of data**
+
 First routes, a tooltip has to be added at this level or lower so that the text can be internationalized.
 ![InitializationContainer.png](InitializationContainer.png)
 There are two components. First the TooltipHelpComponentAlternative which is the tooltip itself. Next is the TooltipMarkerComponent is the icon for the tooltip.
