@@ -1,5 +1,7 @@
 # How OED uses React/Redux/State/Props and the database in its pages
 
+**This information is based on an older version of OED before React hooks and the Redux Toolkit. Thus, it no longer corresponds to what OED is likely doing.**
+
 The following was originally written up in March 2022. The hope is that it will be kept up to date. If you think it can be improved then propose edits or let us know. It certainly is not complete or perfectly accurate but hopefully close.
 
 The goal of this document is to describe how what you see on pages gets there. It is focused on the React and Redux parts of the system.

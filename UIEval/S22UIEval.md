@@ -1,5 +1,7 @@
 # Spring 2022 OED UI/UX evaluation
 
+**Note the OED UI has changed since this analysis so some items may not apply or may need to be modified given changes.**
+
 OED is an energy dashboard that targets two main types of users:
 
 1. General users. These are the most common people to interact with an OED website. They do not log in. The goal is to make it as easy as possible for these users to work with OED.

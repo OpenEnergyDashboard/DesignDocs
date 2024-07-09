@@ -16,6 +16,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 - [parameterOptimization.md](./parameterOptimization/parameterOptimization.md): Proposal to adjust parameters.
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
+- [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
 
 ## Information
 
@@ -35,3 +36,7 @@ All of these are in this archive/ directory
 - [csv.md](./archive/csv/csv.md): adding CSV file input to OED.
 - [datetime/datetime.md](./archive/datetime/datetime.md): How OED deals with readings that cross daylight savings for meters that honor daylight savings.
 - [fast-ptAnalysis/fastPtModification.md](./archive/fast-ptAnalysis/fastPtModification.md): Ideas from 2021 to improve fast-pt to avoid potential performance issues and undesirable graphing results.
+- [pipeline/earlyHaNotes.md](./archive/pipeline/earlyHaNotes.md): describes ideas of the redesigned pipeline from 2019.
+- [usingRoutes/usingRoutes.md](./archive/usingRoutes/usingRoutes.md): Information on how React and Redux work with pages and state within OED but before hooks and toolkit.
+- [automatedTestData.md](./archive/automatedTestData.md): How to generate mathematical test data and use it in the CI testing.
+- [export.md](./archive/export.md): Ideas and work around 2021 on exporting raw line graphic data.
