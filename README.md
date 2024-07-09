@@ -30,3 +30,4 @@ All of these are in this archive/ directory
 - [3DGraphic/3DGraphic.md](./archive/3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
 - [radar/radar.md](./archive/radar/radar.md): A new graphic to show in clock/radar form.
 - [resourceGeneralization/resourceGeneralization.md](./archive/resourceGeneralization/resourceGeneralization.md): Ideas and work from 2020 onward on expanding OED to be able to work with many unit/resource types. This lead to OED V1.0.0.
+- [color.md](./archive/color.md): Ideas and work around 2020 on choosing the colors of meters/groups for OED graphics.
