@@ -45,7 +45,7 @@ Future roles might be used to control access to some data but sites have not yet
 9. USAGE.md needs update (Is this necessary? To create a user, the admin would use the app; they wouldn’t use the command line.)
 10. There will need to be an admin page to edit users. We really should already have this but now is the time. It should list all users and allow the values to be changed. This can be done once the other changes are in place and might be a future enhancement for release 1.0. I think it is okay at this point if only the admin can do the changes and not anyone with that user role login. (done)
 
-## Outline of Process (Davin)
+## Outline of Process
 
 1. Modify SQL scripts so that the role column is added to the database. (done)
 2. Modify the User Model to have an enum for the three roles. (done)
