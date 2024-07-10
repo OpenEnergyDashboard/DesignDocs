@@ -4,7 +4,9 @@
 
  Parameter Tuning - “involves altering variables such as memory allocation, disk I/O settings, and concurrent connections based on specific hardware and requirements” - Percona
 
-OED needs to ensure that all parameters are set to what they need to be, so the dashboard is working as efficiently as possible. The parameters that are currently used are located in the postgresql.conf file which is in the postgres-data directory. 
+[Issue #162](https://github.com/OpenEnergyDashboard/OED/issues/162) covers this effort.
+
+OED needs to ensure that all parameters are set to what they need to be, so the dashboard is working as efficiently as possible. The parameters that are currently used are located in the postgresql.conf file which is in the postgres-data directory.
 
 To view the parameters set for Postgres & OED, you can run this awk script:
 

@@ -1,6 +1,6 @@
 # Enhancement to Github Action Testing
 
-The initial problem described is that the testing within the ``travis.yml`` file there are variables stored in plain text. **Issue 553** would like to replace these with github actions and later have them stored within secrets on github.
+The initial problem described is that the testing within the ``travis.yml`` file there are variables stored in plain text. [issue 553](https://github.com/OpenEnergyDashboard/OED/issues/553) would like to replace these with github actions and later have them stored within secrets on github.
 
 The owner on OED would need to be the one to store the individual values as secrets among testing because secrets can only be stored by the creator of the repository. You must have admin access to create and store these secrets, so that the rest of the users are able to run OED without any problems.
 

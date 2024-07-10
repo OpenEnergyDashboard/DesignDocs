@@ -16,16 +16,19 @@ The user would graph meter MB to see the buildings usage. If the user wants to s
 
 Furthermore, you can create a group with only one meter and then the meter and group are (almost) equivalent. There are some subtle differences in that a group will not display or export meter level data.
 
+This is covered by [issue #1302](https://github.com/OpenEnergyDashboard/OED/issues/1302).
+
 ## Idea
 
 Fuse the group and meter menus so groups and meters are interleaved alphabetically. Where in the menu they show does not change, such as compatible vs incompatible. Because there are minor differences between meters and groups, they would be distinguished in some way. How needs to be settled but a superscript g or m, a different color, etc. could be used. OED also needs to decide the label for this menu. One idea is "Data Sources" but others might make sense.
 
-This only impacts the graphing menus. The meter/group pages will still exist for admins and other users. All the admin pages will be unmodified.
+## Details
 
-## Moving forward
+This picture shows the 3D graphic page:
+![3D graphics page](./merge.png)
 
-This is currently an idea/proposal that seeks input from others. If accepted and the details are worked out then it can be considered a design document. People can comment on the OED Discord channel or put comments/ideas below.
+Every OED graphics page has the groups and meters boxed in green. These would be fused into a single drop down menu on every page. The 3D page (but likely at least one more is coming) also has pills at the top over the graphic shown boxed in purple. These would be fused in a way that is compatible with the drop down menus. Note that it may be harder to label these with color since gray vs blue identify which item is selected so maybe a scheme for identifying meters vs groups needs to be worked out for the pills and then used for the drop down menu. These changes should be the total in terms of the UI.
 
-## Comments/ideas
+This only impacts the graphing menus. The meter/group pages will still exist for admins and other users and not change. All the admin pages will be unmodified.
 
-- Enter then here.
+Note internally OED needs to track if an item is a group or meter. Currently this is done by which menu was used to select the item. This needs to be updated for the single menu so it still works. Note the move the the Redux toolkit changed a lot of the code so there is a flag to tell if an item is a meter or group. Then getting the data varies by this flag. It is likely that the new menus should use this scheme where it is updated as needed.

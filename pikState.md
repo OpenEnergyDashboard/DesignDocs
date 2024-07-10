@@ -110,6 +110,8 @@ The refresh of the DB views can take some time. It would be nice if the standard
 
 ### Client-side unit conversions
 
+Update: [Issue #1303](https://github.com/OpenEnergyDashboard/OED/issues/1303) discusses client-side conversions. If time varying conversions are successful [issue #896](https://github.com/OpenEnergyDashboard/OED/issues/896) then that should not be done.
+
 The original design meant that readings were fetched from the server each time the graphic unit changed. Now that the client knows the conversions in cik Redux state, the client can do the conversions. OED is already doing the area conversions on the client side (and some others in some cases) so the combined conversion can be determined and used to modify all the readings. The changes will be done in two stages: 1) meters and 2) groups.
 
 Note new readings must be fetched if the time range is modified but they will follow the same ideas for the unit used.

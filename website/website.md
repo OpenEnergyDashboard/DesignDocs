@@ -1,5 +1,7 @@
 # Documentation on how website data is created
 
+**The ongoing migration (in summer 2024) to the website to a responsive design and other changes means this directions are not up-to-date with those changes. An update to this document is planned.**
+
 ## Creating the CSV data readings files
 
 The files to do this are in the webData/ directory. If you are not creating new meter data then they should already be there. webMeter.ods can generate random meter data. It is a LibreOffice file spreadsheet file with formulas. You get the meter data by setting the following cells:

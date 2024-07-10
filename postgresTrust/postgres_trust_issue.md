@@ -1,12 +1,14 @@
 # Postgres trust settings
 
+[Issue #584](https://github.com/OpenEnergyDashboard/OED/issues/584) includes this work.
+
 The current Postgres trust setting do not allow for the safest way to access the OED database.
 
 In this file, it describes how to run script that will allow for updated postgres setting from the method ``trust`` to ``scram-sha-256``
 
 When the database is opened, it will now prompt for the OED password, making this a much safer way to gain access to the database.
 
-To do this, there must be a local terminal window opened up once the file is downloaded to the machine.
+To do this, there must be a local terminal window opened up once [this script](./update_pg_conf.sh) is downloaded to the machine.
 
 To make sure that this file is executable, run the command
 ``chmod +x update_pg_hba_conf.txt``
