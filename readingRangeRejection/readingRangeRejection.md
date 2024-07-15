@@ -9,7 +9,7 @@ PR #989 allowed admins to set min/max ranges for the reading values and start/en
 
 While this was an improvement, sites have had issues with this system. For example, if the data is coming from a meter and it reports an invalid value then all the readings are rejected. There is no easy way to get OED to accept all the values in range. Also note that disabling the checks means undesirable values are accepted by OED and there is no easy way to remove them. For these reasons, this outlines changes to OED to allow for the rejection of values outside the range but still accepting the ones that are okay.
 
-This is covered by [issue #1304](https://github.com/OpenEnergyDashboard/OED/issues/1304).
+This is covered by [issue #1307](https://github.com/OpenEnergyDashboard/OED/issues/1307).
 
 ## Proposal
 
