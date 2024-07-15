@@ -18,6 +18,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [unitVaryTime/conversionsVaryTime.md](/unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
 - [weather/weather.md](./weather/weather.md): Documents ideas on using weather data to normalize usage.
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
+- [readingRangeRejection.md](./readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
 
 ## Information
 
