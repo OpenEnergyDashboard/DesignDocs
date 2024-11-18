@@ -20,6 +20,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
 - [readingRangeRejection.md](./readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
 - [postgresQueryOptimization.md](./postgresQueryOptimization/postgresQueryOptimization.md): how to analyze time spent on OED queries and the results of doing this.
+- [todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
 
 ## Information
 
