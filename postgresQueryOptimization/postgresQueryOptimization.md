@@ -164,4 +164,110 @@ There are lots of other options and the absolute speeds will depend on the machi
 
 ## Results
 
-Hopefully coming.
+```sql
+LOAD 'auto_explain'; SET auto_explain.log_min_duration = 0; SET auto_explain.log_analyze = true; SET auto_explain.log_nested_statements = true;
+```
+
+Run this in the shell prior to using PostgresSQL command ANALYZE EXPLAIN. It allows for explains from inside the function to show up in PostgreSQL logs.
+
+### Query:
+```sql
+EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01 00:00:00', '2020-12-26 00:00:00', 2);
+```
+
+### Resulting Log:
+
+[Clean version in depesz](https://explain.depesz.com/s/rLK2)
+
+```sql
+2024-11-14 16:39:09.445 UTC [70] LOG:  duration: 0.036 ms  plan:
+  Query Text: SELECT min(reading_frequency) FROM (meters m INNER JOIN unnest(meter_ids_requested) meters(id) ON m.id = meters.id)
+  Aggregate  (cost=2.72..2.73 rows=1 width=16) (actual time=0.033..0.035 rows=1 loops=1)
+    ->  Hash Join  (cost=0.23..2.70 rows=10 width=16) (actual time=0.026..0.031 rows=1 loops=1)
+          Hash Cond: (m.id = meters.id)
+          ->  Seq Scan on meters m  (cost=0.00..2.27 rows=27 width=20) (actual time=0.010..0.014 rows=27 loops=1)
+          ->  Hash  (cost=0.10..0.10 rows=10 width=4) (actual time=0.008..0.008 rows=1 loops=1)
+                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                ->  Function Scan on unnest meters  (cost=0.00..0.10 rows=10 width=4) (actual time=0.005..0.005 rows=1 loops=1)
+
+2024-11-14 16:39:09.445 UTC [70] CONTEXT:  SQL statement "SELECT min(reading_frequency) FROM (meters m INNER JOIN unnest(meter_ids_requested) meters(id) ON m.id = meters.id)"
+  PL/pgSQL function meter_3d_readings_unit(integer[], integer, timestamp without time zone, timestamp without time zone, integer) line 1 at SQL statement
+
+2024-11-14 16:39:09.445 UTC [70] LOG:  duration: 0.008 ms  plan:
+  Query Text: meter_frequency_hour_up := CEIL((SELECT * FROM EXTRACT(EPOCH FROM meter_frequency)) / 3600)
+  Result  (cost=0.01..0.03 rows=1 width=4) (actual time=0.007..0.008 rows=1 loops=1)
+    InitPlan 1 (returns $0)
+      ->  Function Scan on "extract"  (cost=0.00..0.01 rows=1 width=32) (actual time=0.004..0.004 rows=1 loops=1)
+
+2024-11-14 16:39:09.445 UTC [70] CONTEXT:  PL/pgSQL assignment "meter_frequency_hour_up := CEIL((SELECT * FROM EXTRACT(EPOCH FROM meter_frequency)) / 3600)"
+  PL/pgSQL function meter_3d_readings_unit(integer[], integer, timestamp without time zone, timestamp without time zone, integer) line 1 at assignment
+
+2024-11-14 16:39:09.445 UTC [70] LOG:  duration: 0.015 ms  plan:
+  Query Text: SELECT c.slope, c.intercept FROM meters m INNER JOIN cik c ON c.source_id = m.unit_id AND c.destination_id = graphic_unit_id WHERE m.id = current_meter_id
+  Nested Loop  (cost=0.00..3.84 rows=1 width=16) (actual time=0.013..0.013 rows=1 loops=1)
+    Join Filter: (m.unit_id = c.source_id)
+    ->  Seq Scan on meters m  (cost=0.00..2.34 rows=1 width=4) (actual time=0.006..0.007 rows=1 loops=1)
+          Filter: (id = $17)
+          Rows Removed by Filter: 19
+    ->  Seq Scan on cik c  (cost=0.00..1.48 rows=2 width=20) (actual time=0.005..0.005 rows=1 loops=1)
+          Filter: (destination_id = $2)
+
+2024-11-14 16:39:09.445 UTC [70] CONTEXT:  SQL statement "SELECT c.slope, c.intercept FROM meters m INNER JOIN cik c ON c.source_id = m.unit_id AND c.destination_id = graphic_unit_id WHERE m.id = current_meter_id"
+  PL/pgSQL function meter_3d_readings_unit(integer[], integer, timestamp without time zone, timestamp without time zone, integer) line 1 at SQL statement
+
+2024-11-14 16:39:09.446 UTC [70] LOG:  duration: 0.003 ms  plan:
+  Query Text: SELECT CASE WHEN ts = date_trunc(interval_precision, ts) THEN ts ELSE date_trunc(interval_precision, ts + ('1 ' || interval_precision)::INTERVAL) END
+  Result  (cost=0.00..0.03 rows=1 width=8) (actual time=0.002..0.002 rows=1 loops=1)
+
+2024-11-14 16:39:09.446 UTC [70] CONTEXT:  SQL function "date_trunc_up" statement 1
+  PL/pgSQL function meter_3d_readings_unit(integer[], integer, timestamp without time zone, timestamp without time zone, integer) line 1 at assignment
+
+2024-11-14 16:39:09.446 UTC [70] LOG:  duration: 0.387 ms  plan:
+  Query Text: SELECT tsrange(min(lower(time_interval)), max(upper(time_interval))) FROM daily_readings_unit WHERE meter_id = meter_id_desired
+  Aggregate  (cost=17.26..17.28 rows=1 width=32) (actual time=0.385..0.385 rows=1 loops=1)
+    ->  Index Only Scan using idx_daily_readings_unit on daily_readings_unit  (cost=0.15..15.40 rows=186 width=22) (actual time=0.061..0.331 rows=366 loops=1)
+          Index Cond: (meter_id = $2)
+          Heap Fetches: 0
+
+2024-11-14 16:39:09.446 UTC [70] CONTEXT:  SQL statement "SELECT tsrange(min(lower(time_interval)), max(upper(time_interval))) FROM daily_readings_unit WHERE meter_id = meter_id_desired"
+  PL/pgSQL function shrink_tsrange_to_meter_readings_by_day(tsrange, integer) line 1 at SQL statement
+  PL/pgSQL function meter_3d_readings_unit(integer[], integer, timestamp without time zone, timestamp without time zone, integer) line 1 at assignment
+
+2024-11-14 16:39:12.133 UTC [70] LOG:  duration: 2687.084 ms  plan:
+  Query Text: SELECT hr.meter_id AS meter_id, AVG(hr.reading_rate) * slope + intercept AS reading_rate, hours.hour AS start_timestamp, hours.hour + reading_length_interval AS end_timestamp
+  FROM (
+    SELECT hour
+    FROM generate_series(lower(requested_range), upper(requested_range) - reading_length_interval, reading_length_interval) AS hours(hour)
+  ) AS hours(hour), hourly_readings_unit hr
+  WHERE hr.meter_id = current_meter_id
+    AND lower(hr.time_interval) >= hours.hour
+    AND upper(hr.time_interval) <= hours.hour + reading_length_interval
+  GROUP BY hours.hour, hr.meter_id
+  ORDER BY hr.meter_id, hours.hour
+
+  Finalize GroupAggregate  (cost=174621.47..175362.47 rows=5200 width=28) (actual time=2681.635..2686.613 rows=4320 loops=1)
+    Group Key: hr.meter_id, hours.hour
+    ->  Gather Merge  (cost=174621.47..175219.47 rows=5200 width=44) (actual time=2681.615..2685.514 rows=4741 loops=1)
+          Workers Planned: 1
+          Workers Launched: 1
+          ->  Sort  (cost=173621.46..173634.46 rows=5200 width=44) (actual time=2667.606..2667.709 rows=2370 loops=2)
+                Sort Key: hours.hour
+                Sort Method: quicksort  Memory: 339kB
+                Worker 0: Sort Method: quicksort  Memory: 335kB
+                ->  Partial HashAggregate  (cost=173248.51..173300.51 rows=5200 width=44) (actual time=2666.807..2667.191 rows=2370 loops=2)
+                      Group Key: hr.meter_id, hours.hour
+                      Batches: 1  Memory Usage: 721kB
+                      Worker 0: Batches: 1  Memory Usage: 721kB
+                      ->  Nested Loop  (cost=0.00..168968.61 rows=570654 width=20) (actual time=11.196..2661.382 rows=4320 loops=2)
+                            Join Filter: ((lower(hr.time_interval) >= hours.hour) AND (upper(hr.time_interval) <= (hours.hour + '02:00:00'::interval)))
+                            Rows Removed by Join Filter: 18,969,120
+                            ->  Parallel Seq Scan on hourly_readings_unit hr  (cost=0.00..2048.60 rows=5136 width=34) (actual time=10.560..16.968 rows=4392 loops=2)
+                                  Filter: (meter_id = 21)
+                                  Rows Removed by Filter: 53,585
+                            ->  Function Scan on generate_series hours  (cost=0.00..10.00 rows=1000 width=8) (actual time=0.000..0.158 rows=4320 loops=8784)
+
+  JIT:
+    Functions: 35
+    Options: Inlining false, Optimization false, Expressions true, Deforming true
+    Timing: Generation 2.347 ms, Inlining 0.000 ms, Optimization 0.891 ms, Emission 20.336 ms, Total 23.574 ms
+```
