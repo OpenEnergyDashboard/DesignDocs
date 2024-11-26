@@ -271,3 +271,11 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01
     Options: Inlining false, Optimization false, Expressions true, Deforming true
     Timing: Generation 2.347 ms, Inlining 0.000 ms, Optimization 0.891 ms, Emission 20.336 ms, Total 23.574 ms
 ```
+
+18,969,120 rows are considered and filtered out in this query with only 4,320 rows are actually returned after the filtering.
+
+The problematic portion:
+```sql
+lower(hr.time_interval) >= hours.hour AND
+upper(hr.time_interval) <= hours.hour + reading_length_interval
+```
