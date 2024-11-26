@@ -358,7 +358,7 @@ src/client/app/containers/InitializationContainer.ts dispatches to get lots of n
 
 #### To see this in action
 
-1. Follow the directions in [Dev details, Seeing what is happening with OED in bullet on traces](https://openenergydashboard.github.io/developer/devDetails.html#goingOn) to edit src/client/app/index.tsx to enable traces.
+1. Follow the directions in [Dev details, Seeing what is happening with OED in bullet on traces](https://openenergydashboard.org/developer/devDetails/#goingOn) to edit src/client/app/index.tsx to enable traces.
 2. In web browser go to developer tools (Firefox: Tools->Browser Tools->Web Browser Tools; Chrome View->Developer->Developer Tools). I prefer the info in a separate window so click the three vertical (Chrome) or horizontal (Firefox) dots on the upper, right side->Dock side and click for undock into separate window) and then reload page. Click on Redux tools icon and then Trace tab. Click on the REQUEST_VERSION action and the window will look something similar to this:
 
 ![Redux trace of REQUEST_VERSION](versionTrace.png)

@@ -109,6 +109,111 @@ Here are some examples:
 
 For now, only one group or meter can be shown at a time in the compare line graphic. If requested, multiple ones could be added later but it is hoped that it is not necessary.
 
+## Update
+
+This was added in Nov. 2024 based on the implementation done in [PR #1351](https://github.com/OpenEnergyDashboard/OED/pull/1351). The high-level changes are:
+
+- The shift is used to determine the start date of the shifted line. The end date of the shift line is the start date of the shifted line plus the number of days in the original line. This is done in all cases. The reason is that if the number of points varies then the lines do not align properly. No solution was found for this so OED tries to be avoid this situation (but see below for complications). Note the example at the top is no longer valid as it has lines of different lengths. It also changes several of the examples. For example, month shifts now can overlap.
+- The slider to zoom will not be present. No way was found to make it work. It only zoomed one axis and then popped back to full range once released.
+- Leap years turned out to be trickier than originally thought. This is because there may be multiple years of data so the mismatch can occur after the first year, the start date might be before or after Mar. 1 so include or miss the leap day and what happens if the start date for the original line was Feb. 29 so a shift of 1 year would not exist in the previous year (moment goes to Feb. 28 of the shifted year). Given all of this, a new approach is proposed.
+
+There was a lot of thought about how to warn the user of aligned/misaligned readings between the original and shifted readings. This is the final summary of that:
+
+- align in day of the week
+
+This only happens if the the number of days shifted % 7 = 0. This happens with a week shift, one month when shifting back into a non-leap year February (exactly 4 weeks) but not for day, most month shifts and a year. It is an easy check so do as long as the number of readings is the same so if the first reading is true then all should be true. It is possible for there to be missing points that do not align but the same number so it is not true for all values so add that caveat.
+
+- align day of month
+
+The shift must go to the same day of the month. This happens when 1 month shift until overlap or go to a different month with differing number of days (this includes one year unless original first day is Feb. 29). It does not happen for day or week. Since longer ranges almost guarantee that the day will no longer align this is not told to the user.
+
+- align date (month and day of month)
+
+This is a subset of align of month when the shift is a multiple of a year unless original first day of Feb. 29. It is easy to check if the first reading of original and shifted agree and most of the time they will not. Only if they do then loop over all remaining reading (if number is the same) to see if the alignment is off at a later point to inform user. This generally happens from mismatched leap years. Given the user probably expects year(s) shift to align and it is cheap to check without adding much cost to other cases it is included.
+
+### Determine dates for shifted line
+
+```js
+// Whenever the Date Range or Shift Date Interval (either via selection or custom) change then
+// the shifted data range is updated as follows:
+if (customShift) {
+    // The date picker was used so the start date is one one chosen.
+    shiftedStart = custom start date
+} else {
+    // A standard shift amount was selected. OED will shift by this amount and allow moment
+    // to determine the appropriate date.
+    // This assumes there is a date range for the original line. A special case is probably needed
+    // if this is not true (not included).
+    shiftedStart = originalStart - shift
+}
+// Add the number of days in the original line to the shifted start to get the end.
+// This means the original and shifted lines have the same number of days.
+// Let moment decide the day since it may help with leap years, etc.
+shiftedEnd = shiftedStart + (originalEnd - originalStart as days)
+```
+
+### Checks/warnings on received reading data
+
+```js
+// When both the readings for the original and shifted lines are in Redux state,
+// the following checks are run. It is assumed the readings are sorted by start date.
+
+// It seems Plotly spaces each axis by the number of points (verify this is correct in all cases??).
+// Given this, if the number of points differs for the original and shifted lines, the data will
+// not appear at the same places horizontally.
+// The time interval in the original and shifted line for the actual readings can have issues.
+// While the requested time ranges should be the same,
+// the actually returned readings may differ. This can happen if there are readings
+// missing including start, end or between. If the number of readings vary then there is an
+// issue. If not, it is unlikely but can happen if there are missing readings in both lines
+// that do not align but there are the same number missing in both. This is an ugly edge case
+// that OED is not going to try to catch now.
+// Use the last index in Redux state as a proxy for the number since need that below.
+// Need to verify all okay if no readings??
+numberPointsSame = true
+if (last index in original Redux readings !== last index in shifted Redux readings) {
+    // If the number of points vary then then scales will not line up point by point. Warn the user.
+    numberPointsSame = false
+    warning: `The original line has ${originalReadingLength} readings but the shifted line has ${shiftedfReadingLength}`
+        + ' readings which means the points will not align horizontally.'
+}
+// Now see if the original and shifted lines overlap.
+if (shifted last end date > original first start date) {
+    info: `The shifted line overlaps the original line starting at ${original first start date}`
+}
+// Now see if day of the week aligns. If the number of points is not the same then no horizontal
+// alignment so do not tell user.
+if (numberPointsSame && first original readings.day() === first shifted original reading.day()) {
+    info: 'days of week align (unless missing readings)'
+}
+// Now see if the month and day align. If the number of points is not the same then no horizontal
+// alignment so do not tell user. Check if the first reading matches because only notify if this is true.
+if (numberPointsSame && monthDateSame(first original reading, first shifted reading)) {
+    // Loop over all readings but the first. Really okay to do first but just checked that one.
+    // Note length of original and shifted same so just use original.
+    message = 'The month and day of the month align for the original and shifted readings'
+    for (i = 1; i < original readings.length; i++) {
+        if (! monthDateSame(original reading i, shifted reading i)) {
+            // Mismatch so inform user. Should be due to leap year crossing and differing leap year.
+            // Only tell first mistmatch
+            message += ` until original reading at date ${original reading i.format('ll')}`
+        }
+    }
+    info: message
+}
+
+// The arguments are moment objects
+monthDateSame(firstDate, secondDate) {
+    // The month (0 up numbering) and date (day of month with 1 up numbering) must match.
+    // The time could be checked but the granulatity should be the same for original and
+    // shifted readings and only mismatch if there is missing readings. In the unlikely
+    // event of having the same number of points but different missing readings then
+    // the first one will mismatch the month or day unless those happen to match in which
+    // case it is still true that they are generally okay so ignore all this.
+    return (firstDate.month() == secondDate.month() && firstDate.date() == secondDate.date());
+}
+```
+
 ## Implementation
 
 The data for each line will be stored in Redux state in the same place as for line graphics. This has the advantage of not requiring significant changes and means if the user shifts between the compare line and line graphic the new graphic has the data in Redux if the dates are not changed. Going the other way may require getting the shifted line data. For now, the data for compare line will be requested as two data requests for the two different ranges. This should be fast but could be fused into one request if desired later on. As such, the accuracy of the data (raw, hourly, daily) will be the same as the current results for line readings of the same length of time for a given meter. Both lines should get the same accuracy since they are for the same number of days.

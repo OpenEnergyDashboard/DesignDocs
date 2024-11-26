@@ -9,7 +9,7 @@ See [https://momentjs.com/docs/#/i18n/](https://momentjs.com/docs/#/i18n/) and o
 
 ## Making OED handle reading dates consistently
 
-As discussed in [OED time help page](https://openenergydashboard.github.io/help/v0.8.0/time.html), OED displays readings at the time/date from the meter and does not shift meters in different timezones. This means that a meter reading at noon in New York and Tokyo will both display at noon even though they happened at different times in different timezones since they happened at the same time of the day.
+As discussed in [OED time help page](https://openenergydashboard.org/helpV0_8_0/time/), OED displays readings at the time/date from the meter and does not shift meters in different timezones. This means that a meter reading at noon in New York and Tokyo will both display at noon even though they happened at different times in different timezones since they happened at the same time of the day.
 
 To make this work, OED stores all readings in UTC time in the database. Some meters do not send timezone information including MAMAC and (we think) Obvius. eGauge, on the other hand, sends Unix timestamps that need to be interpreted in the timezone of the meter. To deal with these difference, OED takes care of putting the reading into the correct date/time when it is processed at the meter level. This means:
 

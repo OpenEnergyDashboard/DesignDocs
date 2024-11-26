@@ -45,7 +45,7 @@ Some admin page questions:
 
 ## OED setup and test data
 
-The [developer pages](https://openenergydashboard.github.io/developer/index.html) have information on setting up OED and loading test data. Note that comparison graphics are harder so let us know if you want help (requires interacting with the database terminal).
+The [developer pages](https://openenergydashboard.org/developer/developer/) have information on setting up OED and loading test data. Note that comparison graphics are harder so let us know if you want help (requires interacting with the database terminal).
 
 ## Known issues
 
