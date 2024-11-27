@@ -301,15 +301,17 @@ upper(hr.time_interval) <= hours.hour + reading_length_interval
 - Looped cross product produces a lot of rows only to eliminate most of them.
 - Has to iterate over every combination of hr and hours to apply the join filter causing high computational cost.
 
-### Data Gathered
+## Gathered Data
 
 Queries were ran on two different machines:
 - Machine 1 was Windows
 - Machine 2 was Mac
 
-#### meter_3d_readings_unit
+### Section for meter_3d_readings_unit
 
-This table varys hours/point and queries were ran on machine 1  
+Queries for this section were ran on machine 1.
+
+**Vary hours/point with year of data:**  
 
 | Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
 |------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -320,4 +322,45 @@ This table varys hours/point and queries were ran on machine 1
 | 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 6);        | 0.038              | 724.405         | 1,440           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
 | 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 8);        | 0.020              | 526.671         | 1,080           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
 | 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 12);       | 0.015              | 391.18          | 720             | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+
+**Vary hours/point with half a year of data:**
+
+| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 2);        | 0.027              | 1,994.978       | 2,160           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 4);        | 0.017              | 895.48          | 1,080           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 6);        | 0.016              | 596.478         | 720             | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+
+**Vary hours/point, using a year of data, and using two meters:**
+- This is for testing only as using multiple meters is not actually possible in OED
+
+| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 1);     | 0.021              | 48.82           | 17,280          | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 2);     | 0.015              | 6,679.271       | 8,640           | {21,22} - Sin & Cos kWh                    | Most time taken is similar to previous 3D queries.                                                                                                             |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 3);     | 0.059              | 4,544.441       | 5,760           | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 4);     | 0.030              | 3,252.553       | 4,320           | {21,22} - Sin & Cos kWh                    |   
+
+### Section for meter_bar_readings_unit
+
+Queries for this section were ran on machine 2.
+
+| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 1, '2020-01-01', '2020-12-30');       | 0.161              | 62.135          | 364             | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 1, '2020-01-01', '2020-12-31');       | 0.084              | 50.121          | 365             | {21} - Cos 23 Min kWh                      | Second query using 1 bar per day to get full year.                                                                                                             |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 2, '2020-01-01', '2020-12-30');       | 0.031              | 25.547          | 182             | {21} - Cos 23 Min kWh                      | Do even numbers have more runtime for some reason?                                                                                                             |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 3, '2020-01-01', '2020-12-30');       | 0.059              | 17.641          | 121             | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 4, '2020-01-01', '2020-12-30');       | 0.155              | 17.756          | 91              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 5, '2020-01-01', '2020-12-30');       | 0.086              | 21.111          | 72              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 6, '2020-01-01', '2020-12-30');       | 0.086              | 17.259          | 60              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 7, '2020-01-01', '2020-12-30');       | 0.114              | 17.084          | 52              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 10, '2020-01-01', '2020-12-30');      | 0.044              | 12.303          | 36              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 13, '2020-01-01', '2020-12-30');      | 0.075              | 12.132          | 28              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 14, '2020-01-01', '2020-12-30');      | 0.031              | 14.724          | 26              | {21} - Cos 23 Min kWh                      | Why are these times very consistent? Shouldn't there be some scaling as the number of rows decreases?                                                          |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 21, '2020-01-01', '2020-12-30');      | 0.084              | 10.487          | 17              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 28, '2020-01-01', '2020-12-30');      | 0.077              | 11.689          | 13              | {21} - Cos 23 Min kWh                      |                                                                                                                                                                |
+| Bar  | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_bar_readings_unit('{21}', 1, 30, '2020-01-01', '2020-12-30');      | 0.039              | 7.503           | 12              | {21} - Cos 23 Min kWh                      |      
+
+### Section for meter_line_readings_unit
 
