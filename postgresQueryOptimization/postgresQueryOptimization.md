@@ -168,7 +168,7 @@ There are lots of other options and the absolute speeds will depend on the machi
 LOAD 'auto_explain'; SET auto_explain.log_min_duration = 0; SET auto_explain.log_analyze = true; SET auto_explain.log_nested_statements = true;
 ```
 
-Run this in the shell prior to using PostgresSQL command ANALYZE EXPLAIN. It allows for explains from inside the function to show up in PostgreSQL logs.
+Run this in the shell prior to using EXPLAIN ANALYZE. It allows you to view details of nested functions in PostgreSQL logs.
 
 ### Query:
 ```sql
@@ -272,10 +272,52 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01
     Timing: Generation 2.347 ms, Inlining 0.000 ms, Optimization 0.891 ms, Emission 20.336 ms, Total 23.574 ms
 ```
 
-18,969,120 rows are considered and filtered out in this query with only 4,320 rows are actually returned after the filtering.
+18,969,120 rows are considered and then filtered out in this query with only 4,320 rows actually being returned.
+
+Execution time ballons at the 6th log entry with this subquery:
+```sql
+SELECT hr.meter_id AS meter_id,
+       AVG(hr.reading_rate) * slope + intercept AS reading_rate,
+       hours.hour AS start_timestamp,
+       hours.hour + reading_length_interval AS end_timestamp
+FROM (
+  SELECT hour
+  FROM generate_series(lower(requested_range), upper(requested_range) - reading_length_interval, reading_length_interval) hours(hour)
+) hours(hour),
+hourly_readings_unit hr
+WHERE hr.meter_id = current_meter_id
+  AND lower(hr.time_interval) >= hours.hour
+  AND upper(hr.time_interval) <= hours.hour + reading_length_interval
+GROUP BY hours.hour, hr.meter_id
+ORDER BY hr.meter_id, hours.hour
+```
 
 The problematic portion:
 ```sql
 lower(hr.time_interval) >= hours.hour AND
 upper(hr.time_interval) <= hours.hour + reading_length_interval
 ```
+- Range comparisons prevent the use of more efficient join algorithms
+- Looped cross product produces a lot of rows only to eliminate most of them.
+- Has to iterate over every combination of hr and hours to apply the join filter causing high computational cost.
+
+### Data Gathered
+
+Queries were ran on two different machines:
+- Machine 1 was Windows
+- Machine 2 was Mac
+
+#### meter_3d_readings_unit
+
+This table varys hours/point and queries were ran on machine 1  
+
+| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 1);        | 0.026              | 31.256          | 8,640           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 2);        | 0.021              | 2,512.07        | 4,320           | {21} - Sin 15 Min kWh                      | Most of the time is consumed by the 6th log entry.                                                                                                             |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 3);        | 0.039              | 1,741.775       | 2,880           | {21} - Sin 15 Min kWh                      | Performance breakdown is similar to previous logs. The nested loop join between `hourly_readings_unit` and the generated series of hours is the main issue.    |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 4);        | 0.014              | 1,245.155       | 2,160           | {21} - Sin 15 Min kWh                      | Performance issues echo the previous queries.                                                                                                                  |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 6);        | 0.038              | 724.405         | 1,440           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 8);        | 0.020              | 526.671         | 1,080           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 12);       | 0.015              | 391.18          | 720             | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+
