@@ -38,7 +38,7 @@ In this case it returned ``698``. Next, the id for the kWh unit is found:
 select id from units where name = 'kWh';
 ```
 
-In this case it returned ``42`. Next, the 3D readings for 24 points/day (not the query takes the hours/pt) is:
+In this case it returned ``42``. Next, the 3D readings for 24 points/day (not the query takes the hours/pt) is:
 
 ```sql
 SELECT meter_3d_readings_unit (
@@ -138,7 +138,7 @@ There will be variation in the times seen when a query is run multiple times due
 
 Tests should be run where the total quantity of readings and the readings on the queried meter is greatly increased to see the effect.
 
-## web browser analysis
+## Web Browser Analysis
 
 This uses the same 3D meter described in the previous section for Postgres analysis. The web browser tools are accessed by inspecting the OED web page. These show Firefox results but other web browsers should be similar. The specific request used was for almost the full year of 2020 (ending slightly before Dec. 31).
 
@@ -487,3 +487,35 @@ Queries for this section were ran on machine 2.
 | Line | EXPLAIN (ANALYZE, BUFFERS) select meter_line_readings_unit('{21}', 1, '2020-01-01 00:00:00', '2020-12-30 00:00:00', 'daily', 200, 200);  | 0.092              | 22.537          | 364               | {21} - Cos 23 Min kWh                      |                                                                                                                                                                                                    |
 | Line | EXPLAIN (ANALYZE, BUFFERS) select meter_line_readings_unit('{21}', 1, '2020-01-01 00:00:00', '2020-06-30 00:00:00', 'daily', 200, 200);  | 0.035              | 17.527          | 181               | {21} - Cos 23 Min kWh                      |                                                                                                                                                                                                    |
 | Line | EXPLAIN (ANALYZE, BUFFERS) select meter_line_readings_unit('{21}', 1, '2020-01-01 00:00:00', '2020-02-29 00:00:00', 'daily', 200, 200);  | 0.086              | 16.928          | 59               | {21} - Cos 23 Min kWh                      |                                                                                                                                                                                                    |
+
+# Google Lighthouse Findings
+
+At times, when displaying bar graphs on a daily frequency, there was noticeable lag between the query completion and the graph being rendered on the client side. To investigate this, Google's Lighthouse browser tool was used. Lighthouse is a performance analysis tool built into Chrome upon installation. It can be used as an extension in other Chrome-based browsers, but it can be used as a browser tool in Google Chrome. It is highly recommended that users use Google Chrome to test with this tool.
+
+Using Lighthouse to analyze the performance of generating a daily bar graph with the **Cos 23 Min kWh meter**, the following observations were made:
+
+![Lighthouse Report Results](lighthouseReportResults.png "Lighthouse Report Results")
+
+### Findings
+Testing with Lighthouse revealed potential bottlenecks on the **main thread**, which could explain the delayed graph rendering. One possible solution to reduce main-thread load is implementing **web workers**, which allow scripts to run in the background. While this is not a definitive fix, it offers a direction for further experimentation. The analysis provided a clearer understanding of where the time delays might be occurring, though the root cause remains to be fully identified.
+
+---
+
+## Using Lighthouse
+
+### Steps for Chrome Users
+1. Open the web page and use **Inspect Element** to access the DOM viewer.
+2. Navigate to the **Lighthouse** tab in the DOM tools navbar.
+   - **Note**: If the browser window is too small, the Lighthouse tool may be hidden under the **arrow menu** (see image below).
+
+![Lighthouse Navbar Step](lighthouseNavigationStep.png "Lighthouse Navbar Step")
+
+3. Once on the Lighthouse tab:
+   - Switch to **Timespan Mode**.
+   - Select the appropriate device (e.g., Desktop).
+   - Ensure the **Performance** category is checked.
+
+4. Prepare the OED environment, but avoid interacting with the web page to provoke any events that are meant to be tested before starting the timespan.
+5. **Start the timespan**, then immediately interact with the page to trigger the desired test event. End the timespan to generate a report.
+
+---
