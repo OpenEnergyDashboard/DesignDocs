@@ -13,10 +13,12 @@ When all containers are finished initializing, attach the cypress shell and ther
 
 ##### Open terminal and run 'docker compose --profile ui-testing up'
 https://github.com/user-attachments/assets/3d6c3b49-69c9-42e0-b0f8-a1a56bb9c236
+
 Notes: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ##### Running test
 https://github.com/user-attachments/assets/6103e95a-8ffc-4504-a193-3c5b896bb014
+
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
 
