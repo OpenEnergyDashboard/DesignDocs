@@ -162,6 +162,15 @@ There are lots of other options and the absolute speeds will depend on the machi
 
 ## Results
 
+### Summary
+
+Our focus was to analyze queries using PostgresSQL command ANALYZE EXPLAIN and identify performance bottlenecks. 
+The meter_3d_readings_unit function is slow and shows performance issues when scaling up hours/point. The performance breakdown seems to be on the database side. 
+The meter_bar_readings_unit function performance was acceptable on the database side but there are issues when rendering the graph on the frontend which will require more research. 
+Based on our research, the meter_line_readings_unit function does not have issues but further research is still recommended.
+
+### Postgres Setup
+
 ```sql
 LOAD 'auto_explain'; SET auto_explain.log_min_duration = 0; SET auto_explain.log_analyze = true; SET auto_explain.log_nested_statements = true;
 ```
