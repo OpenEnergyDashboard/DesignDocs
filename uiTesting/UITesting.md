@@ -1,5 +1,5 @@
 # Requirements
-If you **don’t have Docker installed** please **refer** to the **getting started page** and **installation directions for Docker** and **installation of an OED site ** use (getting OED to run in your browser) .
+If you **don’t have Docker installed** please **refer** to the **getting started page** and ***installation directions for Docker*** and ***installation of an OED site*** use (getting OED to run in your browser) .
 
 # Testing environment
 Cypress testing is installed using the Docker containerization tool, allowing for it to be segregated from the rest of the system. This approach makes updates easier, since docker uses the latest image tag provided by cypress to create the container (Note: you have to delete the docker container and image and then rerun 'docker compose --profile ui-testing up' to create the cypress docker container with the latest updates). Dependences are also all taken care of through the container definitions. Testing within a standardized Docker Container ensures best practice and results consistency. 
@@ -13,25 +13,26 @@ When all containers are finished initializing, attach the cypress shell and ther
 
 ##### Open terminal and run 'docker compose --profile ui-testing up'
 
-https://github.com/user-attachments/assets/e8bfc324-1c83-4470-b0da-3620d416b995
+https://github.com/user-attachments/assets/e33cdd5c-8a33-465d-9fa8-98f846fdc205
 
 Notes: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ##### Running test
-https://github.com/user-attachments/assets/e33cdd5c-8a33-465d-9fa8-98f846fdc205
 
+https://github.com/user-attachments/assets/f0803371-551f-4ec5-90c8-9c2250d1f73b
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
 
 # Testing Strategy
 
-https://github.com/user-attachments/assets/f0803371-551f-4ec5-90c8-9c2250d1f73b
-
 Currently when we want to look at a UI element we must manually navigate the page, inspect the page, and copy as selector on the element that you want to test. Once we have this, cypress is able to get elements based on their selector. We decided to do this since the alternative of iteratively looping through the elements would be less precise and less strict testing. Testing using selectors should work well enough for this, as there are little to no dynamically rendered components. In the case of dynamically rendered components the ability to manipulate them may involve more logic and cypress steps in order to work as intended. 
 
 
 # Testing Scenarios:
+
+https://github.com/user-attachments/assets/e8bfc324-1c83-4470-b0da-3620d416b995
+
 
 Currently we test specific elements using the elements' css selector. In the video I first open the inspect element tool and inspect element the menu bar to pinpoint it's location in the html. In this case I recursively open the element's child to see it's children. This is
 since trying to inspect element any specific menu item makes the menu disappear and clicking the drop down on the inspect element interface to see menu items also runs into the same issue.
