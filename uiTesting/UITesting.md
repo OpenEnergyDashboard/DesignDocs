@@ -12,24 +12,24 @@ When all containers are finished initializing, attach the cypress shell and ther
 ##### Clone the testing repoistory from https://github.com/aravindb24/OED
 
 ##### Open terminal and run 'docker compose --profile ui-testing up'
-<video width="640" height="360" controls>
-  <source src="Running_OED_Demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/f0803371-551f-4ec5-90c8-9c2250d1f73b
+
 
 Notes: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ##### Running test
-<video width="640" height="360" controls>
-  <source src="Running_Test_Demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/e33cdd5c-8a33-465d-9fa8-98f846fdc205
+
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
 
 # Testing Strategy
+
+https://github.com/user-attachments/assets/e8bfc324-1c83-4470-b0da-3620d416b995
+
 Currently when we want to look at a UI element we must manually navigate the page, inspect the page, and copy as selector on the element that you want to test. Once we have this, cypress is able to get elements based on their selector. We decided to do this since the alternative of iteratively looping through the elements would be less precise and less strict testing. Testing using selectors should work well enough for this, as there are little to no dynamically rendered components. In the case of dynamically rendered components the ability to manipulate them may involve more logic and cypress steps in order to work as intended. 
+
 
 # Testing Scenarios:
 
