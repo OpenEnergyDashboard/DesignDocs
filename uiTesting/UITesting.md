@@ -1,3 +1,5 @@
+**Note this is a first version to start the documentation of UI testing in OED. It is expected that it will be updated with more information as OED develops its processes. It is also anticipated that UI testing will be added to the main OED repo. Please feel free to suggest changes and to use this document with its status in mind.**
+
 # Requirements
 If you **don’t have Docker installed** please **refer** to the **getting started page** and ***installation directions for Docker*** and ***installation of an OED site*** use (getting OED to run in your browser) .
 
