@@ -24,6 +24,8 @@ When all containers are finished initializing, attach the cypress shell and ther
     Your browser does not support the video tag.
 </video>
 
+![](./Running_OED_Demo.mp4)
+
 Note: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ### Running test
