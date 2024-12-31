@@ -21,7 +21,9 @@ Notes: Ensure docker application is running and after running the command 'docke
 
 ##### Running test
 
-https://github.com/user-attachments/assets/f0803371-551f-4ec5-90c8-9c2250d1f73b
+<video width="480" height="270" controls>
+    <source src="./Running_OED_Demo.mp4" type="video/mp4"> Your browser does not support the video tag.
+</video>
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
