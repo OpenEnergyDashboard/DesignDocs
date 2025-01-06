@@ -24,7 +24,7 @@ Note: Ensure docker application is running and after running the command 'docker
 ### Running test
 
 <video width="480" height="270" controls>
-    <source src="./Running_Test_DemoSmall.mp4" type="video/mp4">
+    <source src="Running_Test_DemoSmall.mp4" type="video/mp4">
     Your browser does not support the video tag.
 </video>
 
