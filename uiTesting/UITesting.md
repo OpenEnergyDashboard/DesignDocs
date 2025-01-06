@@ -19,6 +19,11 @@ When all containers are finished initializing, attach the cypress shell and ther
 - Clone the testing repository from https://github.com/aravindb24/OED
 - Open terminal and run ``docker compose --profile ui-testing up``
 
+<!--
+A few notes on adding video:
+1. Go to the GitHub web version of this file. Edit it. drag-and-drop the desired video file where you want it, save/commit the changes.
+2. There currently is a file size limit for adding files (maybe 10 MB?). If the mp4 file is too large then its size should be reduced. One option is VLC (see https://www.digitalcitizen.life/make-video-smaller-windows-10/, for example). Do: Media > Convert/save, choose file with Add, click Convert/Save, under Settings use a smaller Profile such as Video for Youtube HD, set the Destination file & click Start.
+ -->
 https://github.com/user-attachments/assets/34ff6fc7-c30d-4709-b3c9-6d6a0d265344
 
 Note: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
@@ -69,3 +74,7 @@ There might be something wrong with a Docker container during initialization. Wh
 
 “Failed to connect. Is Docker installed?” (On VSCode Docker Extension)
 Solution: Reboot System
+
+### Video files
+
+The original and reduced size (as displayed with "Small" at end of name) video files are available in the repository file list.
