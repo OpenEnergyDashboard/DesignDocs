@@ -30,7 +30,7 @@ Note: Ensure docker application is running and after running the command 'docker
     Your browser does not support the video tag.
 </video>
 
-<h3>Test</h3>
+<p>Test</p>
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
