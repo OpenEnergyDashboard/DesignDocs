@@ -23,10 +23,7 @@ Note: Ensure docker application is running and after running the command 'docker
 
 ### Running test
 
-<video width="480" height="270" controls>
-    <source src="Running_Test_DemoSmall.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/3d95de2e-ceb6-41d7-b711-bca61b0be840
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
