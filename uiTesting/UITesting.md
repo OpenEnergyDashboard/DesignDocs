@@ -19,6 +19,8 @@ When all containers are finished initializing, attach the cypress shell and ther
 - Clone the testing repository from https://github.com/aravindb24/OED
 - Open terminal and run ``docker compose --profile ui-testing up``
 
+https://github.com/user-attachments/assets/34ff6fc7-c30d-4709-b3c9-6d6a0d265344
+
 Note: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ### Running test
@@ -34,10 +36,7 @@ Currently when we want to look at a UI element we must manually navigate the pag
 
 ## Testing Scenarios
 
-<video width="480" height="270" controls>
-    <source src="./Test_Scenario_Demo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-</video>
+https://github.com/user-attachments/assets/cf0ba738-8499-4605-ab20-09f83edb8470
 
 Currently we test specific elements using the elements' css selector. In the video I first open the inspect element tool and inspect element the menu bar to pinpoint it's location in the html. In this case I recursively open the element's child to see it's children. This is
 since trying to inspect element any specific menu item makes the menu disappear and clicking the drop down on the inspect element interface to see menu items also runs into the same issue.
