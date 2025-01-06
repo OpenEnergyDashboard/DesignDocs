@@ -19,18 +19,14 @@ When all containers are finished initializing, attach the cypress shell and ther
 - Clone the testing repository from https://github.com/aravindb24/OED
 - Open terminal and run ``docker compose --profile ui-testing up``
 
-https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/uiTesting/Running_OED_Demo.mp4
-
 Note: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
 
 ### Running test
 
 <video width="480" height="270" controls>
-    <source src="./Running_Test_Demo.mp4" type="video/mp4">
+    <source src="./Running_Test_DemoSmall.mp4" type="video/mp4">
     Your browser does not support the video tag.
 </video>
-
-<p>Test</p>
 
 Command to run test: 'npx cypress run'
 To find more cypress commands related to running cypress.
