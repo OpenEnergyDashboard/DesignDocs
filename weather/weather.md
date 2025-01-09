@@ -8,15 +8,17 @@ See [issue #1291](https://github.com/OpenEnergyDashboard/OED/issues/1291) about 
 
 ## Getting weather data
 
-Update 7/24: A team created code in this [GitHub repo](https://github.com/9brian/OED/tree/frontend-team) on branch frontend-team to create a weather location and get the temperature data. While working, it needs the following:
+Update 7/2024: A team created code in this [GitHub repo](https://github.com/9brian/OED/tree/frontend-team) on branch frontend-team to create a weather location and get the temperature data. While working, it needs the following:
 
 - Several translation keys are not done: weather.input.error, weather.failed.to.create.location & weather.successfully.create.location where others should be checked.
 - There is a fetchData npm command in package.json. It is not working, the name should be changed and there should be a way to specify dates. See src/server/services/weather/fetchData.js.
 - A system needs to be set up to get weather data for a location. This should be via a admin interface and cron jobs to do automatically.
 - The code should be reviewed and updated as needed. See src/client/app/components/weather/ for the UI code. Note @huss did a review of one version and their notes can be asked for.
-- The SQL code in src/server/sql/weather_data/ and src/server/sql/weather_location/ does not have a migration in src/server/migrations/1.0.0-1.1.0 (or whatever version is needed).
+- The SQL code in src/server/sql/weather_data/ and src/server/sql/weather_location/ does not have a migration in src/server/migrations/1.0.0-2.0.0 (or whatever version is needed).
 
-In addition, the graphic with meter/group data and weather data needs to be done.
+This code is now out of data with development so the first step is to merge with development to get it up to date.
+
+In addition, the graphic with meter/group data and weather data needs to be done. See section below on this.
 
 It has become clearer that normalizing by temperature is more complex:
 
@@ -26,6 +28,59 @@ It has become clearer that normalizing by temperature is more complex:
 - Many other factors may be needed.
 
 Given this, researching and testing the models will need to happen before it is incorporated into OED. If possible, it is desired to use previous data to create a model to then predict future usage based on temperature. That could be used, for example, to see how much a change in a building actually saved. Currently OED could show this but not taking into account temperature changes between years (for example).
+
+## Temperature graphic
+
+OED has long supported line graphics. The new (or almost complete) compare line graphic added a new line graphic where there were two different scales for the y-axis to show the two different date ranges overlapping as seen here:
+
+![compare line graphic](./compreLine.png)
+
+This new graphic will also have two different scales but for the x-axis where one is the current line graphic values and the other is for temperature. It will roughly look like this:
+
+![temperature graphic](./weatherGraphicMockup.png)
+
+Some notes:
+
+1. The line color of the temperature line is the same as the compare line in blue. This color is not used for any meter/group so it is the alternative color OED uses. The width should match the normal lines in OED.
+2. There is a new graphic type of temperature (internationalized/translated) in its correct alphabetical location in that drop down menu.
+3. There is a new drop down menu for "Temperature Unit" with a help link that has the options of "Celsius" and "Fahrenheit" (all internationalized using enums). It will default to celsius but see below on admin setting the default. OED should always collect the temperature data in a set unit (it may already be celsius). No conversion is needed for that but the values in Redux state for temperature need to be converted for the other temperature unit. While this could be a unit/conversion as done for reading data, it is easier to do this and avoid complications so that will not be done unless others think it should be.
+4. The new temperature axis is on the right side in the blue color of the line. It is shown as Fahrenheit axis label but it would be the temperature unit selected.
+5. The temperature line is labeled at the top for the line.
+6. There is no slider on the compare line because it could not be made to work. Hopefully it can here but can be removed if necessary.
+
+The temperature data shown will be for the meter(s)/group(s) shown (when possible). See the following section on this. An enhancement that can be done after the basic implementation is to place a message if there is no temperature data for the location and time interval. It is similar to this one for line graphic:
+
+![no data in line graphic](./noDataLine.png)
+
+but would be "No Temperature Data in Date Range" (internationalized). It would be done in the way discussed in th next section for the compatible meters/groups. The warning if no meter data would also display if that was the case (only one case needs to be shown and it probably does not matter which but would be nice if follows the choices for line that are similar).
+
+### Meter/Group menus
+
+A check is made if all the meters and groups selected are in the same location. Note if any have no location then the check counts this as incompatible locations. If the locations are incompatible then a message is placed in the graphics area that states "These meters/groups are not compatible for temperature graphs" (internationalized). This is similar to (and done the same way as) the radar notice:
+
+![radar incompatibility](./incompatibleRadar.png)
+
+Note it should be done as in [PR #1402](https://github.com/OpenEnergyDashboard/OED/pull/1402) in case it is not yet merged.
+
+If the meters/groups are compatible for the temperature graphic then the menus will be filtered so all that are in a different location then the current location will be placed in the incompatible section for the meters and groups drop down. This is similar to the filtering for units (which also applies here) but can further restrict choices on this graphic. This filtering can be done at a later stage where the incompatible message will appear if one of those meters/groups are selected until this is added.
+
+The temperature line will use the compatible location (the one shared by all meters/groups) to get the needed temperature data as described below.
+
+### Temperature data
+
+There needs to be an SQL query, model, route and Redux state for the temperature data. The Redux Toolkit method should be used. The temperature data will be unique for location and time interval and stored in Redux state with these values. It is requested when temperature data is being graphed.
+
+### Meter location
+
+The meter admin pages need a new location selection. By default there is no default location and if none is given or chosen then it will be stored as null in the database. It will have similarities to the meter "Unit" drop down where the choices are the locations set on the weather admin page with the addition of no location (default on create). The route, model and database for meters needs to be updated for this new value. The database migration will set the value to null (no location) for any existing meters.
+
+### Default temperature unit
+
+The Admin Settings page needs a new entry for the default temperature unit. It will allow Celsius and Fahrenheit where the default will be Celsius. It will be similar to the area unit but may not need none as an option. Similar to this setup, it should use an enum/Object for the values in JS/TS/SQL and there should be an added test (see src/server/test/db/enumTests.js) for them being equal. Once this is added then the temperature graphic will use/select this temperature unit at first and only change if the user selects a different unit.
+
+### Deployment
+
+Once this graphic and  related updates are complete along with addressing comments/needs for the acquiring the weather data then it can be integrated. This is being done since normalization (below) is a bigger issue.
 
 ## Original
 
