@@ -6,21 +6,21 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 ## Active
 
-- [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
-- [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
+- [testing/testing.md](./testing/testing.md): Documents how the testing data was generated into CSV files and gives the tests desired.
 - [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic.
 - [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 - [parameterOptimization.md](./parameterOptimization/parameterOptimization.md): Proposal to adjust parameters.
-- [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
-- [simplifyOptions/fewerOptions.md](./simplifyOptions/fewerOptions.md): Move many of the current options for users into a modal popup.
-- [testing/testing.md](./testing/testing.md): Documents how the testing data was generated into CSV files and gives the tests desired.
-- [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
-- [unitVaryTime/conversionsVaryTime.md](/unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
 - [weather/weather.md](./weather/weather.md): Documents ideas on using weather data to normalize usage.
-- [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
-- [readingRangeRejection.md](./readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
 - [postgresQueryOptimization.md](./postgresQueryOptimization/postgresQueryOptimization.md): how to analyze time spent on OED queries and the results of doing this.
-- [todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
+- [unitVaryTime/conversionsVaryTime.md](/unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
+- [todoComments/todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
+- [uiTesting/uiTesting.md](./uiTesting/UITesting.md): Doing UI testing on OED.
+- [readingRangeRejection.md](./readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
+- [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
+- [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
+- [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
+- [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
+- [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
 
 ## Information
 
@@ -31,6 +31,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 All of these are in this archive/ directory
 
+- [simplifyOptions/fewerOptions.md](./archive/simplifyOptions/fewerOptions.md): Move many of the current options for users into a modal popup.
 - [3DGraphic/3DGraphic.md](./archive/3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
 - [automatedTestData.md](./archive/automatedTestData.md): How to generate mathematical test data and use it in the CI testing.
 - [areaNormalization/areaNormalization.md](./archive/areaNormalization/areaNormalization.md): Documents idea on allowing normalization by area but also probably relates to other normalizations to come.

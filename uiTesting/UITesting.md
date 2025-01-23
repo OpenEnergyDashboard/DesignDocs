@@ -2,22 +2,23 @@
 
 **Note this is a first version to start the documentation of UI testing in OED. It is expected that it will be updated with more information as OED develops its processes. It is also anticipated that UI testing will be added to the main OED repo. Please feel free to suggest changes and to use this document with its status in mind.**
 
+This is covered by [issue #1419](https://github.com/OpenEnergyDashboard/OED/issues/1419).
+
 ## Requirements
 
-If you **don’t have Docker installed** please **refer** to the **getting started page** and ***installation directions for Docker*** and ***installation of an OED site*** use (getting OED to run in your browser).
+Please refer to the [first steps/getting started page](https://openenergydashboard.org/developer/gettingStarted/) which contain ***installation directions for Docker*** and ***installing running OED*** to get OED to run in your browser. It is best to verify OED runs outside of UI testing before doing UI testing. Note the OED repository contains the needed files to do UI testing but they are only used when UI testing is run.
+
+The tests assume the [standard OED test data](https://openenergydashboard.org/developer/testData/) is loaded. This means ``npm run testData`` was properly executed within the web container. **At the current time, some tests assume a default OED setup for the site and unchanged test data. The hope is to fix this in the future.**
 
 ## Testing environment
 
 Cypress testing is installed using the Docker containerization tool, allowing for it to be segregated from the rest of the system. This approach makes updates easier, since docker uses the latest image tag provided by cypress to create the container (Note: you have to delete the docker container and image and then rerun 'docker compose --profile ui-testing up' to create the cypress docker container with the latest updates). Dependencies are also all taken care of through the container definitions. Testing within a standardized Docker Container ensures best practice and results consistency.
 
+Note this means that cypress is not part of the node packages that are installed within OED. As a result, IDEs will generally show issues with the cypress definitions. Extra care should be take to make sure of proper usage.
+
 ## Setup/Running Test Walk Through
 
-To start OED you would run 'docker compose up' in your local terminal which initializes and starts the web and database docker container. To do UI testing, 'docker compose --profile ui-testing up' must be used which behaves like 'docker compose up' but it also initializes and starts the cypress container. The flag --profile specifies a profile must be passed which then ui-testing is passed as that argument. This tells docker to run the cypress service within the docker-compose.yml file alongside the web and database services.
-
-When all containers are finished initializing, attach the cypress shell and there you can run cypress commands.
-
-- Clone the testing repository from https://github.com/aravindb24/OED
-- Open terminal and run ``docker compose --profile ui-testing up``
+To start OED you would run ``docker compose up`` in your local terminal which initializes and starts the web and database docker container. To do UI testing, ``docker compose --profile ui-testing up`` must be used which behaves like ``docker compose up`` but it also initializes and starts the cypress container. The flag ``--profile`` specifies a profile must be passed which then ``ui-testing`` is passed as that argument. This tells docker to run the cypress service within the ``docker-compose.yml`` file alongside the web and database services.
 
 <!--
 A few notes on adding video:
@@ -26,14 +27,13 @@ A few notes on adding video:
  -->
 https://github.com/user-attachments/assets/34ff6fc7-c30d-4709-b3c9-6d6a0d265344
 
-Note: Ensure docker application is running and after running the command 'docker compose --profile ui-testing up' the docker image and container both show up.
+Note: Ensure docker application is running and after running the command ``docker compose --profile ui-testing up`` with the docker container running for cypress, database & web.
 
 ### Running test
 
 https://github.com/user-attachments/assets/3d95de2e-ceb6-41d7-b711-bca61b0be840
 
-Command to run test: 'npx cypress run'
-To find more cypress commands related to running cypress.
+Command to run test: ``npx cypress run`` which should be done inside a shell of the oed **cypress** Docker container that is probably named cypress/included (see [getting started](https://openenergydashboard.org/developer/gettingStarted/) in the section "Using an OED Docker terminal").
 
 ## Testing Strategy
 
@@ -56,23 +56,27 @@ Currently there is no way of showing the browser while the test is running (--he
 
 All testing must refer to web:3000 like ``cy.visits("http://web:3000”)`` or ``cy.visits(“\”)`` the default url set in the YML file (under environment as ``- CYPRESS_BASE_URL=http://web:3000``).
 
+Many tests assume the standard setup and test data.  In the future we should wipe the database and load the needed data (maybe without the actual meter data until needed) in a similar way to how the Chai/Mocha tests work. There are TODO items in the code for many of these.
+
+src/cypress/e2e/general_ui.cy.ts has tests that do not currently work and need to be fixed:
+
 ### Notes
 
 For all cypress testing scenarios is visited the webpage web:3000 is the only page
 The cypress container nicely interacts with the web container.
 
-install_args="--skip_db_initialize" docker compose --profile ui-testing up
+```install_args="--skip_db_initialize" docker compose --profile ui-testing up```
+
 Running the command above skips initializing the database container which saves time during testing. Run the command only if the database hasn’t been altered.
 
 ### Known Errors
 
-Error response from daemon: network 6c6712650678a8a6aa53d3a085404410fe64b2dfe2c4e132939beeec1dbef6dc not found
-
+Error response from daemon: network 6c6712650678a8a6aa53d3a085404410fe64b2dfe2c4e132939beeec1dbef6dc not found \
 **Solution: Delete the all or the cypress  docker  container and the image and rerun ``docker compose --profile ui-testing up``**
 
 There might be something wrong with a Docker container during initialization. When in doubt try to delete the docker containers and rerun.
 
-“Failed to connect. Is Docker installed?” (On VSCode Docker Extension)
+“Failed to connect. Is Docker installed?” (On VSCode Docker Extension) \
 Solution: Reboot System
 
 ### Video files
