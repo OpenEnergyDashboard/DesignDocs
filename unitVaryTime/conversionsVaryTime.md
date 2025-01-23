@@ -17,7 +17,7 @@ See [issue #896](https://github.com/OpenEnergyDashboard/OED/issues/896) about th
 
 ## Potential solution
 
-During a discussion with Simon Tomlinson, he felt OED could efficiently implement this by creating conversions that had time ranges in a way similar to readings. He outlined potential SQL as (done quickly and does not exactly match what OED has now):
+During a discussion with @simonbtomlinson, he felt OED could efficiently implement this by creating conversions that had time ranges in a way similar to readings. He outlined potential SQL as (done quickly and does not exactly match what OED has now):
 
 ```sql
 create table conversions (
@@ -61,9 +61,9 @@ How efficient this will be, esp. when the conversion varies with time, needs to 
 
 ## Conversion ideas
 
-The current ideas in resource generalization are mapped to the new system by setting the start/end timestamp (valid_for in Simon's code) to -inf and inf (or some appropriate value) to indicate they apply to all time. These effectively create conversions that do not vary with time.
+The current ideas in resource generalization are mapped to the new system by setting the start/end timestamp (valid_for in @simonbtomlinson code) to -inf and inf (or some appropriate value) to indicate they apply to all time. These effectively create conversions that do not vary with time.
 
-For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in Simon's code) where the primary key would not only include the start timestamp as does readings. The exact primary key needs to be worked out.
+For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in @simonbtomlinson code) where the primary key would not only include the start timestamp as does readings. The exact primary key needs to be worked out.
 
 To simplify the system and to make it (probably) better, OED will not allow gaps in time for conversions for a given source/destination. This means that all the conversions for a given source/destination must span -inf to inf without any gaps. Clearly the ones that don't vary, as described just above, meet this criterion. The rationale for this is if there are gaps then the conversion will not be applied and the values would probably be misleading. With readings gaps are allowed because the values are generally coming via meters where failures can occur. This is somewhat beyond the control of the admin of the OED system so we deal with them. In this case the reading value shown by OED will be impacted but there is not much we can do. OED does account for the missing time to make the average reflect the time for actual points if they partly overlap the reading point being shown. If there is not overlap then no point is shown. While something similar could be done for conversions, it is unclear we should. The main argument is that the conversions are set by the admin so they can enter a value for all times. If it is unknown they can set the slope/intercept to 0 so the value will be forced to the x-axis in the graphic. However, it is unclear why a value would not be known for a part of time and you still want to apply this conversion. One case that might cause issues is where conversions are automatically set such as weather or cost. Something needs to be done if there are missing values. This decision needs review and finalization.
 

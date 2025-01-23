@@ -20,6 +20,66 @@ Some queries use the same basic data sources so optimizing the primary one shoul
 
 Initially, the goal is to analyze and determine which requests are slow and then try to optimize them to run faster. Ultimately, all the main requests can be analyzed and optimized. While the focus is on the postgres time, checking the full time from request to response in the web browser is also valuable and may be easier to identify the best requests to focus on.
 
+## Action items
+
+## 3D
+
+Sections below show that the 3D queries are running slower than desired. @simonbtomlinson looked at this and provided the following analysis. These ideas should be implemented within OED and then the speedup should be checked. It is possible that the special case for one hour per 3D reading could be removed after this is done. Once this is complete, other queries that use generate_series should be examined to see if this would also apply and be valuable.
+
+### Analysis of 3D
+
+The first thing that stood out to me in the plan was the sequential scan on hourly_readings_unit. We aren't using any index on that table, so for every point on the graph, we have to scan the entire thing. In general when I see a seq scan it's probably a mistake unless the table only has a few hundred rows.
+
+hourly_readings_unit is a materialized view, so we can add indexes on it. I suggest an index on (meter_id, lower(time_interval)).
+
+With this index the query runtime is roughly halved. This makes postgres quickly look up the relevant start of rows, but then it scans to the end of the index to look for more since we don't know how many will be needed. So on average it scans half the table each time - halving the runtime. 
+
+If we add a little extra to the query though, postgres will know when to stop scanning the index. We can use the fact that if the start of the hourly_readings_unit range is outside of the currently being collected interval, it can't possibly match. So we just add  AND lower(hr.time_interval) <= hours.hour + reading_length_interval to the query. With this the query runs for me in 15ms.
+
+```text
+                                                                                        QUERY PLAN                                                
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=37528.04..37528.54 rows=200 width=28) (actual time=14.186..14.376 rows=2160 loops=1)
+   Sort Key: hours.hour
+   Sort Method: quicksort  Memory: 198kB
+   Buffers: shared hit=9297
+   ->  HashAggregate  (cost=37516.39..37520.39 rows=200 width=28) (actual time=13.091..13.569 rows=2160 loops=1)
+         Group Key: hours.hour
+         Batches: 1  Memory Usage: 641kB
+         Buffers: shared hit=9297
+         ->  Nested Loop  (cost=0.42..35917.50 rows=319778 width=20) (actual time=0.239..10.638 rows=8640 loops=1)
+               Buffers: shared hit=9297
+               ->  Function Scan on generate_series hours  (cost=0.00..10.00 rows=1000 width=8) (actual time=0.214..0.441 rows=2160 loops=1)
+               ->  Index Scan using hourly_readings_unit_meter_id_lower_idx on hourly_readings_unit hr  (cost=0.42..32.71 rows=320 width=34) (actual time=0.002..0.004 rows=4 loops=2160)
+                     Index Cond: ((meter_id = 4) AND (lower(time_interval) >= hours.hour) AND (lower(time_interval) <= (hours.hour + '04:00:00'::interval)))
+                     Filter: (upper(time_interval) <= (hours.hour + '04:00:00'::interval))
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=9297
+ Planning Time: 0.230 ms
+ Execution Time: 14.611 ms
+(18 rows)
+```
+
+Here's my query, with all the constants from the function hardcoded so I didn't need to run the full function.
+
+```sql
+explain (analyze, buffers) SELECT hr.meter_id AS meter_id,
+       AVG(hr.reading_rate) * 1 + 0 AS reading_rate,
+       hours.hour AS start_timestamp,
+       hours.hour + interval '4 hours' AS end_timestamp
+FROM (
+  SELECT hour
+  FROM generate_series(lower('[2020-01-01, 2020-12-26]'::tsrange), upper('[2020-01-01, 2020-12-26]'::tsrange) - interval '4 hours', interval '4 hours') hours(hour)
+) hours(hour),
+hourly_readings_unit hr
+WHERE hr.meter_id = 4
+  AND lower(hr.time_interval) >= hours.hour
+  AND upper(hr.time_interval) <= hours.hour + interval '4 hours'
+  AND lower(hr.time_interval) <= hours.hour + interval '4 hours'
+GROUP BY hours.hour, hr.meter_id
+ORDER BY hr.meter_id, hours.hour;
+```
+
 ## Postgres analysis
 
 This will mostly use 3D meter readings to show how the analysis is done. It will also use the standard developer meter of "Sin 15 Min kWh" as the example. Information on the 3D meter reading query can be found in ``src/server/models/Reading.js`` in the function ``getThreeDReadings`` and ``src/server/sql/reading/create_function_get_3d_readings.sql`` in ``meter_3d_readings_unit``.
