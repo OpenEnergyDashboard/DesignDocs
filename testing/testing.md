@@ -1,6 +1,8 @@
 # Documentation on how testing data is created and used
 
-**As of 23 January 2025 all test cases are allocated or done. Thus, no new cases are available. OED may add more cases in the future.**
+## Status of tests: **Important**
+
+**As of 6 February 2025 all test cases are reserved or done. Tests are allocated by the OED project individually or to organizations. If you want to work on a test case then either put a comment in the issue or contact the project to see if we can assign you one. Tests cases that are done without assignment will not be accepted.**
 
 ## Creating a new test
 
