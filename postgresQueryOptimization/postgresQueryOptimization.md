@@ -456,6 +456,91 @@ upper(hr.time_interval) <= hours.hour + reading_length_interval
 - Looped cross product produces a lot of rows only to eliminate most of them.
 - Has to iterate over every combination of hr and hours to apply the join filter causing high computational cost.
 
+## Improved Query Execution Plan
+
+After the suggestions by @simonbtomlinson were implemented this is the result of looking at the execution. Note the special case for a 3D point every hour was also removed since it did not speed up the code very much. It is noted that the slowdown is gone and everything looks good.
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01 00:00:00', '2020-12-26 00:00:00', 2);
+```
+
+### Resulting Log:
+[Clean version in depesz](https://explain.depesz.com/s/FLaJ)
+
+```sql
+2025-03-20 05:00:05.728 UTC [390] LOG:  duration: 0.323 ms  plan:
+        Query Text: SELECT min(reading_frequency)                      FROM (meters m INNER JOIN unnest(meter_ids_requested) meters(id) ON m.id = meters.id)
+        Aggregate  (cost=8.46..8.47 rows=1 width=16) (actual time=0.319..0.320 rows=1 loops=1)
+          ->  Nested Loop  (cost=4.15..8.46 rows=1 width=16) (actual time=0.314..0.315 rows=1 loops=1)
+                ->  Function Scan on unnest meters  (cost=0.00..0.01 rows=1 width=4) (actual time=0.006..0.006 rows=1 loops=1)
+                ->  Bitmap Heap Scan on meters m  (cost=4.15..8.16 rows=1 width=20) (actual time=0.305..0.306 rows=1 loops=1)
+                      Recheck Cond: (id = meters.id)
+                      Heap Blocks: exact=1
+                      ->  Bitmap Index Scan on meters_pkey  (cost=0.00..4.15 rows=1 width=0) (actual time=0.014..0.014 rows=1 loops=1)
+                            Index Cond: (id = meters.id)
+2025-03-20 05:00:05.728 UTC [390] CONTEXT:  SQL statement "SELECT min(reading_frequency)                      FROM (meters m INNER JOIN unnest(meter_ids_requested) meters(id) ON m.id = meters.id)"
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at SQL statement
+2025-03-20 05:00:05.729 UTC [390] LOG:  duration: 0.010 ms  plan:
+        Query Text: meter_frequency_hour_up := CEIL((SELECT * FROM EXTRACT(EPOCH FROM meter_frequency)) / 3600)
+        Result  (cost=0.01..0.03 rows=1 width=4) (actual time=0.006..0.007 rows=1 loops=1)
+          InitPlan 1 (returns $0)
+            ->  Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.001 rows=1 loops=1)
+2025-03-20 05:00:05.729 UTC [390] CONTEXT:  PL/pgSQL assignment "meter_frequency_hour_up := CEIL((SELECT * FROM EXTRACT(EPOCH FROM meter_frequency)) / 3600)"
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at assignment
+2025-03-20 05:00:05.731 UTC [390] LOG:  duration: 0.025 ms  plan:
+        Query Text: SELECT c.slope, c.intercept                       FROM meters m INNER JOIN cik c on c.source_id = m.unit_id AND c.destination_id = graphic_unit_id WHERE m.id = current_meter_id
+        Nested Loop  (cost=4.15..9.67 rows=1 width=16) (actual time=0.023..0.024 rows=1 loops=1)
+          Join Filter: (m.unit_id = c.source_id)
+          Rows Removed by Join Filter: 1
+          ->  Bitmap Heap Scan on meters m  (cost=4.15..8.16 rows=1 width=4) (actual time=0.008..0.008 rows=1 loops=1)
+                Recheck Cond: (id = 21)
+                Heap Blocks: exact=1
+                ->  Bitmap Index Scan on meters_pkey  (cost=0.00..4.15 rows=1 width=0) (actual time=0.003..0.004 rows=1 loops=1)
+                      Index Cond: (id = 21)
+          ->  Seq Scan on cik c  (cost=0.00..1.48 rows=3 width=20) (actual time=0.013..0.013 rows=2 loops=1)
+                Filter: (destination_id = 1)
+                Rows Removed by Filter: 11
+2025-03-20 05:00:05.731 UTC [390] CONTEXT:  SQL statement "SELECT c.slope, c.intercept                       FROM meters m INNER JOIN cik c on c.source_id = m.unit_id AND c.destination_id = graphic_unit_id WHERE m.id = current_meter_id"
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at SQL statement
+2025-03-20 05:00:05.731 UTC [390] LOG:  duration: 0.004 ms  plan:
+        Query Text:  SELECT CASE WHEN ts = date_trunc(interval_precision, ts) THEN ts ELSE date_trunc(interval_precision, ts + ('1 ' || interval_precision)::INTERVAL) END 
+        Result  (cost=0.00..0.03 rows=1 width=8) (actual time=0.003..0.003 rows=1 loops=1)
+2025-03-20 05:00:05.731 UTC [390] CONTEXT:  SQL function "date_trunc_up" statement 1
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at assignment
+2025-03-20 05:00:05.738 UTC [390] LOG:  duration: 4.157 ms  plan:
+        Query Text: SELECT tsrange(min(lower(time_interval)), max(upper(time_interval)))                           FROM daily_readings_unit where meter_id = meter_id_desired
+        Aggregate  (cost=30.21..30.23 rows=1 width=32) (actual time=4.154..4.155 rows=1 loops=1)
+          ->  Index Only Scan using idx_daily_readings_unit on daily_readings_unit  (cost=0.15..26.55 rows=366 width=22) (actual time=1.913..4.069 rows=366 loops=1)
+                Index Cond: (meter_id = 21)
+                Heap Fetches: 0
+2025-03-20 05:00:05.738 UTC [390] CONTEXT:  SQL statement "SELECT tsrange(min(lower(time_interval)), max(upper(time_interval)))                           FROM daily_readings_unit where meter_id = meter_id_desired"
+        PL/pgSQL function shrink_tsrange_to_meter_readings_by_day(tsrange,integer) line 1 at SQL statement
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at assignment
+2025-03-20 05:00:05.777 UTC [390] LOG:  duration: 34.617 ms  plan:
+        Query Text: SELECT hr.meter_id as meter_id, AVG(hr.reading_rate) * slope + intercept as reading_rate, hours.hour AS start_timestamp, hours.hour + reading_length_interval AS end_timestamp FROM ( SELECT hour FROM generate_series( lower(requested_range), upper(requested_range) - reading_length_interval, reading_length_interval ) hours(hour) ) hours(hour), hourly_readings_unit hr WHERE hr.meter_id = current_meter_id AND lower(hr.time_interval) >= hours.hour AND upper(hr.time_interval) <= hours.hour + reading_length_interval AND lower(hr.time_interval) <= hours.hour + reading_length_interval GROUP BY hours.hour, hr.meter_id ORDER BY hr.meter_id, hours.hour
+        Sort  (cost=42237.57..42250.57 rows=5200 width=28) (actual time=33.536..34.104 rows=4320 loops=1)
+          Sort Key: hours.hour
+          Sort Method: quicksort  Memory: 496kB
+          ->  HashAggregate  (cost=41812.62..41916.62 rows=5200 width=28) (actual time=30.659..32.242 rows=4320 loops=1)
+                Group Key: hr.meter_id, hours.hour
+                Batches: 1  Memory Usage: 977kB
+                ->  Nested Loop  (cost=0.42..39384.00 rows=323815 width=20) (actual time=1.384..26.867 rows=8640 loops=1)
+                      ->  Function Scan on generate_series hours  (cost=0.00..10.00 rows=1000 width=8) (actual time=0.414..0.839 rows=4320 loops=1)
+                      ->  Index Scan using idx_hourly_readings_unit_meter_time on hourly_readings_unit hr  (cost=0.42..36.13 rows=324 width=34) (actual time=0.002..0.006 rows=2 loops=4320)
+                            Index Cond: ((meter_id = 21) AND (lower(time_interval) >= hours.hour) AND (lower(time_interval) <= (hours.hour + '02:00:00'::interval)))
+                            Filter: (upper(time_interval) <= (hours.hour + '02:00:00'::interval))
+                            Rows Removed by Filter: 1
+2025-03-20 05:00:05.777 UTC [390] CONTEXT:  SQL statement "SELECT hr.meter_id as meter_id, AVG(hr.reading_rate) * slope + intercept as reading_rate, hours.hour AS start_timestamp, hours.hour + reading_length_interval AS end_timestamp FROM ( SELECT hour FROM generate_series( lower(requested_range), upper(requested_range) - reading_length_interval, reading_length_interval ) hours(hour) ) hours(hour), hourly_readings_unit hr WHERE hr.meter_id = current_meter_id AND lower(hr.time_interval) >= hours.hour AND upper(hr.time_interval) <= hours.hour + reading_length_interval AND lower(hr.time_interval) <= hours.hour + reading_length_interval GROUP BY hours.hour, hr.meter_id ORDER BY hr.meter_id, hours.hour"
+        PL/pgSQL function meter_3d_readings_unit(integer[],integer,timestamp without time zone,timestamp without time zone,integer) line 1 at RETURN QUERY
+2025-03-20 05:00:05.778 UTC [390] LOG:  duration: 56.027 ms  plan:
+        Query Text: EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01 00:00:00', '2020-12-26 00:00:00', 2);
+        ProjectSet  (cost=0.00..5.27 rows=1000 width=32) (actual time=55.335..55.871 rows=4320 loops=1)
+          ->  Result  (cost=0.00..0.01 rows=1 width=0) (actual time=0.001..0.003 rows=1 loops=1)
+2025-03-20 05:00:34.797 UTC [33] LOG:  checkpoint starting: time
+2025-03-20 05:00:35.240 UTC [33] LOG:  checkpoint complete: wrote 4 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.402 s, sync=0.014 s, total=0.444 s; sync files=2, longest=0.014 s, average=0.007 s; distance=12 kB, estimate=266 kB
+```
+8,640 rows were processed in the nested loop join, with 4,320 rows remaining after grouping and aggregation
+
 ## Gathered Data
 
 Queries were ran on two different machines:
@@ -468,33 +553,34 @@ Queries for this section were ran on machine 1.
 
 **Vary hours/point with year of data:**  
 
-| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
-|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 1);        | 0.026              | 31.256          | 8,640           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 2);        | 0.021              | 2,512.07        | 4,320           | {21} - Sin 15 Min kWh                      | Most of the time is consumed by the 6th log entry.                                                                                                             |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 3);        | 0.039              | 1,741.775       | 2,880           | {21} - Sin 15 Min kWh                      | Performance breakdown is similar to previous logs. The nested loop join between `hourly_readings_unit` and the generated series of hours is the main issue.    |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 4);        | 0.014              | 1,245.155       | 2,160           | {21} - Sin 15 Min kWh                      | Performance issues echo the previous queries.                                                                                                                  |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 6);        | 0.038              | 724.405         | 1,440           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 8);        | 0.020              | 526.671         | 1,080           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 12);       | 0.015              | 391.18          | 720             | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| Type | Query                                                                                                      | Planning Time (ms) |Exec. Time (ms)| New Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|--------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 1);        | 0.026              |31.256  | 39.679          | 8,640           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 2);        | 0.021              |2,512.07  | 28.387        | 4,320           | {21} - Sin 15 Min kWh                      | Most of the time is consumed by the 6th log entry.                                                                                                             |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 3);        | 0.039              |1,741.775	 | 21.661       | 2,880           | {21} - Sin 15 Min kWh                      | Performance breakdown is similar to previous logs. The nested loop join between `hourly_readings_unit` and the generated series of hours is the main issue.    |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 4);        | 0.014              |1,245.155   | 21.116       | 2,160           | {21} - Sin 15 Min kWh                      | Performance issues echo the previous queries.                                                                                                                  |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 6);        | 0.038              |724.405   | 18.941         | 1,440           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 8);        | 0.020              |526.671   | 14.827         | 1,080           | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-12-26', 12);       | 0.015              |391.18  | 13.596          | 720             | {21} - Sin 15 Min kWh                      | Accessed Cache                                                                                                                                                 |
 
 **Vary hours/point with half a year of data:**
 
-| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
-|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 2);        | 0.027              | 1,994.978       | 2,160           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 4);        | 0.017              | 895.48          | 1,080           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 6);        | 0.016              | 596.478         | 720             | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+| Type | Query                                                                                                      | Planning Time (ms) |Exec. Time (ms)| New Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 2);        | 0.027              |1,994.978  | 20.698       | 2,160           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 4);        | 0.017              |895.48     | 14.200          | 1,080           | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 6);        | 0.016              |596.478    | 10.030         | 720             | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
 
 **Vary hours/point, using a year of data, and using two meters:**
+
 - This is for testing only as using multiple meters is not actually possible in OED
 
-| Type | Query                                                                                                      | Planning Time (ms) | Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
-|------|------------------------------------------------------------------------------------------------------------|--------------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 1);     | 0.021              | 48.82           | 17,280          | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 2);     | 0.015              | 6,679.271       | 8,640           | {21,22} - Sin & Cos kWh                    | Most time taken is similar to previous 3D queries.                                                                                                             |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 3);     | 0.059              | 4,544.441       | 5,760           | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
-| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 4);     | 0.030              | 3,252.553       | 4,320           | {21,22} - Sin & Cos kWh                    |   
+| Type | Query                                                                                                      | Planning Time (ms) |Exec. Time (ms)| New Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
+|------|------------------------------------------------------------------------------------------------------------|--------------------|------------|-----------------|-----------------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 1);     | 0.021              |48.82       | 84.578           | 17,280          | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 2);     | 0.015              |6,679.271   | 51.863       | 8,640           | {21,22} - Sin & Cos kWh                    | Most time taken is similar to previous 3D queries.                                                                                                             |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 3);     | 0.059              |4,544.441   | 37.948       | 5,760           | {21,22} - Sin & Cos kWh                    |                                                                                                                                                                |
+| 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21,22}', 1, '2020-01-01', '2020-12-26', 4);     | 0.030              |3,252.553   | 35.421       | 4,320           | {21,22} - Sin & Cos kWh                    |   
 
 ### Section for meter_bar_readings_unit
 
