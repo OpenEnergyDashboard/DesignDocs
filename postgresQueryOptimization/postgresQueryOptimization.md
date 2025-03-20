@@ -458,6 +458,8 @@ upper(hr.time_interval) <= hours.hour + reading_length_interval
 
 ## Improved Query Execution Plan
 
+After the suggestions by @simonbtomlinson were implemented this is the result of looking at the execution. Note the special case for a 3D point every hour was also removed since it did not speed up the code very much. It is noted that the slowdown is gone and everything looks good.
+
 ```sql
 EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit ('{21}', 1, '2020-01-01 00:00:00', '2020-12-26 00:00:00', 2);
 ```
@@ -570,6 +572,7 @@ Queries for this section were ran on machine 1.
 | 3D   | EXPLAIN (ANALYZE, BUFFERS) SELECT meter_3d_readings_unit('{21}', 1, '2020-01-01', '2020-06-29', 6);        | 0.016              |596.478    | 10.030         | 720             | {21} - Sin 15 Min kWh                      |                                                                                                                                                                |
 
 **Vary hours/point, using a year of data, and using two meters:**
+
 - This is for testing only as using multiple meters is not actually possible in OED
 
 | Type | Query                                                                                                      | Planning Time (ms) |Exec. Time (ms)| New Exec. Time (ms) | # Rows Returned | Meter                                      | Notes                                                                                                                                                          |
