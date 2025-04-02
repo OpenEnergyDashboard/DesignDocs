@@ -7,20 +7,18 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 ## Active
 
 - [testing/testing.md](./testing/testing.md): Documents how the testing data was generated into CSV files and gives the tests desired.
-- [lineCompare.md](./lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic.
 - [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 - [parameterOptimization.md](./parameterOptimization/parameterOptimization.md): Proposal to adjust parameters.
 - [weather/weather.md](./weather/weather.md): Documents ideas on using weather data to normalize usage.
 - [postgresQueryOptimization.md](./postgresQueryOptimization/postgresQueryOptimization.md): how to analyze time spent on OED queries and the results of doing this.
-- [unitVaryTime/conversionsVaryTime.md](/unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
+- [unitVaryTime/conversionsVaryTime.md](./unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
+- [views/views.md](./views/views.md): Documents how to modify views used for readings.
 - [todoComments/todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
 - [uiTesting/uiTesting.md](./uiTesting/UITesting.md): Doing UI testing on OED.
-- [readingRangeRejection.md](./readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
 - [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
-- [pikState.md](./pikState.md): Moving from a pik array to cik state for client conversions.
 
 ## Information
 
@@ -47,3 +45,6 @@ All of these are in this archive/ directory
 - [resourceGeneralization/resourceGeneralization.md](./archive/resourceGeneralization/resourceGeneralization.md): Ideas and work from 2020 onward on expanding OED to be able to work with many unit/resource types. This lead to OED V1.0.0.
 - [users.md](./archive/users.md): adding multiple user roles.
 - [usingRoutes/usingRoutes.md](./archive/usingRoutes/usingRoutes.md): Information on how React and Redux work with pages and state within OED but before hooks and toolkit.
+- [lineCompare.md](./archive/lineCompare/lineCompare.md): A new graphic to compare different time ranges via a line graphic.
+- [readingRangeRejection.md](./archive/readingRangeRejection/readingRangeRejection.md): how to modify OED to deal with min/max reading values that takes into account all units and allow for rejection of only readings that are outside the ranges.
+- [pikState.md](./archive/pikState.md): Moving from a pik array to cik state for client conversions.
