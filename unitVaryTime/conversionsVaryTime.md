@@ -1,21 +1,53 @@
 # Conversions that vary with time
 
-Unlike some of the design documents, this one proposes avenues to try so the final solution can be determined.
+Unlike some of the design documents, this one proposes avenues to try so the final solution can be determined. As time goes on, more and more details are being given and settled.
 
 ## Introduction
 
-The current [resourceGeneralization](../archive/resourceGeneralization/resourceGeneralization.md) designed conversions between units that did not vary. This document discusses how OED can extend this idea so conversions will vary with time.
+The current [resourceGeneralization](../archive/resourceGeneralization/resourceGeneralization.md) designed conversions between units that did not vary. It was the core of OED V1.0.0. This document discusses how OED can extend this idea so conversions will vary with time.
 
 There are conversions that sites want to vary by time including:
 
-- Area normalization (see [design document](../areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side.
+- Area normalization (see [design document](../archive/areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side.
 - Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also change periodically. This means lots of time variations which is unlike the first use above.
-- Baselines (which may be doable by units) which can change if a building is changed. OED has yet to implement this feature in any way.
+- Baselines (which may be doable by units) which can change if a building is changed. OED has yet to implement this feature in any way but it may move forward in the summer of 2025.
 - Weather. Normalize usage by the [weather](../weather/weather.md). In a common way, the degree heating/cooling for each day is determined from local weather and then used to normalize the usage. Other ways are possible. This usage has similarities to cost in the frequency of variation but there is no regular pattern. OED now has a way to get weather data but not normalize it.
 
 See [issue #896](https://github.com/OpenEnergyDashboard/OED/issues/896) about this.
 
-## Potential solution
+This change is expected to be large and is hoped to be the core of OED V3.0.0. In the big picture, here is the work envisioned:
+
+- The database needs modification to store time-varying conversions and use them to acquire graphic data from readings. It will start with line graphics to do this. This is a critical first step to show the viability of doing this.
+- The DB will need further changes to make time-varying conversions work for all graphics.
+- A UI will be needed to allow admins to enter time-varying conversions.
+- The analysis of the conversions to create the compressed conversions (cik) used by the database will need substantial changes. This will involve JS code and DB changes to store the new information.
+
+Each of these steps is elaborated on in sections below.
+
+## Basic DB changes & testing
+
+### Background
+
+OED keeps the readings in the original unit of the meter (meter unit). There are conversions from meter units to graphic units. The graphic units are the ones that users can see/display readings in. The OED admin documentation has information on [meter units](https://openenergydashboard.org/helpV1_0_0/adminUnitInfo/) along with information showing the setup of the [website units/conversions](https://openenergydashboard.org/helpV1_0_0/exampleDescription/). OED analyzes the conversions input by admins to create direct conversions from a meter unit to every allowed graphing unit. This information is stored in cik in the database where the i is the meter unit and the k is the graphic unit. This allows OED to easily convert from meter readings (in the meter unit) to the desired graphic unit. The original design is discussed in the [resource generalization design doc](../archive/resourceGeneralization/resourceGeneralization.md) where it has been modified over time, esp. to [remove pik state](../archive/pikState.md). All conversions are done in the DB at the time of a readings request. OED has considered doing some on the client-side (see [issue 1303](https://github.com/OpenEnergyDashboard/OED/issues/1303)) but this will not ever be done if time-varying is done. The complexity of doing time-varying means it will be limited to the server/DB. The update of cik is discussed in a later section. However, what is important for this section is that changing how the DB does conversions when getting readings will implement time-varying assuming cik now properly reflects this idea. The format of the returned readings, all routes and graphics will remain the same.
+
+### Basic DB changes
+
+The conversions and cik tables need to be modified so each one has a date/time range (or a start/end time). The next step is to modify the meter line reading function (meter_line_readings_unit in src/server/sql/reading/create_reading_views.sql) to properly use the new cik that has time ranges. Here are the steps envisioned:
+
+- The current developer test data will be used where the time range will be set to (-infinity, infinity) so they span all time. This means they will act the same as the original system. The changes will initially be validated for these conversions and timed to see how much the system slowed down.
+- A conversion will be split at a day boundary with different conversions for each part. Doing it on a day boundary will guarantee that the conversion completely overlaps all test data except the 23 minute ones that will not be used at this point This will test a simple conversion that varies with time. The daily, hourly and raw data can be tested. The result will be validated and timing determined.
+- A conversion will be split at several points to validate/time the system.
+- Now a conversion will be split at many points but on day boundaries. A one year test meter (such as the 15 min meters) can be tested with a conversion that varies each day. Using a script/program to generate the needed inserts into cik in the DB should make this fairly quick. This will be tested/timed. It should be a strong test of the new system with about 365 different conversions applied for each day.
+- A 23 min meter can be tested to see what happens when the reading can cross conversion boundaries with the same conversions as the last step. This will require extra SQL logic to work so it is important to know if it is fast enough so OED can allow arbitrary conversion times.
+- The 4 day meter can be used to test what happens when a reading is longer than the conversions with the same conversions as the last step. The inverse of a reading inside the conversions was already tested.
+
+At some point both the result from the DB and on the web page showing a graphic should both be validated.
+
+If all these are successfully accomplished and the timing is okay then it would seem time-varying conversions should work across OED. The basic testing would be complete.
+
+A team is working on doing this testing in the spring of 2025.
+
+### Potential DB solution
 
 During a discussion with @simonbtomlinson, he felt OED could efficiently implement this by creating conversions that had time ranges in a way similar to readings. He outlined potential SQL as (done quickly and does not exactly match what OED has now):
 
@@ -51,13 +83,17 @@ inner join conversions on conversions.id = hourly_readings.conversion_id
 group by hourly_readings.duration -- unique per reading, need more with meters
 ```
 
-The basic idea to apply the time varying conversion in a similar way that readings area averaged by determining the overlap in time and properly applying. Note that an actual solution would do a slope (rate above) and an intercept (not above).
+The basic idea to apply the time varying conversion in a similar way that readings are averaged by determining the overlap in time and properly applying. Note that an actual solution would do a slope (rate above) and an intercept (not above). The above has a key for the conversion in the hourly_readings table but OED does not do this. The conversion is found from the passed meter and graphic unit. This and other items will mean the actual OED SQL will differ from what is above.
 
 Note OED has an hourly and daily table so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for the DB functions. It may be valuable to see the description in the devDocs for [resource generalization](../archive/resourceGeneralization/resourceGeneralization.md) that describes how the older functions worked (see [section other-database-considerations](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/archive/resourceGeneralization/resourceGeneralization.md#other-database-considerations).
 
-The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below).
+The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below). At the current time this is not being done. The hope is all conversions will vary with time and (-infinity, infinity) will be used for ones that effectively don't.
 
 How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed and OED could retain the current non-varying conversion system.
+
+## Further DB reading data changes
+
+## UI for time-varying conversions
 
 ## Conversion ideas
 
@@ -100,6 +136,8 @@ For conversion editing, OED needs to list all the current conversions (see comme
 
 Needs to be worked out. First lets see if how the other cases pan out.
 
+## Updating cik
+
 ## Implementation plan
 
 There are a number of open questions so this will be done step-by-step where the result is used to decide the best way to continue. **As such, regular contact with the OED project is anticipated.**
@@ -130,7 +168,7 @@ Unless there are performance differences that are of concern, the plan is to tre
 
 If all goes well, then the new UI for the conversion page needs to be created. The "Entering conversions" section has ideas on this. It may be most practical to start with the non-repeating case and then do repeating after that. This is going to be significant work that will be settled once the underlying system is well understood.
 
-## Update May 2024
+## Update May 2024 - Historical
 
 These are mostly notes from a team that did preliminary work on this. They may be useful as the process moves forward.
 
