@@ -93,6 +93,17 @@ How efficient this will be, esp. when the conversion varies with time, needs to 
 
 ## Further DB reading data changes
 
+It is unclear which readings from the DB will be completed as part of the basic DB changes. This is a complete list:
+
+- line: meter_line_readings_unit & group_line_readings_unit in src/server/sql/reading/create_reading_views.sql; same used by radar & compare line.
+- bar: meter_bar_readings_unit & group_bar_readings_unit in src/server/sql/reading/create_reading_views.sql; same used by map.
+- compare bar: meter_compare_readings_unit & group_compare_readings_unit in src/server/sql/reading/create_function_get_compare_readings.sql
+- 3D: meter_3d_readings_unit & group_3d_readings_unit in src/server/sql/reading/create_function_get_3d_readings.sql
+
+While the ideas will be similar across all the functions, the details will vary. Note many group functions call the equivalent meter function so they could work without change.
+
+Each item needs to be tested (DB and web graphic result) & timed to test efficiency. Any needed/desired optimizations will be performed. The results will be added to the ones already documented from the basic DB work.
+
 ## UI for time-varying conversions
 
 ## Conversion ideas
