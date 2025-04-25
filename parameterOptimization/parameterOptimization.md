@@ -24,6 +24,9 @@ https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
 
 ### Main suggestions:
 
+SET work_mem = '32MB' prevents memory from spilling to the disk.
+Previously it took 4435.462 ms, now with higher memory it takes 2985.888 ms for hourly_readings_unit
+
 default wal_buffer size is 16MB, but if there are a lot of concurrent connections a higher value can help performance.
 
 maintenance_work_mem value is 64MB but a large value helps in tasks like VACUUM, RESTORE, CREATE INDEX, ADD FOREIGN KEY, and ALTER TABLE.
