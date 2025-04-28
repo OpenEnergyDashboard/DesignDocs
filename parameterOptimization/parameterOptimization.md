@@ -24,6 +24,11 @@ https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
 
 ### Main suggestions:
 
+SET work_mem = '32MB' prevents memory from spilling to the disk.
+Previously it took 4435.462 ms, now with higher memory it takes 2985.888 ms for hourly_readings_unit.
+The query expirences memory spilling to disk in two operations, the HashAggregate and the Sort. When the HashAggregate is operating its using 23920kb going beyond memory restriction of 8,273kb making the actual time 2952.788. During the execution of the Sort opertaion it went over the limit by 8.8mb, causing spilling to the Disk, actual time 4243. 
+
+
 default wal_buffer size is 16MB, but if there are a lot of concurrent connections a higher value can help performance.
 
 maintenance_work_mem value is 64MB but a large value helps in tasks like VACUUM, RESTORE, CREATE INDEX, ADD FOREIGN KEY, and ALTER TABLE.
