@@ -242,7 +242,7 @@ The admin will determine the time range desired for the baseline. The admin can 
 The admin now selects the second baseline point. This is basically the same as the first point. Once they click the button the following happens:
 
 - The order of the selected points does not matter and the code should work whether the first point is first or second in date/time.
-- OED calculates the average reading over the time range of the two points. This is logically a single bar value over the time range divided by the time range. Another way to think about it is as being similar to the reading rate views but with one point for the entire time range. The current code is in src/server/sql/reading/create_reading_views.sql. A fast way to calculate this value is:
+- OED calculates the average reading over the time range of the two points. This is logically a single bar value over the time range divided by the time range. There is the original baseline code that is not up-to-date with the current code for getting data at src/server/sql/baseline/create_function_get_average_reading.sql and it needs to be analyzed to see if it is the better way to do this. Another way to think about it is as being similar to the reading rate views but with one point for the entire time range. The current code is in src/server/sql/reading/create_reading_views.sql. A fast way to calculate this value is:
   - Round the time range to full days so the earlier point is rounded up to the start of the next day and the later point is round down to the end of the previous day (which may be the start of the next day).
   - Use a variant of the bar code where you get a single bar across all these days. This will basically use the daily reading table to get the correct sum of the daily readings. This needs to be converted to a rate if that is not done directly.
   - Now add in the time lost (if any) on the two ends for the partial days. This could be done first with full hours from the hourly table and then the missing parts not in full hours. However, this is not commonly done so it is fine to use the readings table to get these values as in a similar way to the raw line readings.
@@ -269,6 +269,10 @@ A few notes on the graphical values:
 - The compare value % change is for the baselined value if that is being done.
 
 OED is currently considering the proper way to deal with conversions that are time-varying such as baselines. Baselines have fewer values than some other conversions so it might do them in real-time. Doing new views is also being considered. Until this is settled it is probably best to wait to get the actual reading values. If needed, the initial implementation could do real-time calculations and then move the logic to views as needed.
+
+### raw meters
+
+It is unclear if a baseline would ever be used on a meter of type raw. It is also unclear if it would make sense. For now, OED will allow but it could be excluded in the future.
 
 ### Admin setting of default behavior
 
