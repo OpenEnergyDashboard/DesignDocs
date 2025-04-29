@@ -45,6 +45,10 @@ OED uses materialized views of hourly and daily meter readings to speed up many 
 - The view takes up space/time. For meters, the two views are about 26% of the size of readings. Not huge but some disk space. It will likely take a comparable amount of extra time to refresh the reading views if a baseline one is added.
 - OED may decide to use views, which become larger, for time-varying conversions to speed them up. If so, then OED may decide to do it here too. Group views have the issues noted above for hourly/daily so they will likely depend on the decision on how to do them.
 
+### Ranges
+
+It is unclear that limiting the baseline ranges to full hours or days would speed up the processing given that readings can begin and end at any time. It is unclear that this restriction would cause any sites issues but it is not included at this time. It would only be added if it was of sufficient time savings during requests.
+
 ## Implementation
 
 There are two large aspects associated with the changes:
