@@ -10,7 +10,7 @@ There are conversions that sites want to vary by time including:
 
 - Area normalization (see [design document](../archive/areaNormalization/areaNormalization.md)) where values can vary with building changes. If variation is allowed then changes will be needed to how it is implemented since it assumes fixed areas and is done on the client rather than the server side.
 - Cost. This one may differ from the others in that costs can vary by time of day and even the day of the week. Thus, the general solution would allow repeating costs over time that can be also change periodically. This means lots of time variations which is unlike the first use above.
-- Baselines (which may be doable by units) which can change if a building is changed. OED has yet to implement this feature in any way but it may move forward in the summer of 2025.
+- Baselines which can change if a building is changed. OED has yet to implement this feature but it is moving forward (see [design document](../baseline/baseline.md)).
 - Weather. Normalize usage by the [weather](../weather/weather.md). In a common way, the degree heating/cooling for each day is determined from local weather and then used to normalize the usage. Other ways are possible. This usage has similarities to cost in the frequency of variation but there is no regular pattern. OED now has a way to get weather data but not normalize it.
 
 See [issue #896](https://github.com/OpenEnergyDashboard/OED/issues/896) about this.
@@ -21,6 +21,7 @@ This change is expected to be large and is hoped to be the core of OED V3.0.0. I
 - The DB will need further changes to make time-varying conversions work for all graphics.
 - A UI will be needed to allow admins to enter time-varying conversions.
 - The analysis of the conversions to create the compressed conversions (cik) used by the database will need substantial changes. This will involve JS code and DB changes to store the new information.
+- New test cases for time-varying conversion will be needed.
 
 Each of these steps is elaborated on in sections below.
 
@@ -35,11 +36,12 @@ OED keeps the readings in the original unit of the meter (meter unit). There are
 The conversions and cik tables need to be modified so each one has a date/time range (or a start/end time). The next step is to modify the meter line reading function (meter_line_readings_unit in src/server/sql/reading/create_reading_views.sql) to properly use the new cik that has time ranges. Here are the steps envisioned:
 
 - The current developer test data will be used where the time range will be set to (-infinity, infinity) so they span all time. This means they will act the same as the original system. The changes will initially be validated for these conversions and timed to see how much the system slowed down.
-- A conversion will be split at a day boundary with different conversions for each part. Doing it on a day boundary will guarantee that the conversion completely overlaps all test data except the 23 minute ones that will not be used at this point This will test a simple conversion that varies with time. The daily, hourly and raw data can be tested. The result will be validated and timing determined.
+- A conversion will be split at a day boundary with different conversions for each part. Doing it on a day boundary will guarantee that the conversion completely overlaps all test data except the 23 minute ones that will not be used at this point. This will test a simple conversion that varies with time. The daily, hourly and raw data can be tested. The result will be validated and timing determined.
 - A conversion will be split at several points to validate/time the system.
 - Now a conversion will be split at many points but on day boundaries. A one year test meter (such as the 15 min meters) can be tested with a conversion that varies each day. Using a script/program to generate the needed inserts into cik in the DB should make this fairly quick. This will be tested/timed. It should be a strong test of the new system with about 365 different conversions applied for each day.
-- A 23 min meter can be tested to see what happens when the reading can cross conversion boundaries with the same conversions as the last step. This will require extra SQL logic to work so it is important to know if it is fast enough so OED can allow arbitrary conversion times.
-- The 4 day meter can be used to test what happens when a reading is longer than the conversions with the same conversions as the last step. The inverse of a reading inside the conversions was already tested.
+- The same idea as the previous step but split on each hour boundary. For a year this would create about 365 x 24 = 8760 different conversions. This will see the correctness and timing in this case.
+- A 23 min meter can be tested to see what happens when the reading can cross conversion boundaries with the same conversions as the last two step. This will require extra SQL logic to work so it is important to know if it is fast enough so OED can allow arbitrary conversion times.
+- The 4 day meter can be used to test what happens when a reading is longer than the conversions with the conversions by the hour. The inverse of a reading inside the conversions was already tested.
 
 At some point both the result from the DB and on the web page showing a graphic should both be validated.
 
@@ -85,11 +87,13 @@ group by hourly_readings.duration -- unique per reading, need more with meters
 
 The basic idea to apply the time varying conversion in a similar way that readings are averaged by determining the overlap in time and properly applying. Note that an actual solution would do a slope (rate above) and an intercept (not above). The above has a key for the conversion in the hourly_readings table but OED does not do this. The conversion is found from the passed meter and graphic unit. This and other items will mean the actual OED SQL will differ from what is above.
 
-Note OED has an hourly and daily table so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for the DB functions. It may be valuable to see the description in the devDocs for [resource generalization](../archive/resourceGeneralization/resourceGeneralization.md) that describes how the older functions worked (see [section other-database-considerations](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/archive/resourceGeneralization/resourceGeneralization.md#other-database-considerations).
+Note OED has an hourly and daily view so both will need changes. If these work then the raw/meter readings also need to be incorporated into the system. See src/server/sql/reading/create_reading_views.sql for those DB functions. It may be valuable to see the description in the devDocs for [resource generalization](../archive/resourceGeneralization/resourceGeneralization.md) that describes how the older functions worked (see [section other-database-considerations](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/archive/resourceGeneralization/resourceGeneralization.md#other-database-considerations)).
 
-The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below). At the current time this is not being done. The hope is all conversions will vary with time and (-infinity, infinity) will be used for ones that effectively don't.
+The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below). At the current time this is not being done. The hope is all conversions will vary with time and (-infinity, infinity) will be used for ones that effectively don't. Note a basic implementation was done in spring 2025.
 
 How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed and OED could retain the current non-varying conversion system.
+
+Note that Simon is still helping to figure out good ways when conversions and readings cross boundaries. It is not clear that will be fast so an alternative may be altered views.
 
 ## Further DB reading data changes
 
@@ -104,56 +108,205 @@ While the ideas will be similar across all the functions, the details will vary.
 
 Each item needs to be tested (DB and web graphic result) & timed to test efficiency. Any needed/desired optimizations will be performed. The results will be added to the ones already documented from the basic DB work.
 
+## Other DB changes
+
+Overall conversions discusses a link between this and individual conversions. To support this, the database needs a second table conversion_segments to associate all conversion regions with a foreign key to the conversion table for which it applies. Thus, there will a row for for each conversion segment and the conversion id for which it applies. The number of rows with the same conversion id will be the number of conversions in that overall conversion. Each row will have the needed info for a conversion. Also, the (overall) conversion table will no longer have a slope and intercept as these are in the associated conversions. A migration will be needed to convert an existing conversion into a new one with only one associated conversion with the current slope/intercept that goes from -inf to inf.
+
+See the sections on patterns for day and week for items. The database needs tables to support these.
+
 ## UI for time-varying conversions
+
+As is the current case, all pages for conversions will be restricted to admins.
+
+### Overview
+
+Time varying conversions will fall into two categories for OED. In this discussion, a conversion is what the admin enters (not the cik from OED's analysis) for a given conversion between two units. The units of the conversion may be of any type within the restrictions that OED already imposes. An overall conversion is the fact that a given pair of units have a conversion between them. An overall conversion will be associated with one or more conversions to show how it varies with time. Note it is allowed that different time ranges (conversions) for an overall conversion can use any type of conversion (described next).
+
+These are the types of conversion that will be used. They are broken up into two overlying groups since those represent how they will be implemented.
+
+- The conversion has only one slope/intercept that spans the entire time of the conversion. This covers several types of usage:
+  - The overall conversion spans (-infinity, infinity). In this case there will be only one conversion in the overall conversion. This is the way to specify the equivalent of the original conversions that do not span time.
+  - The overall conversion has multiple conversions that do not have a pattern or are not entered as a pattern. The different conversions for each time range are entered manually by the admin so there are multiple entries for the overall conversion.
+  - The overall conversion has multiple conversions where there are many of them and manually inputting them would be difficult. This is similar to the previous case but is not entered manually.
+- The overall conversion has multiple conversions that follow a regular pattern that OED supports. The plan is to have a single conversion entry that represents the pattern where OED will then determine the days for which it applies.
+
+Two of the types of conversions will be future work but the system is designed to make that extension fairly easy. These are:
+
+- Multiple conversions that are not manually entered. There are some utility rates that are varied based on overall system usage that fall into this category. The rate is provided after the fact. OED should have a method to upload the the varying conversion that will likely be similar to uploading readings or meters via a CSV or route point. There are a number of potential issues including: care will be needed to be sure there are no gaps in time (assuming that is required as expected) and readings may appear before the corresponding conversion is entered.
+- Exceptions for the regular pattern. For example, many utilities charge the low/weekend rate on certain holidays. See the later section on basic research done on this.
 
 ## Conversion ideas
 
 The current ideas in resource generalization are mapped to the new system by setting the start/end timestamp (valid_for in @simonbtomlinson code) to -inf and inf (or some appropriate value) to indicate they apply to all time. These effectively create conversions that do not vary with time.
 
-For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in @simonbtomlinson code) where the primary key would not only include the start timestamp as does readings. The exact primary key needs to be worked out.
+For ones that vary with time, there would be multiple conversions (OED uses the source/destination as the primary key and not the id as in @simonbtomlinson code) where the primary key would also include the start timestamp as does readings. The exact primary key needs to be worked out.
 
-To simplify the system and to make it (probably) better, OED will not allow gaps in time for conversions for a given source/destination. This means that all the conversions for a given source/destination must span -inf to inf without any gaps. Clearly the ones that don't vary, as described just above, meet this criterion. The rationale for this is if there are gaps then the conversion will not be applied and the values would probably be misleading. With readings gaps are allowed because the values are generally coming via meters where failures can occur. This is somewhat beyond the control of the admin of the OED system so we deal with them. In this case the reading value shown by OED will be impacted but there is not much we can do. OED does account for the missing time to make the average reflect the time for actual points if they partly overlap the reading point being shown. If there is not overlap then no point is shown. While something similar could be done for conversions, it is unclear we should. The main argument is that the conversions are set by the admin so they can enter a value for all times. If it is unknown they can set the slope/intercept to 0 so the value will be forced to the x-axis in the graphic. However, it is unclear why a value would not be known for a part of time and you still want to apply this conversion. One case that might cause issues is where conversions are automatically set such as weather or cost. Something needs to be done if there are missing values. This decision needs review and finalization.
+To simplify the system and to make it (probably) better, OED will not allow gaps in time for conversions for a given source/destination. This means that all the conversions for a given source/destination must span -inf to inf without any gaps. Clearly the ones that don't vary, as described just above, meet this criterion. The rationale for this is if there are gaps then the conversion will not be applied and the values would probably be misleading. With readings, gaps are allowed because the values are generally coming via meters where failures can occur. This is somewhat beyond the control of the admin of the OED system so OED deals with them. In this case the reading value shown by OED will be impacted but there is not much OED can do. OED does account for the missing time to make the average reflect the time for actual points if they partly overlap the reading point being shown. If there is no overlap then no point is shown. While something similar could be done for conversions, it is unclear we should. The main argument is that the conversions are set by the admin so they can enter a value for all times. If it is unknown they can set the slope/intercept to 0 so the value will be forced to the x-axis in the graphic. However, it does not seem common that part of the conversion time would be unknown. One case that might cause issues is where conversions are automatically set such as weather or cost. Something needs to be done if there are missing values. This decision needs review and finalization.
 
 ## Entering conversions
 
 Given you can have lots of conversions that vary with time, a new interface will be needed for the admin to enter these values.
 
-### Non-repeating values
+### Overview page
 
-Here the admin will enter all the conversion values for various time ranges.
+This will be modeled on the current admin conversion page with a card for each existing conversion:
 
-For conversion creation, the admin will set the source/destination units (and the other information currently needed). Once OED has the source/destination, it will need to check if there is any other conversion involving these two units. There are two cases:
+![current admin conversion page](currentConversion.png "current admin conversion page")
 
-1. This is the first conversion for this pair of units. OED will automatically set the start/end timestamp to be -inf and inf (or whatever value is decided). This means that the page is not substantively changed and it is easy for an admin to do the case where conversions do not vary with time.
-2. There are already conversion(s) for this unit pair. In this case OED will need to get the start time for the new conversion. The details need to be decided. The start time will be used to split the current conversion that includes that time. An example may help:
+The "Create a Conversion" button will serve a similar purpose to create the first time varying conversion for a given source/destination but the details are different.
 
-    - If this is the second conversion for this unit pair, the first will have time of -inf, inf with a value of 10 for the slope and 0 for the intercept (for example). If a start time for the new conversion is 1/1/2022 with a value of 20 (ignoring slope that is usually 0) then there will now be two conversions:
+ The card will show similar information but not a slope/intercept and represent the overall conversion. The "Edit Conversion" (planned to be updated to "Details/Edit Conversion") will allow for viewing all the conversions associated with the overall conversion and for modifying it. As such it will be very different from the current popup. It will be similar to the [baseline display/table for meters](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/baseline/baseline.md#detailsedit-baseline-of-a-meter).
 
-      1. -inf, 1/1/2022 with value 10
-      2. 1/1/2022, inf with value 20
+ Note there is a good chance the related look of the baseline effort is ongoing while this effort is made. Coordination between the efforts and reuse of code should be utilized.
 
-This idea can be applied to any existing conversion. Note the admin should be able to enter -inf as the start time to split from the beginning of time.
+ Each popup/page is described next.
 
-A special case is if the start time is on the end time of a current conversion. This will not be allowed as it is effectively an edit of the conversion. Note the description is the end time. This means it does not exclude -inf which can only be a start time. For all other values (except inf which the admin is not allowed to enter), there will be an end time of one conversion and the start time of another conversion that matches because gaps are not allowed. One question is whether the edit should just be done here rather than on a separate page.
+### Creating a conversion
 
-To facilitate entering conversions, it may be useful for OED to display the current conversion with the entered source/destination. This could be a table and/or a graph of them. Another option that may make sense is to have a card for each one that is similar to the look of other admin pages. The cards would be sorted by start time so the next time follows the first.
+ This page is similar to the current popup but also allowing to set the first conversion for this overall conversion. The popup will look something similar to the following:
 
-For conversion editing, OED needs to list all the current conversions (see comment above). The admin can then select a conversion (decide how) and the values can be edited. The values for the start/end time must be controlled by these rules:
+![first conversion creation modal](firstConversion.png "first conversion creation modal")
 
-- -inf/inf cannot be changed so the conversions continue to span all time.
-- If the start/end time is changed then the conversion that has the matching end/start time must be modified to have the same value so the conversions continue to abut and span all time. We need to consider if this is the best way to do this.
+When a conversion creation is started, the pattern will be No Pattern and Slope = Intercept = 0. Whenever the pattern is No Pattern, the slope and intercept values are shown and can be edited. When the pattern is a weekly pattern the slope and intercept are grayed out without a value and cannot be changed. This enforces that only one of these is set/active at any time. If it goes from a weekly pattern to no pattern then the Slope/Intercept start with a value of zero. In all cases, the admin is warned, as is currently done, if the Slope and Intercept remain zero and if the Intercept is non-zero (only applies if pattern is No Pattern).
 
-### Repeating values
+The Pattern will be set via a drop down menu where the selected item is the current choice of pattern. The first choice in this drop down will be "No Pattern" that indicates there is not a pattern. The remaining choices are an alphabetical list by name of weekly patterns.
 
-Needs to be worked out. First lets see if how the other cases pan out.
+The Note below Initial Conversion is a Note for the conversion and differs from the Note above for the overall conversion.
+
+When this first conversion is finished being created, the admin returns to the creation modal to allow for saving (or cancelling). The save is slightly more complex because the id of the new overall conversion is not known until it is added to the DB. The initial conversion needs this id as a foreign key to save the conversion. It should be dealt with in a single route to the server and multiple steps to save the two items. Note the dates for the initial conversion are (-inf, inf) since it must span all time.
+
+### Editing a conversion
+
+As described above, editing a conversion will have similarities to baseline but with some changes:
+
+![conversion details/edit modal](newEdit.png "conversion details/edit modal")
+
+The Slope/Intercept will be removed as shown in the red box. The conversions table will be added where indicated and highlighted with a red arrow in the figure (not in OED). As noted for baselines, this may need to be changed to a page for space reasons but hopefully not.
+
+The admin can directly edit the Bidirectional and Note but not the other values as is currently done.
+
+The "Delete Conversion" button will still delete this overall conversion. This means all the associated conversion are no longer associated with it so that also needs to happen. It is believed the same rules will apply as currently deleting a conversion but this should be verified.
+
+The conversions table has a row for each conversion in this overall conversion. The conversion rows will be sorted by the time range it applies where the start date/time is equivalent. The following tables have the basic layout/structure but it will look a little different on the OED page and similar to baseline. The first row is the headers, the next a description and the following rows are examples.
+
+| Dates | Slope |  Intercept | Pattern | Note |    |    |    |    |    |
+| :---- | :---- |  :-------- | :------ |:--- | :- | :- | :- | :- | :- |
+| The date range that this conversion applies separated by a hyphen. If it is -inf or +inf then it has a special representation. | Slope for conversion where it is empty if a pattern (not No Pattern). | Intercept for conversion where it is empty if a pattern (not No Pattern). | Will have the pattern name to use or "No pattern" if not using a pattern. | Any note associated with this conversion. The first ~100 characters (value based on look) will be shown and popup with the full message on click as done with the log messages. This differs from the Note above that is for the overall conversion. | Button "edit" | Button "Split adding earlier conversion" | Button "Split adding later conversion" | Button "Delete changing earlier conversion" | Button "Delete changing later conversion" |
+| March 9, 2024 00:00:00 PM to January 2, 2025 00:00:00 PM | 123.45 | 0 | No Pattern | Sample with full dates and no pattern | see below | see below | see below | see below | see below |
+| March 9, 2024 00:00:00 PM to January 2, 2025 00:00:00 PM |  |  | Weekly ABC | Sample with full dates and pattern | see below | see below | see below | see below | see below |
+| to January 2, 2025 00:00:00 PM | 123.45 | 0 | No Pattern | Sample where it applies from -inf and no pattern | see below | see below | see below | see below | see below |
+| from January 2, 2025 00:00:00 PM |   |  | Weekly XYZ | Sample where it applies to +inf and pattern | see below | see below | see below | see below | see below |
+
+The buttons will each allow the admin to modify the conversion in this row as described below. The comments in baseline (except applies to a conversion) are not repeated here and only differences are noted.
+
+#### Edit button
+
+The admin can modify the non-button values in the row. The actions are similar to creating the first conversion. Editing the Dates or Note is similar to baseline. The Pattern will be set via a drop down menu as done above for creating a conversion along with the slope and intercept.
+
+#### Split adding earlier conversion button
+
+This is similar to baseline. The new conversion takes on the standard default values and is created similarly.
+
+#### Split adding later conversion button
+
+Similar to the item above and baseline.
+
+#### Delete changing earlier conversion button
+
+Similar to baseline but for conversion.
+
+#### Delete changing later conversion button
+
+Similar to baseline but for conversion.
+
+## Days & Weeks to create patterns
+
+The following sections describe how to enter a pattern for use in a conversion. Note, non-repeating values is covered above through creating an overall conversion and editing conversions.
+
+## Pattern: Repeating values
+
+OED will support repetition patterns where the pattern is on a per week basis. This will simplify the system while still supporting these known use cases:
+
+- Each weekday has the same values and each weekend day as the same values that differ from the weekday.
+- Each day of the week is different.
+- Weekly patterns that periodically change by specifying the range on each pattern. For example, the daily cost is one value from April through September and a different values from October through March. At this time OED will not have a yearly pattern so this must be done manually which seems acceptable since these tend to be long-term changes and the value can also change over these long timeframes. This is done by setting appropriate time frames on the overall conversion.
+
+This will be accomplished by specifying the conversions across a day and then assigning a specific day to each day of a weekly pattern. This means a week is composed of seven separate days where the same day can be put in multiple days of a week. An advantage of this setup is that holidays that span a full day(s) (as is normal) will be an exception to a given day in the weekly pattern. It is possible to do this with the exception system envisioned (see below). A disadvantage of this setup is that conversions that cross a day boundary will show up as two conversions. For example, if the cost goes from 22:00 to 06:00 then one day would have this conversion from 22:00-24:00 and the next would have the same conversion values from 00:00-06:00. (Note the actual end of a day is 00:00 of the next day in the code.) It may be possible to optimize this case in the future to combine the two conversions when applying but it is unclear that is necessary for efficiency so it will not be done initially.
+
+The following sections discuss how day & week will be specified. As discussed above, the week can be used as a pattern in a conversion. It is fine to use a week in multiple patterns knowing that changing the pattern will impact all uses.
+
+### Day
+
+Conceptually, OED will treat a day as an overall conversion which starts at 00:00 and ends at 24:00. When a new day is created, it has an initial conversion with these time limits along with a slope and intercept (0 until set). There is also a name and note associated with a day. The vision is there will be a new "Day" choice in the "Pages" menu for admins. This will take the admin to a new page that is similar to conversion (and other pages) that has a create button and cards for each existing day. Creating or going to the details/edit of a card will have similar looks and processes to the conversion page described above. Keeping them consistent is valuable for the admin to reduce the cognitive load to use the pages. Once the first day range/conversion is created, the table will allow editing, splitting and deleting of the day range/segment. Each day segment row will have these values:
+
+- Hours in the day to which it applies.
+- slope
+- intercept
+- note
+
+and the buttons as for the conversion table above using day in the text. Clicking a button will have a similar action to the conversion above.
+
+Note one difference is that start/end of the first/last day range is the hours described and not -inf to inf.
+
+The database needs a day table to store the information on each day. It will need a second table day_segments to associate all day segments with a foreign key to the day table for which it applies. Thus, there will a row for for each day segment and the day id for which it applies. The number of rows with the same day id will be the number of segments in that day. This is similar to the tables for conversions and conversion_segments.
+
+### Week
+
+There will be a new "Week" choice in the "Pages" menu for admins. This will take the admin to a new page that is similar to day that has a create button and cards for each existing week. Each week has these values:
+
+- name
+- note
+- The seven days that make it up.
+
+Creating or editing a week is similar (except initial values). Everything is blank on creating and the current values on editing. The days in a week will be shown as a table:
+
+| Day of Week | Day |
+| :---------: | :-: |
+| Sunday      | drop down menu of days |
+| Monday      | drop down menu of days |
+| Tuesday      | drop down menu of days |
+| Wednesday      | drop down menu of days |
+| Thursday      | drop down menu of days |
+| Friday      | drop down menu of days |
+| Saturday      | drop down menu of days |
+
+The drop down menu of days will have a list of all days with the current value selected. If there is no current value then it will indicate the need to select an item as done in the Meters or Groups drop downs on the graphic pages. During creation of a week, the save should be grayed out/un-selectable until all days of the week have a day selected.
+
+A week is composed of seven days and each one will be a separate column in the week DB table. The other needed items will also be included. Each day is a foreign key into the day table as the id.
+
+### Applying a pattern to create conversions
+
+To allow the pattern to be as general as desired and easily support exceptions in the future, the plan is to use ical format. This easily allows repetition of each day segment (RRULE) along with exceptions. There is also software to take the ical format and generate all desired dates across the desired time. The details have not been worked out so decisions and testing will be needed.
+
+Some possible software of interest for doing this follows. It is not an exhaustive list.
+
+- [rrule.js](https://www.npmjs.com/package/rrule): Seems to allow input of RRULE as JSON object and it gives the occurrences/date instances including excepitons. Has ability to get certain ones and provide human readable rule equivalent. Does RRuleSet. BSD license. Seems nice. Seems best obvious one on npmjs.com. Mostly done 2013 & 2018 and a little at other times. Heavily used.
+
+- [ical.js](https://github.com/kewisch/ical.js?tab=readme-ov-file): Parse formats such as iCalendar & jCal. MIT license. Maybe be part of Mozilla.
+
+- [iCalendar Viewer](https://www.ratfactor.com/tools/icalendar-viewer): Uses ical.js from Mozilla to parse and display iCal format in a human readable format. Last update in 2023. Unsure needed except debugging.
+
+- [iCalcreator](https://sourceforge.net/projects/icalcreator/): PHP, for using with other software. Last update 2017. GNU license. Uses ical.js and probably less directly relevant and license is an issue.
+
+- [RRULE generator](https://icalendar.org/rrule-tool.htm): Menus to tell rule and gives RRULE. May be good for testing the rule created.
+
+- [iCal4j](https://www.ical4j.org/) Seems to have lots of software to work with iCal and generate needed info along with extensions. Maybe of interest but in Java.
+
+- [ical-ts](https://github.com/filecage/ical-ts): TS compliant but no license, unsure if really used, done by one person mostly in 2023.
+
+### Duplication
+
+There may be some value to users to allow them to duplicate a day or week to simplify changes. This would take a little effort and given that setting up a day or week is not too hard it will not be done initially. It could be added later.
 
 ## Updating cik
 
-## Implementation plan
+**This section is not complete.**
+
+### Implementation plan
 
 There are a number of open questions so this will be done step-by-step where the result is used to decide the best way to continue. **As such, regular contact with the OED project is anticipated.**
 
-### 1. Database
+#### Database
 
 As described in the "Potential solution" section, the database functions need to be modified to handle conversions that vary with time. The envisioned steps are:
 
@@ -167,17 +320,33 @@ As described in the "Potential solution" section, the database functions need to
 4. Once the performance is acceptable, test code will be written to try a range of cases that can be incorporated into the standard OED testing set to be certain that now and in the future the functions work as expected. This testing will be more systematic and careful than in step 2.
 5. Any additional DB functions to deal with other graphics will be created. It is hoped this is minimal. New test code is needed for any changes or the current tests need to be modified for conversions that vary with time.
 
+## Other items
+
 ### Routing
 
-The current graphics route back data from the server to the client and into Redux state. It is hoped that the new system will have conversions that are similar to the current system (with an id for each conversion even if it varies with time) so there are not many changes in this area.
+The current graphics route back data from the server to the client and into Redux state. It is hoped that the new system will have conversions that are similar to the current system so there are not many changes in this area. Note cik has the slope and intercept but it is never used. It should be removed. The routes for conversions need to be updated for the new information for time-varying.The time-varying equivalent of cik is not needed on the client-side.
 
 ### Graphics
 
 Unless there are performance differences that are of concern, the plan is to treat all conversions similarly so they will show on the same user graphics as they currently do. The fact that a conversion varies with time does not change any of the calculations concerning its compatibility for menus/graphics. Thus, the hope is for minimal changes in this area.
 
-### Admin conversion page
+### New test cases
 
-If all goes well, then the new UI for the conversion page needs to be created. The "Entering conversions" section has ideas on this. It may be most practical to start with the non-repeating case and then do repeating after that. This is going to be significant work that will be settled once the underlying system is well understood.
+These need to be worked out. The current reading tests will be a good start.
+
+### Exceptions for conversion patterns
+
+Assuming the plan to use ical RRULE to create patterned conversions is used, the exceptions for holidays could be added via EXDATE. The question is how to do that. This has not been completely worked out. However, basic research found that there is free software to determine holiday dates for locations around the world. These are specified here as a starting point for future efforts.
+
+- [date-holidays](https://github.com/commenthol/date-holidays): npm package with lots of downloads, ISC license. Lots of contributors. Works worldwide. Returns holidays as array of JSON objects. Can also check if a date is a holiday. This may be the most promising.
+
+- [date-holidays-ical](https://github.com/commenthol/date-holidays-ical): ISC license. Looks interesting but unclear exactly what does. Uses date-holidays. It may be a way to convert date-holidays to ical. Seems interesting but not used much and pretty much one person.
+
+- [dates-holidays-parser](https://www.npmjs.com/package/date-holidays-parser): ICS. Seems an add-on to date-holidays but unsure what adds.
+
+- [CalendarLabs](https://www.calendarlabs.com/ical-calendar/holidays/afghanistan-holidays-327/): Seems to allow subscription and download but uncertain. Unsure have archive of all years.
+
+- Google calendar API: Unsure works as desired but start of idea may be at [stack overflow](https://stackoverflow.com/questions/30833844/get-holidays-list-of-a-country-from-google-calendar-api#).
 
 ## Update May 2024 - Historical
 
