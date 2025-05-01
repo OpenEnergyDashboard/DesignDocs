@@ -1,7 +1,5 @@
 # Conversions that vary with time
 
-Unlike some of the design documents, this one proposes avenues to try so the final solution can be determined. As time goes on, more and more details are being given and settled.
-
 ## Introduction
 
 The current [resourceGeneralization](../archive/resourceGeneralization/resourceGeneralization.md) designed conversions between units that did not vary. It was the core of OED V1.0.0. This document discusses how OED can extend this idea so conversions will vary with time.
@@ -91,7 +89,7 @@ Note OED has an hourly and daily view so both will need changes. If these work t
 
 The design of the new conversion storage in the DB needs to be worked out. It may be the case that there will be a new conversion table that holds the conversions by time with a foreign key into the modified current table that holds the rest of the information on the conversion that does not vary with time. If the conversion does not vary then there would only be one entry in the new table for that conversion. If it varies then there would be one entry per range (see below). At the current time this is not being done. The hope is all conversions will vary with time and (-infinity, infinity) will be used for ones that effectively don't. Note a basic implementation was done in spring 2025.
 
-How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed and OED could retain the current non-varying conversion system.
+How efficient this will be, esp. when the conversion varies with time, needs to be tested. If necessary, limitations on the variation can be imposed and OED could retain the current non-varying conversion system. Another alternative is to create views for each meter unit to graphic unit so the overall conversion is precomputed and not done on the fly. The view may be needed.
 
 Note that Simon is still helping to figure out good ways when conversions and readings cross boundaries. It is not clear that will be fast so an alternative may be altered views.
 
@@ -113,6 +111,8 @@ Each item needs to be tested (DB and web graphic result) & timed to test efficie
 Overall conversions discusses a link between this and individual conversions. To support this, the database needs a second table conversion_segments to associate all conversion regions with a foreign key to the conversion table for which it applies. Thus, there will a row for for each conversion segment and the conversion id for which it applies. The number of rows with the same conversion id will be the number of conversions in that overall conversion. Each row will have the needed info for a conversion. Also, the (overall) conversion table will no longer have a slope and intercept as these are in the associated conversions. A migration will be needed to convert an existing conversion into a new one with only one associated conversion with the current slope/intercept that goes from -inf to inf.
 
 See the sections on patterns for day and week for items. The database needs tables to support these.
+
+See section on Cik for the new table needed to do those implementation steps.
 
 ## UI for time-varying conversions
 
@@ -300,25 +300,34 @@ There may be some value to users to allow them to duplicate a day or week to sim
 
 ## Updating cik
 
-**This section is not complete.**
+In the current system, admins input conversions. OED then analyzes the conversions to create cik. This uses a graph where the units are vertices and the conversions are edges with arrows so directional. Starting at each meter unit, all paths to graphic units are found and the overall conversion is obtained. The overall conversion from each meter to graphing unit is stored in cik in the DB and transferred to the client on starting. These are all that is needed to determine unit relationships for the menus and graphics.
 
-### Implementation plan
+Time-varying conversions do not fundamentally change the idea but it does add complications. Primarily, to support this, the equivalent cik values need to have time ranges associated with them. OED may keep the original cik table without the slope/intercept since that simplifies getting it to the client when needed. A new table, say cik_vary, will store the conversion (slope, intercept) for each time range and meter/graphic unit. Determining the slope, intercept is more complex since it is combining a series of conversions that can vary with time and the time range may differ across conversions. As a simple example, an overall conversion for three units that are chained together with only a few conversions for each overall conversion is used (ote the scale of time is not accurate).
 
-There are a number of open questions so this will be done step-by-step where the result is used to decide the best way to continue. **As such, regular contact with the OED project is anticipated.**
+![chained time-vary conversion](chainedTimeVaryConversion.png "chained time-vary conversion")
 
-#### Database
+An example of the values: from 1/1/25-7/1/25 has 2,0 for U1→U2 and 10,0 for U2→U3 so combined is 20,0 for U1→U3. Note that whenever the time ranges do not line up in the chaining will cause another range in the chained conversion. When you have lots of different ranges and a longer sequence of units it can add a lot of ranges.
 
-As described in the "Potential solution" section, the database functions need to be modified to handle conversions that vary with time. The envisioned steps are:
+The general algorithm proposed for combining conversions is outlined here:
 
-1. Modify the DB tables and functions to work with conversions that vary with time. This will not necessarily do all needed changes but the ones needed for testing.
-2. The validity of the changes will be tested via a moderate level of testing. It is envisioned that this will be done via a Postgres command line to allow for each change and quick tests during this phase.
-3. The speed of the DB queries will be tested for conversions that mimic the two types described in "Introduction" section. Thus, conversions that vary infrequently (a handful of conversions over time) and ones that vary frequently (trying every day and then every hour). Doing line graph data will be good for these tests.
+- Find the path from the meter unit to the graphic unit as was done previously using the overall conversions.
+- Set currentStart to -inf.
+- Sort each coverall conversion on the path by increasing time of the range for each conversion in that overall path.
+- Set the currentRange for each overall conversion in the path to first sorted conversion.
+- Begin loop
+  - Find the minimum time for the end of the currentRange for all overall conversions on the path and call this currentEnd. In case of a tie then choose any of these.
+  - Combine all the conversions for the path in the proper order for the slope & intercept. This is the needed conversion for cik_vary where the time range is currentStart to currentEnd.
+  - If currentEnd is inf then exit loop (better way would be nice to avoid exit in middle of loop)
+  - Set the currentRange to the next segment on any overall conversion that has its end time of the current range the same as the currentEnd. The example shows this at 1/1/26. The algorithm will pick either one for the minimum end time but all must advance since the total range of both conversions has been included already.
+  - set currentStart to be currentEnd.
+- End loop
 
-   As a special case, the new code with only one value (so it does not really vary with time) will be compared with the current conversion code to see the impact of treating non-varying conversions as a special case of varying. This will indicate if all the conversions can use the new system.
+This should give all the ranges in the overall conversion from the start unit to the end unit on the desired path. Each one must be stored in cik_vary.
 
-   The timings will also indicate if the new system is viable for deploying. The OED project can help with tool recommendations to perform this analysis. This may be an iterative process until the performance is deemed acceptable.
-4. Once the performance is acceptable, test code will be written to try a range of cases that can be incorporated into the standard OED testing set to be certain that now and in the future the functions work as expected. This testing will be more systematic and careful than in step 2.
-5. Any additional DB functions to deal with other graphics will be created. It is hoped this is minimal. New test code is needed for any changes or the current tests need to be modified for conversions that vary with time.
+Here are two alternative to storing cik during the calculation of cik_vary. Since they are done in the DB they guarantee that cik and cik_vary are consistent (but they should be if the above algorithm is correct).
+
+- Use a materialized view for cik that finds all the unique meter unit/graphic unit rows in cik_vary. This would be refreshed each time cik_vary is changed.
+- Same idea but do each time cik is needed. This avoids duplicating information but it might be too slow or use a lot more server time since it is done each time a user requests the cik data for the client.
 
 ## Other items
 
