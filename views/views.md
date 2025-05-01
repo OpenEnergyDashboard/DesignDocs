@@ -23,7 +23,9 @@ The proposed changes are:
 
   - Generating the group data on the fly means you always get the latest data. However, groups can only be graphed as hourly or daily. The underlying meters are only correct at this accuracy if the views are refreshed. In the current system it is possible for the sum of the meters in a group to differ from the group in a graphic due to the meter views being out of date. It is believed that making that always work is important so using group views would fix it.
   - OED has gotten all meter readings from the DB to be fast, generally around 20 ms. Groups generally call the meter function for each meter in a group and then sum the values to get the group value. First, with lots of underlying meters it will slow down and scales linearly. This means a group could take longer than desired (OED would like to have all reading requests to the DB complete in less than 100-200 ms). Second, testing on 3D found it took around 100 ms longer in fixed overhead to do a group vs. the sum of the individual meter times. It is believed this is due to the grouping for the sum that does not run quickly. A similar issue was fixed for meters by using an index on the view. It is unclear that would work with the group values generated on the fly. [Postgres query optimization](../postgresQueryOptimization/postgresQueryOptimization.md) has more details.
-  - The use of materialized views for meters has been shown to be very effective and the space requirements are not bad so rolling the same idea for groups makes sense at this point.
+  - The use of materialized views for meters has been shown to be very effective and the space requirements are not bad so rolling the same idea for groups makes sense at this point. However, as discussed in detail below, a group view requires entries for each compatible unit to a group and not just a single entry for the readings. This means that the space used will be greater. It is hoped the advantages of speed outweigh the space disadvantage but testing is needed.
+    - Time-varying conversions may push OED to make a similar change to meters. This could either be a test of the idea or an extension if first done there.
+    - OED also chose to include min/max values in the views when they were introduced. This was a similar time/space tradeoff.
 
   One complication is that modification of a group would make the view data inconsistent with the group views. This is not a common operation so the views will be refreshed when this happens and OED already has done this for other operations.
 
@@ -63,14 +65,99 @@ The new value actually has a positive attributes. It is averaging within the hou
 
 ## Group views
 
-Group views will be similar to meter view and done as follows:
+Group views will be similar in concept to the current meter views but will have to differ in important ways.
 
-- The hourly group view will be be determined by averaging the hourly meter view for each deep meter in a group (the unique meters in a group). It is an average since the view is a rate. This differs from meters that need to use the original meter readings. It is done first after the meter views. The deep meters of a group are stored in the DB in groups_deep_meters.
-- The daily group view will be from the hourly group view similarly to meters.
+Currently, the group readings are determined by summing the underlying meters during each request by calling the meter readings function for each deep meter. This means the readings returned for each meter is converted into the desired graphic unit before it is summed. This is necessary since different meters within a group can collect in different units so you can't directly sum them. Given this, OED cannot sum the meters into a materialized view as done for meters that represents the group with a single value for each reading.
+
+The overall change for groups is that the method used to get group graphic data must be rolled into the group view but made to work for any compatible graphic unit. This means that for each allowed graphic unit the meter data is converted to that unit and then summed. It is stored in the view with an additional column of graphic unit.
+
+The compatible graphic units of a group is the graphic units that are compatible with each deep meter of the group. Currently this is only calculated on the client-side using functions in src/client/app/utils/determineCompatibleUnits.ts. The basic idea is:
+
+- For each meter, get the set of compatible graphic units. These are the ones with an entry in cik for that meter unit and graphic unit pair.
+- Find the intersection of all the meter sets. This is the set of compatible graphic units for the group.
+  - Note that since the group is the intersection of the meters, the number of compatible graphic units of the group is generally smaller than the underlying meters. It is at most the smallest number of compatible graphic units in any deep meter.
+
+There are likely several ways to do this calculation in the DB. Here is one thought that might work:
+
+- Get the deep meter ids in the group and store in variable deep_meters.
+- Calculate the number of deep meters in the group and store in variable num_deep_meters.
+- For each visible graphic unit (type_of_unit is not a meter unit or displayable is not none), count the number of rows in cik where the source is in deep_meters and the destination is the graphic unit being considered. If this number is the same as num_deep_meters then this graphic unit is compatible with the meter. The reason is that there must be an entry in cik for each group deep meter and graphic unit.
+- The group view needs to calculate the view for each of the compatible graphic units found for the group.
+
+In some cases you could pick a common unit to sum them in and then convert for the desired graphic unit but that does not work if the conversions have different values to a unit. For example, the cost per energy unit is not the same for different meters so you cannot convert to a common energy and then convert to cost. Given this, this potential optimization is not done since it adds nontrivial complexity to the code.
+
+Now a rough estimate of the increase in database size is made. The following sizes in byes for each type is used:
+
+- integer: 4
+- double precision: 8
+- timestamp: 8
+- tsrange: 20 (which seems to vary but using 8 bytes per time and overhead)
+
+x is used as the number of readings. It is assumed that each meter and group has the same number of readings.
+
+This assumes the reading are every 15 minutes for a meter. Thus, the hourly view is 0.25 the number of readings and daily view is 1/96 = 0.01. Both are 0.25 + 0.01 = 0.26. So, having x readings means both meter views have 0.26x.
+
+The space requirements for the current readings:
+
+- A row in readings has 28 bytes
+  - meter_id/integer: 4
+  - reading/double precision: 8
+  - 2 x timestamp: 16
+- All readings are 28x in size
+
+The space requirements for the current meter views:
+
+- Each row in the hourly/daily meter view has 48 bytes:
+  - meter_id/integer: 4
+  - reading/double precision: 8
+  - min/double precision: 8
+  - max/double precision: 8
+  - interval/tsrange: 20
+- Both views are 0.26x \* 48 = 12.48x or 12.48 / 28 \* 100 = 44.6% of the reading size
+
+The space requirements for the proposed group views:
+
+- Each row in the hourly/daily group view has 52 bytes:
+  - meter_id/integer: 4
+  - graphic unit id/integer: 4
+  - reading/double precision: 8
+  - min/double precision: 8
+  - max/double precision: 8
+  - interval/tsrange: 20
+- An estimate (hard to know value) of the number of compatible graphic units in  group is 2-10 with an average of 6.
+- Both views are 6 \* 0.26x \* 52 = 81.1x
+  - This is 81.1 / 28 \* 100 = 290% of the reading size
+  - Compared to the current situation it is 81.1 / (28 + 12.48) \* 100 = 200% increase
+
+This means the DB will be about 3x larger which isn't trivial but isn't terrible. It might be more or less depending on the average number of compatible units per group at a site.
+
+A very big site might need:
+
+- readings:
+  - 50 meters
+  - 20 years per meter
+  - 20 years \* 365.25 days/year \* 24 hours/day \* 4 readings/hour = 701280 readings/meter
+  - 701280 readings/meter \* 50 meters = 35 million which is x.
+- The size needed for the DB would be:
+  - Current readings: 35M \* 28 = 0.98 GB
+  - Current readings & meter views:  35M \* (28 + 12.48) = 1.4 GB
+  - Current readings & meter views & new group views:  35M \* (28 + 12.48 + 81.1) = 4.3 GB
+
+This does not account for the smaller tables nor the DB overhead.
+
+Just for the record, if the following view changes are made then it would impact the size as follows:
+
+- Do meter views for each compatible graphic unit. This should allow time-varying via views for hourly & daily:
+  - Assume 10 compatible graphic units per meter. It is higher than groups since it is not the intersection of many meters.
+  - Both views are 10 \* 0.26x \* 48 = 124.8x.
+  - A very big site would need 35M \* (28 + 124.8 + 81.1) = 8.2 GB
+- Do baseline via views. This means a second entry for each current one so 16.4 GB.
+
+These increases in view size will slow down the refresh so the ideas below on speeding them up may be important.The overall DB size is getting nontrivial but may be okay for a larger site. The tradeoff of speed of views vs. space needs to be tested and decided.
 
 ### graphic readings with group views
 
-The DB logic to sum the individual meters needs to be replaced to use the group views. It is likely to be similar types of changes across all the functions. In the end, the result should be the same (except when readings are missing for daily as described above). There is sometimes other logic in meter readings for each graph type that is not currently present in group readings since groups reuse meters. That logic will need to be added to the group DB functions. It is likely it will be the same (or very similar) so it probably should be moved to a function so it can be used across the meter and group code.
+The DB logic to sum the individual meters needs to be replaced to use the group views. It is likely to be similar types of changes across all the functions. In the end, the result should be the same (except when readings are missing for daily as described above). There is sometimes other logic in meter readings for each graph type that is not currently present in group readings since groups reuse meters. That logic will need to be added to the group DB functions. It is likely it will be the same (or very similar) so it probably should be moved to a function so it can be used across the meter and group code. Another change is the the lookup to the group view will take care of the graphic unit.
 
 The following changes are needed to use the group views when getting readings for graphics:
 
