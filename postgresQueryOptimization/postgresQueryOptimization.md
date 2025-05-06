@@ -643,7 +643,187 @@ Queries for this section were ran on machine 2.
 | Line | EXPLAIN (ANALYZE, BUFFERS) select meter_line_readings_unit('{21}', 1, '2020-01-01 00:00:00', '2020-06-30 00:00:00', 'daily', 200, 200);  | 0.035              | 17.527          | 181               | {21} - Cos 23 Min kWh                      |                                                                                                                                                                                                    |
 | Line | EXPLAIN (ANALYZE, BUFFERS) select meter_line_readings_unit('{21}', 1, '2020-01-01 00:00:00', '2020-02-29 00:00:00', 'daily', 200, 200);  | 0.086              | 16.928          | 59               | {21} - Cos 23 Min kWh                      |                                                                                                                                                                                                    |
 
-# Google Lighthouse Findings
+# Bar Chart Rendering Performance Report
+
+This report documents the performance analysis and optimization steps undertaken to improve SVG-based bar chart rendering within our application. Performance metrics were gathered through precise instrumentation, and critical bottlenecks were identified using advanced performance APIs.
+
+**Methodology for Test Case Selection**
+
+To identify the most challenging test scenarios for our performance analysis, we employed the following SQL query to find meters with the highest data volumes:
+
+```sql
+SELECT 
+  m.id,
+  m.name AS meter_name,
+  COUNT(*) AS reading_count,
+  TO_CHAR(MIN(r.start_timestamp), 'YYYY-MM-DD') AS earliest_date,
+  TO_CHAR(MAX(r.end_timestamp), 'YYYY-MM-DD') AS latest_date,
+  MAX(r.end_timestamp)::date - MIN(r.start_timestamp)::date AS days_range
+FROM readings r
+JOIN meters m ON r.meter_id = m.id
+GROUP BY m.id, m.name
+ORDER BY reading_count DESC;
+```
+
+This query revealed that meters 22, 26, and 27 (Sin Amp 1 kWh, Sin Amp 2 kWh, and Sin Amp 3 kWh) each contained 70,176 readings spanning 731 days, making them ideal candidates for stress testing our chart rendering capabilities.
+
+## Initial Investigation
+
+To identify potential performance issues, the RTK-Query hook was instrumented using the User Timing Performance API to measure processing times:
+
+```javascript
+//Location in BarChartComponent.tsx
+const { data: meterReadings, isFetching: meterIsFetching } = readingsApi.useBarQuery(meterArgs, {  
+  skip: meterShouldSkip,  
+  selectFromResult: ({ data, ...rest }) => {  
+    performance.mark('bar-transform-start');
+
+    const transformed = selectPlotlyBarDataFromResult(  
+      data ?? stableEmptyBarReadings,  
+      barMeterDeps  
+    );
+
+    performance.mark('bar-transform-end');  
+    performance.measure('bar-transform-duration', 'bar-transform-start', 'bar-transform-end');
+
+    return {  
+      ...rest,  
+      data: transformed  
+    };  
+  }  
+});
+```
+
+This initial measurement revealed that the selector was **not** the primary source of the performance bottleneck.
+
+## DOM Element Analysis
+
+To accurately measure the number of DOM elements created by Plotly charts, we implemented the following function:
+
+```javascript
+countPlotlyDOMElements() {
+  const plotlyElement = document.querySelector('.js-plotly-plot');
+  if (!plotlyElement) {
+    console.log('[DOM Count] No Plotly element found');
+    return 0;
+  }
+  
+  // Count all elements inside the Plotly container
+  const totalElements = plotlyElement.querySelectorAll('*').length;
+  // Count specific bar elements (SVG rect elements)
+  const barElements = plotlyElement.querySelectorAll('.bars .point').length;
+  
+  console.log('[DOM Count] Total DOM elements:', totalElements);
+  console.log('[DOM Count] Bar elements:', barElements);
+  console.log('[DOM Count] Other elements:', totalElements - barElements); 
+  
+  return {
+    total: totalElements,
+    bars: barElements
+  };
+}
+```
+
+We integrated this function into our performance monitoring system to capture DOM element metrics alongside rendering time:
+
+```javascript
+React.useEffect(() => {
+    setTimeout(() => {
+      console.log(`[DOM Count] Dataset points: ${dataPoints}, Meters: ${meterIds.split(',').length}`);
+      const domCounts = countPlotlyDOMElements();
+      console.log(`[DOM Count] Points × Meters calculation: ${dataPoints} × ${meterIds.split(',').length} = ${dataPoints * meterIds.split(',').length}`);
+      console.log(`[DOM Count] Actual DOM elements: ${domCounts.total}`);
+      console.log(`[DOM Count] Ratio: ${(domCounts.total / dataPoints).toFixed(2)} DOM elements per data point`);
+    }, 1000);
+  }
+}, [meterIsFetching, groupIsFetching, datasets, meterArgs, groupArgs]);
+```
+
+## Advanced Analysis with Long Animation Frames (LoAF)
+
+Long Animation Frames (LoAF) are critical to performance analysis because they help developers detect frame rendering that significantly exceeds ideal responsiveness thresholds (typically 50ms). Frames longer than this threshold can make applications feel sluggish or unresponsive, negatively impacting user experience. By employing LoAF, developers gain insights into specific performance bottlenecks occurring during rendering cycles. The API provides detailed metadata such as total duration, blocking duration (time spent blocking high-priority tasks), timestamps of UI interactions, and script execution details, enabling precise identification and subsequent optimization of problematic code.
+
+```javascript
+function initPerformanceObserver() {  
+  if (observerInitialized || typeof PerformanceObserver === 'undefined') return;
+
+  obs = new PerformanceObserver((list) => {  
+    for (const entry of list.getEntries()) {  
+      console.log(`entry.duration=${entry.duration.toFixed(1)}ms`, entry);  
+      realRender = Math.max(realRender, entry.duration);  
+    }  
+  });
+
+  obs.observe({ type: 'long-animation-frame' });  
+  observerInitialized = true;  
+}
+```
+
+## Performance Test Scenarios
+
+| Test Scenario | Meter ID | Meter Names | Data Points | Time Range | Days | Render Time (Ms) | DOM Total Elements | Dom Bar Elements |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Sin Amp 1 kWh - Stress Test Single Bar | 22 | Sin Amp 1 kWh | 731 | 2020-01-01 to 2022-01-02 | 1 | 2425.2 | 9015 | 1462 |
+| Sin Amp 1 kWh - Stress Test Week Bar | 22 | Sin Amp 1 kWh | 104 | 2020-01-01 to 2022-01-02 | 7 | 295.5 | 1498 | 208 |
+| Sin Amp 1 kWh - Stress Test 4 Weeks | 22 | Sin Amp 1 kWh | 26 | 2020-01-01 to 2022-01-02 | 28 | 126 | 553 | 52 |
+| Sin Amp 1 kWh, Sin Amp 2 kWh, Sin Amp 3 kWh - Highest Data Volume - Single Bar | 22,26,27 | Sin Amp 1 kWh; Sin Amp 2 kWh; Sin Amp 3 kWh | 2193 | 2020-01-01 to 2022-01-02 | 1 | 5737 | 26,591 | 4,386 |
+| Sin Amp 1 kWh, Sin Amp 2 kWh, Sin Amp 3 kWh - Highest Data Volume - Week Bar | 22,26,27 | Sin Amp 1 kWh; Sin Amp 2 kWh; Sin Amp 3 kWh | 312 | 2020-01-01 to 2022-01-02 | 7 | 1111 | 4011 | 936 |
+| Sin Amp 1 kWh, Sin Amp 2 kWh, Sin Amp 3 kWh - Highest Data Volume - 4 Week Bar | 22,26,27 | Sin Amp 1 kWh; Sin Amp 2 kWh; Sin Amp 3 kWh | 78 | 2020-01-01 to 2022-01-02 | 28 | 322.8 | 1209 | 156 |
+| Natural Gas BTU in Dollar - Minimal Code | 8 | Natural Gas BTU in Dollar | 5 | 2020-01-01 to 2022-01-02 | 1 | 150.5 | 324 | 10 |
+| Natural Gas BTU in Dollar - Error with 0 Data Points | 8 | Natural Gas BTU in Dollar | 0 | 2020-01-01 to 2022-01-02 | 7 | 57.8 | 0 | 0 |
+
+## Critical Findings
+
+A significant Long Animation Frame was identified during this analysis:
+
+* **Duration**: 5737.0ms  
+* **Blocking Duration**: 5676.5ms (99% of render time)  
+* **scriptDuration**: 5ms, forcedLayout: 0ms  
+* **Data Volume**: 2193 points × 3 meters
+
+## DOM Element Analysis
+
+Our DOM element counting tests revealed a significant issue with how Plotly generates SVG elements:
+
+* **Expected DOM Elements**: 6,579 (calculated as 2193 data points × 3 meters)  
+* **Actual DOM Elements**: 26,591 (4× more than expected)  
+* **Bar Elements**: 4,386 (approximately 2 per data point)  
+* **Supporting Elements**: 22,205   
+* **DOM Element Ratio**: 12.13 DOM elements created per data point
+
+This high ratio of DOM elements per data point explains the severe performance degradation. For every visible bar in the chart, Plotly creates approximately 12 DOM elements under the hood. These include not only the visible bars but also supporting elements like event listeners, tooltip containers, clipping masks, positioning containers, and accessibility elements.
+
+## Main Thread Saturation
+
+The main JavaScript thread is blocked for 5.6+ seconds during rendering, preventing all user interaction during this period. This creates the perception of an unresponsive application.
+
+## DOM Element Proliferation
+
+The chart creates far more DOM elements than expected, with each data point requiring multiple supporting elements. Each of these requires memory allocation, styling, and positioning within the document flow, creating severe rendering bottlenecks at scale.
+
+## Limitations of Plotly.js Bar Charts
+
+The official Plotly documentation specifically mentions "implement WebGL for increased speed, improved interactivity, and the ability to plot even more data" Plotly but only lists scatter plots (scattergl) as WebGL-enabled, not bar charts.
+
+This documentation explicitly states that "scattergl charts render an order of magnitude faster than their SVG counterparts." Plotly and specifically notes that "All 3D charts in plotly.js are rendered with WebGL," implying that standard 2D charts like bar charts are not. **Which is why 3D maps render faster than Bar Charts**. 
+
+- [https://plotly.com/javascript/](https://plotly.com/javascript/) and https://plotly.com/javascript/webgl-vs-svg/
+
+In this forum thread, a user specifically asks about why Plotly.js doesn't have WebGL versions of bar charts, noting that bar charts "could also get slow if containing a lot of bar DOM nodes" Plotly, which confirms they are rendered as DOM/SVG elements rather than using WebGL.
+
+https://community.plotly.com/t/webgl-for-bar-line-charts/3518
+
+## Alternative High-Performance Bar Chart Solutions
+
+Given the performance limitations of Plotly.js, there may be documentation in the d3.js for more optimized bar graph generation.
+
+## Conclusion
+
+The proposed optimizations and alternative solutions outlined in this report are expected to substantially improve performance, ensuring smoother user interactions and rapid rendering times for complex datasets.
+
+
+
+# Google Lighthouse Findings - Resolved
 
 At times, when displaying bar graphs on a daily frequency, there was noticeable lag between the query completion and the graph being rendered on the client side. To investigate this, Google's Lighthouse browser tool was used. Lighthouse is a performance analysis tool built into Chrome upon installation. It can be used as an extension in other Chrome-based browsers, but it can be used as a browser tool in Google Chrome. It is highly recommended that users use Google Chrome to test with this tool.
 
