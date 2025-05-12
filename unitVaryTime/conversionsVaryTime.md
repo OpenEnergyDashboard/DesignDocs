@@ -459,3 +459,96 @@ These notes were added during review but may not be complete:
 
 - The readings table will not include the conversion. Readings are stored in the meter unit and converted for graphing.
 - It is suspected that the final select for readings needs to be modified for multiple conversions that change over time.
+
+## Update May 2025
+
+
+### Table Modifications
+The CIK table has been modified to include time-based parameters. Specifically, we added:
+
+- ``start_time``: Defines when a conversion begins being valid.
+- ``end_time``: Defines when a conversion stops being valid.
+
+These columns use timestamps type with defaults of ``-infinity`` and ``infinity`` respectively for conversions that don't vary with time, essentially maintaining backward compatibility with the existing system.
+
+The updated CIK table now looks like:
+
+```sql
+CREATE TABLE IF NOT EXISTS cik (
+    source_id INTEGER REFERENCES units(id),
+    destination_id INTEGER REFERENCES units(id),
+    slope FLOAT,
+    intercept FLOAT,
+    start_time TIMESTAMP DEFAULT '-infinity',
+    end_time TIMESTAMP DEFAULT 'infinity',
+    PRIMARY KEY (source_id, destination_id, start_time)
+);
+```
+Note that the primary key has been modified to include ``start_time`` to allow multiple conversions rated for the same source across different time periods.
+
+### Integration with Readings
+We maintained the existing readings table structure rather than adding a direct conversion reference to it. As noted in the design document, “Readings are stored in the meter unit and converted for graphing.” This decision preserves the separation of concerns in the database design while allowing for the new time-varying functionality.
+
+### SQL Function Updates
+We updated the ``meter_line_readings_unit`` function in ``create_readings_views.sql`` to incorporate time-based conversion lookups. The key modification was changing the ``JOIN`` condition to include time range overlap check:
+
+From:
+```sql
+INNER JOIN cik c on c.source_id = m.unit_id AND c.destination_id = graphic_unit_id
+```
+
+To:
+```sql
+INNER JOIN cik c on c.source_id = m.unit_id AND c.destination_id = graphic_unit_id AND tsrange(c.start_time, c.end_time, '()') && hourly.time_interval
+```
+We also updated the ``daily_readings_unit`` to incorporate smaller time-based conversion functionality.
+
+### Timestamp Handling
+The implementation successfully supports ``-infinity`` and ``infinity`` timestamp values, allowing for both:
+
+- Finite time ranges for conversions that changes at specific points in time.
+
+- Infinite ranges for conversions that apply for all time
+
+
+We enforced the no gaps are allowed in conversion periods for a given source pair. This ensures that a valid conversion is always available for any timestamp.  
+
+## Testing Results
+
+### Hourly Readings Tests w/ Time Varying
+
+Query: ``select meter_line_readings_unit('{24}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
+
+| Timespan | Points of data | Time (ms) PC #1 | Time (with caching) | Time (ms) PC #2| Time (with caching) |
+|----------|---------------|---------------------|---------------------|----------------------|---------------------|
+| 1 Day    | 24            | 500.891 ms          | 315.327 ms          | 131.380 ms           | 130 ms              |
+| 7 Days   | 167           | 847.195 ms          | 841.690 ms          | 437.492 ms           | 434.791 ms          |
+| 1 Month  | 744           | 3282.888 ms         | 3279.741 ms         | 1672.792 ms          | 1609.225 ms         |
+| 3 Months | 2184          | 9306.561 ms         | 9153.339 ms         | 4618.551 ms          | 4536.902 ms         |
+| 6 Months | 4368          | 18871.800 ms        | 18821.291 ms        | 7930.092 ms          | 7834.928 ms         |
+| 1 Year   | 8784          | 37837.269 ms        | 36410.803 ms        | 17335.164 ms         | 17301.856 ms        |
+| 2 Years  | 17540         | 64763.023 ms        | 76054.927 ms        | 47652.153 ms         | 45804.863 ms        |
+
+### Daily Readings Tests w/ Time Varying
+
+Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
+
+| Timespan | Points of data | Time (ms) PC #2 | Time(with Caching) |
+|----------|---------------|-----------|-------------------|
+| 6 Months | 182 days      | 36.058 ms | 35.360 ms         |
+| 1 Year   | 365 days      | 60.254 ms | 57.114 ms         |
+| 1.5 Years| 547 days      | 82.422 ms | 81 ms             |
+| 2 Years  | 736 days      | 108.398 ms| 106.645 ms        |
+
+Note: Both queries have different numbers at the beginning. Each environment that you run OED on may have different meters numbers. For the meter, we used meter "Sin Amp 1 kwh" ({24} for the first query, {25} for the second query) and for the units we used "kWh" (it is {1} for both queries, but may vary on different environments).
+
+For detailed instructions on how to reproduce these test results, see the [Test Instructions](timeVaryingTesting.md) document.
+
+### Notes
+- The timing appears to be linear as data volume increases. There is also a benefit to caching as it shows improvements across all tests. For shorter timeframes (1 day), caching does provide a significant benefit, while for longer timeframes the benefit is less pronounced but still valuable.
+
+- Daily readings are substantially faster than hourly readings. For 2-year timeframes with hourly data (around 17,540 points), query times approach or exceed 1 minute, which might be the upper limit of user timeframe interaction. 
+
+- There is also a noticeable performance difference between two different PC's. PC #2 is roughly 2-2.5x faster than PC #1. This can highlight a potential importance of hardware consideration when it comes to deploying a solution in various environments.
+
+---
