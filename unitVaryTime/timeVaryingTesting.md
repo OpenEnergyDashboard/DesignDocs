@@ -1,5 +1,7 @@
 # Time Varying Conversion Test Instructions
 
+*Written by GitHub users: @SGalindo831, @KobiMurakami*
+
 This document provides detailed instructions for reproducing the test results reported in the [Time Varying Conversions Implementation](conversionsVaryTime.md).
 
 ## Creating Test Data
@@ -84,7 +86,8 @@ If there is items in your `` CIK `` simply run to remove anything from the `` CI
 delete from cik where source_id = 10 and destination_id = 1; 
 ```
 
-Note: In the queries provided above, we have a `` source_id = 10 `` and `` destination_id = 1 ``. The `` source_id `` being used for this is `` Electric_Utility `` and `` destination_id `` being used is `` Electric Utility kWh ``. 
+Note: In the queries provided above, we have `source_id = 10` and `destination_id = 1`. The `source_id` being used is `"Electric_Utility"` and the `destination_id` is `"Electric Utility kWh"`, which represents a graphic unit in kilowatt-hours (kWh).
+
  To find the right `` source_id ``, enter the following in your OED Database Shell: `` select id,name from units; `` . For the `` destination_id `` enter the following: `` select id,name from meters; ``
 
  4. Once you have the proper `` source_id ``, `` destination_id ``, and cleared the `` CIK `` table. Navigate to the test data you saved from the previous section. Simply select all of the data and copy and paste it into the OED Database Shell. This may take a while depending on how much data you are pasting into your shell. Once all of the data has been pasted, simply hit "Enter" and it should insert all of the data into the `` CIK `` table. To check the amount of data that was inserted, simply run the following to to get a count of the data.
@@ -113,3 +116,6 @@ select id,name from meters;
  - Also, when generating the test data, make sure you are using the proper step. If generated test data is using "day" `` stepTime ``, use the first `` daily `` query above. If using "hour" `` stepTime ``, use the second `` hourly `` query above.
 
 6. After running the last query, you now have begun testing the query. Simply hold `` Space `` to see all of the test data that was inserted, if you don't want to see the test data, simply press `` Q `` and it should quit the query and display the time it took to run the query. Make sure to run the same `` select_line_readings `` 2-3 times to ensure caching. The completion times will vary from the first time your run the query compared to the second or third time.
+
+*Documentation written by @SGalindo831 and @KobiMurakami*
+---
