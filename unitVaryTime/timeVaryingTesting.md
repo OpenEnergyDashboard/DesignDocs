@@ -1,6 +1,5 @@
 # Time Varying Conversion Test Instructions
 
-*Written by GitHub users: @SGalindo831, @KobiMurakami*
 
 This document provides detailed instructions for reproducing the test results reported in the [Time Varying Conversions Implementation](conversionsVaryTime.md).
 
@@ -117,5 +116,4 @@ select id,name from meters;
 
 6. After running the last query, you now have begun testing the query. Simply hold `` Space `` to see all of the test data that was inserted, if you don't want to see the test data, simply press `` Q `` and it should quit the query and display the time it took to run the query. Make sure to run the same `` select_line_readings `` 2-3 times to ensure caching. The completion times will vary from the first time your run the query compared to the second or third time.
 
-*Documentation written by @SGalindo831 and @KobiMurakami*
 ---

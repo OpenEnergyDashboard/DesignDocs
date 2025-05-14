@@ -461,7 +461,6 @@ These notes were added during review but may not be complete:
 - It is suspected that the final select for readings needs to be modified for multiple conversions that change over time.
 
 ## Update May 2025
-*Contributed by GitHub users: @SGalindo831, @KobiMurakami*
 
 
 ### Table Modifications
@@ -552,5 +551,4 @@ For detailed instructions on how to reproduce these test results, see the [Test 
 
 - There is also a noticeable performance difference between two different PC's. PC #2 is roughly 2-2.5x faster than PC #1. This can highlight a potential importance of hardware consideration when it comes to deploying a solution in various environments.
 
-*Documentation written by @SGalindo831 and @KobiMurakami*
 ---
