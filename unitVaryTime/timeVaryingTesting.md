@@ -85,9 +85,9 @@ If there is items in your `` CIK `` simply run to remove anything from the `` CI
 delete from cik where source_id = 10 and destination_id = 1; 
 ```
 
-Note: In the queries provided above, we have `source_id = 10` and `destination_id = 1`. The `source_id` being used is `"Electric_Utility"` and the `destination_id` is `"Electric Utility kWh"`, which represents a graphic unit in kilowatt-hours (kWh).
+Note: In the queries provided above, we have `source_id = 10` and `destination_id = 1`. The `source_id` being used is `"Electric_Utility"` and the `destination_id` is `"kWh"`, which represents a graphic unit in kilowatt-hours (kWh).
 
- To find the right `` source_id ``, enter the following in your OED Database Shell: `` select id,name from units; `` . For the `` destination_id `` enter the following: `` select id,name from meters; ``
+ To find the right `` source_id `` and ``destination_id,`` enter the following in your OED Database Shell: `` select id,name from units; ``. Both source and destination IDs come from the units table since they represent unit types, not specific meters.
 
  4. Once you have the proper `` source_id ``, `` destination_id ``, and cleared the `` CIK `` table. Navigate to the test data you saved from the previous section. Simply select all of the data and copy and paste it into the OED Database Shell. This may take a while depending on how much data you are pasting into your shell. Once all of the data has been pasted, simply hit "Enter" and it should insert all of the data into the `` CIK `` table. To check the amount of data that was inserted, simply run the following to to get a count of the data.
 
