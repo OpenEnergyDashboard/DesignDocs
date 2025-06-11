@@ -13,6 +13,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [postgresQueryOptimization.md](./postgresQueryOptimization/postgresQueryOptimization.md): how to analyze time spent on OED queries and the results of doing this.
 - [unitVaryTime/conversionsVaryTime.md](./unitVaryTime/conversionsVaryTime.md): Documents ideas on how to deal with conversions that vary with time including area, baseline, weather, etc.
 - [views/views.md](./views/views.md): Documents how to modify views used for readings.
+- [groupVisualization/groupVisualize.md](./groupVisualization/groupVisualization.md): Documents new group visualization to show relationship of meters and groups.
 - [todoComments/todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
 - [uiTesting/uiTesting.md](./uiTesting/UITesting.md): Doing UI testing on OED.
 - [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
