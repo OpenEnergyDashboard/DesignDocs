@@ -8,6 +8,8 @@ OED added a visualization to show the relationship of units and conversions. In 
 
 It shows the relationship between the meters (on left in blue) and the groups (on right in yellow). It also shows that groups can be included in other groups. This is an example of the type of graphic desired but the one in OED will differ in some details.
 
+This change is covered by [issue #1496](https://github.com/OpenEnergyDashboard/OED/issues/1496).
+
 ## Idea
 
 A graph will be used to represent the meters and groups in the new graphic. This will allow for similar software to the graph used for the current units and conversions graphic. Each vertex will be a meter or group and a line indicates if the meter or group is included in the group. When the graph is displayed, the meters and groups will be different colors (as above but other colors can be used and the text does not have to be the same color). If possible, they will be different shapes. Unlike the picture above, the OED graphic will not have different colored lines and the placement probably will be the default from the graphic package rather than initially ordered as in the picture. The line will have an arrow from the meter/group to the group that includes it. Note that each meter and group will only be a single vertex in the graph (as in the picture) so there may be many lines from any given vertex. It might be best if meters that are not included in any group are not shown since they would have no lines coming from them.
