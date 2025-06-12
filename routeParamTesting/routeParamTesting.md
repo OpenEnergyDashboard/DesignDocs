@@ -9,6 +9,8 @@ Many routes in OED accept parameters to know what should be done. In general, OE
 
 The current code does a reasonable job in testing values but it is not complete. In particular, it is not careful to avoid requests that are malicious attacks. Furthermore, there is no systematic testing to verify that the validation performs as desired. The goal is to address these limitations via systematic testing using our standard Chai/Mocha frameworks.
 
+[issue 1497](https://github.com/OpenEnergyDashboard/OED/issues/1497) covers this work.
+
 ## Current status
 
 A developer has worked (and might still be working) to create a route parameter testing methodology and used it to test the units route. This is a similar idea to the OED testing of getting graphic data from readings or systematic UI testing. The code may already be in as a pull request or merged when people do this work so please check with the project to find the best place to start.
