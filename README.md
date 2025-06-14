@@ -17,6 +17,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [routeParamTesting/routeParamTesting.md](./routeParamTesting/routeParamTesting.md): Documents planned systematic testing of route parameters.
 - [todoComments/todoComments.md](./todoComments/todoComments.md): Documents TODO comments across the codebase, providing status updates and linking related issues.
 - [uiTesting/uiTesting.md](./uiTesting/UITesting.md): Doing UI testing on OED.
+- [latestChartlink/latestChartlink.md](./latestChartlink/latestChartlink.md): Documents extending chart links to support moving to current time to get latest readings.
 - [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
