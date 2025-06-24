@@ -562,7 +562,7 @@ Below are the testing results after incorporating the May 2025 changes. These re
 ### Hourly Readings Tests w/ Time Varying
 
 Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
-| Timespan | Points of data| Time (ms) PC #1   | Time (with caching) | Time (ms) PC #2      | Time (with caching) | Time (ms) PC #3       | Time (with caching) |
+| Timespan | Points of data| Time (ms) PC #1  | Time (with caching) | Time (ms) PC #2      | Time (with caching) | Time (ms) PC #3       | Time (with caching) |
 |----------|---------------|---------------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
 | 1 Day    | 24            | 111.166          | 143.073         | 281.423          | 65.789           | 157.324          | 115.315 m         |       
 | 7 Days   | 167           | 537.052          | 599.264          | 327.736          | 271.153          | 378.85             | 376.068           |        
@@ -578,9 +578,9 @@ Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'dai
 
 | Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) | Time (ms) PC #2 | Time(with Caching) | Time (ms) PC #3 | Time(with Caching) |
 |----------|----------------|-----------|-------------------|----------------------|---------------------|----------------------|---------------------|
-| 6 Months | 182 days       | 48.474  ms| 76.159  ms       | 13.258  ms           | 20.82  ms           | 36.774 ms            | 34.135 ms           |
-| 1 Year   | 365 days       | 108.081 ms| 108.288 ms       | 46.332  ms           | 60.429 ms           | 56.004 ms            | 54.74  ms           |
-| 1.5 Years| 547 days       | 105.243 ms| 112.464 ms       | 82.309  ms           | 75.299 ms           | 79.511 ms            | 76.441 ms           |
-| 2 Years  | 736 days       | 132.841 ms| 125.611 ms       | 99.994  ms           | 90.001 ms           | 97.683 ms            | 97.414 ms           |
+| 6 Months | 182 days       | 48.474  | 76.159         | 13.258             | 20.82             | 36.774             | 34.135            |
+| 1 Year   | 365 days       | 108.081 | 108.288        | 46.332             | 60.429            | 56.004             | 54.74             |
+| 1.5 Years| 547 days       | 105.243 | 112.464        | 82.309             | 75.299            | 79.511             | 76.441            |
+| 2 Years  | 736 days       | 132.841 | 125.611        | 99.994             | 90.001            | 97.683             | 97.414            |
 
 ---
