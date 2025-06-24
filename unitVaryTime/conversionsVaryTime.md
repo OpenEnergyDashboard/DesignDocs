@@ -555,7 +555,7 @@ For detailed instructions on how to reproduce these test results, see the [Test 
 
 
 ### Preliminary Work
-We began by integrating the CIK table modifications, integration with readings, SQL function updates, and timestamp handling changes as outlined in "Update May 2025". Following this, we were able to replicate consistent testing results, specifically for hourlyu and daily readings with time-varying inputs, by following the [Test Instructions]([url](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/unitVaryTime/timeVaryingTesting.md)).
+We began by integrating the CIK table modifications, integration with readings, SQL function updates, and timestamp handling changes as outlined above in **Update May 2025**. Following this, we were able to replicate consistent testing results, specifically for hourlyu and daily readings with time-varying inputs, by following the [Test Instructions]([url](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/unitVaryTime/timeVaryingTesting.md)).
 
 Below are the testing results after incorporating the May 2025 changes. These results will serve as a baseline to track progress as the team works to improve database runtime performance.
 
