@@ -559,12 +559,11 @@ We began by integrating the CIK table modifications, integration with readings, 
 
 Below are the testing results after incorporating the May 2025 changes. These results will serve as a baseline to track progress as the team works to improve database runtime performance.
 
-# Hourly Readings Tests w/ Time Varying
+### Hourly Readings Tests w/ Time Varying
 
 Query: ``select meter_line_readings_unit('{24}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
-
-| Timespan | Points of data| Time (ms) PC #1     | Time (with caching) | Time (ms) PC #2| Time (with caching) | Time (ms) PC #3 | Time (with caching) | Time (ms) PC #4| Time (with caching) |
-|----------|---------------|---------------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
+| Timespan | Points of data | Time (ms) PC #1 | Time (with caching) | Time (ms) PC #2| Time (with caching) |
+|----------|---------------|---------------------|---------------------|----------------------|---------------------|
 | 1 Day    | 24            | 281.423 ms          | 65.789 ms           |       
 | 7 Days   | 167           | 327.736 ms          | 271.153 ms          |        
 | 1 Month  | 744           | 1216.803 ms         | 1202.195 ms         |     
@@ -573,11 +572,11 @@ Query: ``select meter_line_readings_unit('{24}', 1, '-infinity', 'infinity', 'ho
 | 1 Year   | 8784          | 15432.595 ms        | 15693.478 ms        | 
 | 2 Years  | 17540         |                     |                     | 
 
-# Daily Readings Tests w/ Time Varying
+### Daily Readings Tests w/ Time Varying
 
 Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
 
-| Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) | Time (ms) PC #2 | Time(with Caching) | Time (ms) PC #3 | Time(with Caching) | Time (ms) PC #4 | Time(with Caching) | 
+| Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) |
 |----------|---------------|-----------|-------------------|
 | 6 Months | 182 days      | 13.258 ms | 20.82 ms          |
 | 1 Year   | 365 days      | 46.332 ms | 60.429 ms         |
