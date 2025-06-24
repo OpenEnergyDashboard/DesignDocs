@@ -576,8 +576,8 @@ Query: ``select meter_line_readings_unit('{24}', 1, '-infinity', 'infinity', 'ho
 
 Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
 
-| Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) |
-|----------|---------------|-----------|-------------------|
+| Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) | Time (ms) PC #1 | Time(with Caching) |
+|----------|---------------|-----------|-------------------|----------------------|---------------------|
 | 6 Months | 182 days      | 13.258 ms | 20.82 ms          |
 | 1 Year   | 365 days      | 46.332 ms | 60.429 ms         |
 | 1.5 Years| 547 days      | 82.309 ms | 75.299 ms         |
