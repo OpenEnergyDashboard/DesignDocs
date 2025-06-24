@@ -563,7 +563,7 @@ Below are the testing results after incorporating the May 2025 changes. These re
 
 Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
 | Timespan | Points of data| Time (ms) PC #1     | Time (with caching) | Time (ms) PC #2      | Time (with caching) | Time (ms) PC #3       | Time (with caching) |
-|----------|---------------|-------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
+|----------|---------------|-----------|---------------------|----------------------|---------------------| ----------------------|---------------------|
 | 1 Day    | 24            | 111.166   ms        | 143.073   ms        | 281.423  ms          | 65.789    ms        | 157.324   ms          | 115.315 ms          |       
 | 7 Days   | 167           | 537.052   ms        | 599.264   ms        | 327.736  ms          | 271.153   ms        | 378.85    ms          | 376.068 ms          |        
 | 1 Month  | 744           | 2466.772  ms        | 2483.517  ms        | 1216.803 ms          | 1202.195  ms        | 1648.254  ms          | 1654.315 ms         |     
