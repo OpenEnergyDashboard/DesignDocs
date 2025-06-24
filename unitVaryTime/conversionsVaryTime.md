@@ -562,8 +562,8 @@ Below are the testing results after incorporating the May 2025 changes. These re
 ### Hourly Readings Tests w/ Time Varying
 
 Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
-| Timespan | Points of data | Time (ms) PC #1 | Time (with caching) | Time (ms) PC #2| Time (with caching) | Time (ms) PC #3| Time (with caching) |
-|----------|---------------|---------------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
+| Timespan | Points of data| Time (ms) PC #1     | Time (with caching) | Time (ms) PC #2      | Time (with caching) | Time (ms) PC #3       | Time (with caching) |
+|----------|---------------|-------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
 | 1 Day    | 24            | 111.166   ms        | 143.073   ms        | 281.423  ms          | 65.789    ms        | 157.324   ms          | 115.315 ms          |       
 | 7 Days   | 167           | 537.052   ms        | 599.264   ms        | 327.736  ms          | 271.153   ms        | 378.85    ms          | 376.068 ms          |        
 | 1 Month  | 744           | 2466.772  ms        | 2483.517  ms        | 1216.803 ms          | 1202.195  ms        | 1648.254  ms          | 1654.315 ms         |     
@@ -577,10 +577,10 @@ Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'ho
 Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
 
 | Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) | Time (ms) PC #2 | Time(with Caching) | Time (ms) PC #3 | Time(with Caching) |
-|----------|---------------|-----------|-------------------|----------------------|---------------------|----------------------|---------------------|
-| 6 Months | 182 days      | 48.474  ms | 76.159  ms       | 13.258  ms           | 20.82  ms           | 36.774 ms            | 34.135 ms           |
-| 1 Year   | 365 days      | 108.081 ms | 108.288 ms       | 46.332  ms           | 60.429 ms           | 56.004 ms            | 54.74  ms           |
-| 1.5 Years| 547 days      | 105.243 ms | 112.464 ms       | 82.309  ms           | 75.299 ms           | 79.511 ms            | 76.441 ms           |
-| 2 Years  | 736 days      | 132.841 ms | 125.611 ms       | 99.994  ms           | 90.001 ms           | 97.683 ms            | 97.414 ms           |
+|----------|----------------|-----------|-------------------|----------------------|---------------------|----------------------|---------------------|
+| 6 Months | 182 days       | 48.474  ms| 76.159  ms       | 13.258  ms           | 20.82  ms           | 36.774 ms            | 34.135 ms           |
+| 1 Year   | 365 days       | 108.081 ms| 108.288 ms       | 46.332  ms           | 60.429 ms           | 56.004 ms            | 54.74  ms           |
+| 1.5 Years| 547 days       | 105.243 ms| 112.464 ms       | 82.309  ms           | 75.299 ms           | 79.511 ms            | 76.441 ms           |
+| 2 Years  | 736 days       | 132.841 ms| 125.611 ms       | 99.994  ms           | 90.001 ms           | 97.683 ms            | 97.414 ms           |
 
 ---
