@@ -600,8 +600,8 @@ Several indices were added to the cik, meters, daily_readings_unit, and hourly_r
 
 By executing the meter_line_readings_unit function with an hourly step and enabling automatic query performance logging, it was determined that PostgreSQL utilized the following indexes to optimize performance:
 - idx_hourly_readings_unit_meter_time ( This index already exist )
-- idx_hourly_readings_time_interval_gist (```sql CREATE INDEX CONCURRENTLY idx_hourly_readings_time_interval_gist ON hourly_readings_unit USING GIST (time_interval); ```)
-- idx_cik_tsrange_overlap (```sql CREATE INDEX CONCURRENTLY idx_cik_tsrange_overlap ON cik USING GIST (tsrange(start_time, end_time, '()')); ```)
-- idx_cik_source_dest_time_range (```sql CREATE INDEX CONCURRENTLY idx_cik_source_dest_time_range ON cik (source_id, destination_id, start_time, end_time); ```)
+- idx_hourly_readings_time_interval_gist (``` CREATE INDEX CONCURRENTLY idx_hourly_readings_time_interval_gist ON hourly_readings_unit USING GIST (time_interval); ```)
+- idx_cik_tsrange_overlap (``` CREATE INDEX CONCURRENTLY idx_cik_tsrange_overlap ON cik USING GIST (tsrange(start_time, end_time, '()')); ```)
+- idx_cik_source_dest_time_range (``` CREATE INDEX CONCURRENTLY idx_cik_source_dest_time_range ON cik (source_id, destination_id, start_time, end_time); ```)
 
 Significant improvements in query performance were observed, though results were inconsistent. Further testing across multiple systems is required to validate the effectiveness of these indices.
