@@ -584,3 +584,24 @@ Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'dai
 | 2 Years  | 736 days       | 132.841 | 125.611        | 99.994             | 90.001            | 97.683             | 97.414            |
 
 ---
+
+### Automatic Query Performance Logging
+
+The following settings enable automatic logging of execution plans for all SQL statements, including those nested within functions or triggers:
+
+LOAD 'auto_explain';
+SET auto_explain.log_min_duration = 0;       -- Log all queries, regardless of duration
+SET auto_explain.log_nested_statements = on; -- Include nested statements in logs
+
+### Added Indices 
+
+Several indices were added to the cik, meters, daily_readings_unit, and hourly_readings_unit tables. The following screenshot shows all added and preexisting indices across the 4 relevant tables:
+![Index](https://github.com/user-attachments/assets/168385c8-4064-45db-a45c-1feefd5ff4aa)
+
+By executing the meter_line_readings_unit function with an hourly step and enabling automatic query performance logging, it was determined that PostgreSQL utilized the following indexes to optimize performance:
+- idx_hourly_readings_unit_meter_time ( This index already exist )
+- idx_hourly_readings_time_interval_gist (```sql CREATE INDEX CONCURRENTLY idx_hourly_readings_time_interval_gist ON hourly_readings_unit USING GIST (time_interval); ```)
+- idx_cik_tsrange_overlap (```sql CREATE INDEX CONCURRENTLY idx_cik_tsrange_overlap ON cik USING GIST (tsrange(start_time, end_time, '()')); ```)
+- idx_cik_source_dest_time_range (```sql CREATE INDEX CONCURRENTLY idx_cik_source_dest_time_range ON cik (source_id, destination_id, start_time, end_time); ```)
+
+Significant improvements in query performance were observed, though results were inconsistent. Further testing across multiple systems is required to validate the effectiveness of these indices.
