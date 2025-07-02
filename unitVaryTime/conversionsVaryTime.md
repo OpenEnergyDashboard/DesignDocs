@@ -587,8 +587,6 @@ Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'dai
 ** PC #2: Macbook M1 Pro 2021 8-Core Intel 16 GB RAM
 *** PC #3: 
 
----
-
 ### Automatic Query Performance Logging
 
 The following settings enable automatic logging of execution plans for all SQL statements, including those nested within functions or triggers:
