@@ -562,7 +562,7 @@ Below are the testing results after incorporating the May 2025 changes. These re
 ### Hourly Readings Tests w/ Time Varying
 
 Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
-| Timespan | Points of data| Time (ms) PC #1  | Time (with caching) | Time (ms) PC #2      | Time (with caching) | Time (ms) PC #3       | Time (with caching) |
+| Timespan | Points of data| Time (ms) PC #1*  | Time (with caching) | Time (ms) PC #2**      | Time (with caching) | Time (ms) PC #3***       | Time (with caching) |
 |----------|---------------|---------------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
 | 1 Day    | 24            | 111.166          | 143.073         | 281.423          | 65.789           | 157.324          | 115.315          |       
 | 7 Days   | 167           | 537.052          | 599.264          | 327.736          | 271.153          | 378.85             | 376.068           |        
@@ -576,13 +576,15 @@ Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'ho
 
 Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
 
-| Timespan | Points of data | Time (ms) PC #1 | Time(with Caching) | Time (ms) PC #2 | Time(with Caching) | Time (ms) PC #3 | Time(with Caching) |
+| Timespan | Points of data | Time (ms) PC #1* | Time(with Caching) | Time (ms) PC #2** | Time(with Caching) | Time (ms) PC #3*** | Time(with Caching) |
 |----------|----------------|-----------|-------------------|----------------------|---------------------|----------------------|---------------------|
 | 6 Months | 182 days       | 48.474  | 76.159         | 13.258             | 20.82             | 36.774             | 34.135            |
 | 1 Year   | 365 days       | 108.081 | 108.288        | 46.332             | 60.429            | 56.004             | 54.74             |
 | 1.5 Years| 547 days       | 105.243 | 112.464        | 82.309             | 75.299            | 79.511             | 76.441            |
 | 2 Years  | 736 days       | 132.841 | 125.611        | 99.994             | 90.001            | 97.683             | 97.414            |
 
+* Macbook Pro 2019 2.3 GHz 8-Core Intel Core i9 (9th gen) 32 GB RAM (DDR4)
+** Macbook M1 Pro 2021 8-Core Intel 16 GB RAM
 ---
 
 ### Automatic Query Performance Logging
