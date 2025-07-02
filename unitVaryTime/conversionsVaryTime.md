@@ -584,8 +584,8 @@ Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'dai
 | 2 Years  | 736 days       | 132.841 | 125.611        | 99.994             | 90.001            | 97.683             | 97.414            |
 
 <p>&#42; PC #1: Macbook Pro 2019 2.3 GHz 8-Core Intel Core i9 (9th gen) 32 GB RAM (DDR4)</p>
-** PC #2: Macbook M1 Pro 2021 8-Core Intel 16 GB RAM
-*** PC #3: 
+<p>** PC #2: Macbook M1 Pro 2021 8-Core Intel 16 GB RAM</p>
+<p>*** PC #3: </p>
 
 ### Automatic Query Performance Logging
 
