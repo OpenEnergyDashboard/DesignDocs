@@ -607,3 +607,37 @@ By executing the meter_line_readings_unit function with an hourly step and enabl
 - idx_cik_source_dest_time_range (``` CREATE INDEX CONCURRENTLY idx_cik_source_dest_time_range ON cik (source_id, destination_id, start_time, end_time); ```)
 
 Significant improvements in query performance were observed, though results were inconsistent. Further testing across multiple systems is required to validate the effectiveness of these indices.
+
+### Materialized Views
+
+This work was conducted in the following repository/branch:  
+🔗 [OED-backend: `views` branch](https://github.com/oed-csumb-su25/OED-backend/tree/views)
+
+We began by building on the previous group's implementation. Rather than embedding the conversion logic directly within the graphing functions, we refactored it into a materialized view—`meter_hourly_readings_unit_old`. This allowed hourly conversions to be precomputed and stored for improved performance. Additionally, a daily materialized view—`meter_daily_readings_unit`—was created to store daily aggregates of the converted hourly data. Notably, the daily view does not apply conversions directly; instead, it aggregates the already-converted hourly values.
+
+The graphing functions (`line`, `bar`, `3d`, and `compare`) were updated to retrieve converted readings from these views, eliminating the need to apply conversions on-the-fly during each query.
+
+Several indexes were evaluated to determine their impact on query performance. The testing process, including index definitions and timing results, is documented here:  
+🔗 [Index Testing Spreadsheet](https://docs.google.com/spreadsheets/d/1RVpVVMPu7ZK-7zjCAnnlf2Favma2tqBSxdXSHfdFtpw/edit?gid=0#gid=0)
+
+Based on these results, a composite index was selected for both the hourly and daily views to optimize filtering and ordering:
+
+```sql
+CREATE INDEX idx_meter_hourly_ordering 
+ON meter_hourly_readings_unit (meter_id, graphic_unit_id, lower(time_interval));
+```
+
+---
+
+### A New Approach
+
+During testing of the `meter_hourly_readings_unit_old` view, we discovered that its implementation of time-varying conversions only functioned correctly when each reading aligned perfectly with the duration of the applied conversions. For example, a 1-hour reading could be split by four 15-minute conversions, but the system failed when those conversions were of unequal lengths (e.g., two 15-minute conversions and one 30-minute conversion). This approach also failed when conversions partially overlapped readings or varied in duration.
+
+To address these limitations, a new view—`meter_hourly_readings_unit`—was developed. The logic from the `hourly_readings_unit` view (which stored unconverted hourly readings) was extracted and embedded into a Common Table Expression (CTE) within the new view. This allowed the new view to independently compute time-weighted conversions without relying on `meter_hourly_readings_unit_old`.
+
+However, further testing revealed limitations even in this improved approach. Specifically:
+- **Precision Loss:** Since conversions were applied to pre-averaged hourly readings, the results could deviate from what would have been computed using raw readings.
+- **Lack of Extremes:** It was not possible to derive accurate `min` and `max` rates without referencing the underlying raw data.
+
+These findings highlighted the trade-offs between performance and precision and motivated continued refinement of the conversion pipeline.
+
