@@ -45,16 +45,27 @@ Each request includes:
 
 **Access Requirements**: To update the OED collection in Postman, you'll need to be added to the **OED API** workspace. Access can only be granted by current workspace members.
 
-  1.	Choose the appropriate folder (or create a new one if needed).
-  2.	Right-click the folder and select **Add Request**.
-  3.	Name the request after the API endpoint.
-  4.	Set the HTTP method, URL, and any required headers.
-  5.	Add a JSON request body (if applicable).
-  6.  Send the request, then click **Save Response**, and give it a descriptive name.
-  7.  In the **Documentation** tab, add:
+  1.	Export the latest OED API collection from the link above, or pull the latest version from GitHub.
+  2.	Use a personal workspace so as not to affect the live OED collection.
+  3.	Choose the appropriate folder (or create a new one if needed).
+  4.	Right-click the folder and select **Add Request**.
+  5.	Name the request after the API endpoint.
+  6.	Set the HTTP method, URL, and any required headers.
+  7.	Add a JSON request body (if applicable).
+  8.  Send the request, then click **Save Response**, and give it a descriptive name.
+  9.  In the **Documentation** tab, add:
 
     - The purpose of this request
     - Any query parameters
     - Example request body
     - Example response 
-  8.	Save the request and commit/export your updated collection; however is appropriate to OED standards.
+  8.	Follow the instructions below to contribute your changes to the OED Collection.
+
+## Contribute to the OED Collection
+**Access Requirements**: To update the OED collection in Postman, you'll need to be added to the **OED API** workspace. Access can only be granted by current workspace members.
+
+	1. Export the latest OED API collection from the link above, or pull the latest version from GitHub.
+ 	2. Use a personal workspace so as not to affect the live OED collection.
+    3. After saving all changes, export as **Collection v2.1 JSON**.
+	4. Add the updated JSON file to the correct location in the git branch.
+ 	5. Open a pull request for review.
