@@ -1,11 +1,11 @@
-## Overview
+# Overview
 
-This Postman collection contains API endpoints for the new UI functionality that allows admin users to manage time-varying conversions and patterns over days and weeks. 
-It can be used to simplify verification and troubleshooting of API functionality, and as a foundation for future documentation of all OED (Operational Energy Dashboard) APIs.
+This Postman collection contains API endpoints for the new UI functionality that allows admin users to manage time-varying conversions and patterns over days and weeks.
+It can be used to simplify verification and troubleshooting of API functionality, and as a foundation for future documentation of all OED (Open Energy Dashboard) APIs.
 
-Postman OED Collection & API Documentation: https://documenter.getpostman.com/view/37855775/2sB3BDLXa7
+Postman OED Collection & API Documentation: [https://documenter.getpostman.com/view/37855775/2sB3BDLXa7](https://documenter.getpostman.com/view/37855775/2sB3BDLXa7)
 
-
+The [current JSON version of the Postman API documentation](OED.postman_collection.json) in this repository.
 
 ## Folder Structure
 
@@ -16,56 +16,54 @@ The collection is organized into folders corresponding to database tables:
 **conversions**: Define relationships between units.
 
 **conversion_segments**: Manage time-varying behavior for conversions. Each conversion spans from `-infinity` to `infinity`.
- 
+
 **day_patterns**: Each pattern is made up of one or more day_segments that together span from 0 to 24.
- 
+
 **day_segments**: Manage time-varying behavior for day segments.
- 
+
 **week_patterns**: Manage week patterns, comprised of multiple day patterns.
 
 Each request includes:
 
-	•	URL, HTTP method, and headers
-	•	Example request body
-	•	Example response
-
-
+- URL, HTTP method, and headers
+- Example request body
+- Example response
 
 ## How to Use the Collection
 
-	1.	Run the login request with admin credentials to obtain a temporary admin token (valid for 24 hours).
-	2.	Copy the returned token and update the `token_val` variable in the collection.
-	3.	Each request uses this via `token: {{token_val}}` in the header.
-	4.	Browse the folders to view and send example requests.
-	5.	Review response data to verify API behavior or troubleshoot issues.
-
-
+1. Run the login request with admin credentials to obtain a temporary admin token (valid for 24 hours).
+2. Copy the returned token and update the `token_val` variable in the collection.
+3. Each request uses this via `token: {{token_val}}` in the header.
+4. Browse the folders to view and send example requests.
+5. Review response data to verify API behavior or troubleshoot issues.
 
 ## Adding a New API Endpoint Request
 
 **Access Requirements**: To update the OED collection in Postman, you'll need to be added to the **OED API** workspace. Access can only be granted by current workspace members.
 
-  1.	Export the latest OED API collection from the link above, or pull the latest version from GitHub.
-  2.	Use a personal workspace so as not to affect the live OED collection.
-  3.	Choose the appropriate folder (or create a new one if needed).
-  4.	Right-click the folder and select **Add Request**.
-  5.	Name the request after the API endpoint.
-  6.	Set the HTTP method, URL, and any required headers.
-  7.	Add a JSON request body (if applicable).
-  8.  Send the request, then click **Save Response**, and give it a descriptive name.
-  9.  In the **Documentation** tab, add:
+1. Export the latest OED API collection from the link above, or pull the latest version from GitHub.
+2. Use a personal workspace so as not to affect the live OED collection.
+3. Choose the appropriate folder (or create a new one if needed).
+4. Right-click the folder and select **Add Request**.
+5. Name the request after the API endpoint.
+6. Set the HTTP method, URL, and any required headers.
+7. Add a JSON request body (if applicable).
+8. Send the request, then click **Save Response**, and give it a descriptive name.
+9. In the **Documentation** tab, add:
 
     - The purpose of this request
     - Any query parameters
     - Example request body
-    - Example response 
-  8.	Follow the instructions below to contribute your changes to the OED Collection.
+    - Example response
+
+Follow the instructions below to contribute your changes to the OED Collection.
 
 ## Contribute to the OED Collection
+
 **Access Requirements**: To update the OED collection in Postman, you'll need to be added to the **OED API** workspace. Access can only be granted by current workspace members.
 
-	1. Export the latest OED API collection from the link above, or pull the latest version from GitHub.
- 	2. Use a personal workspace so as not to affect the live OED collection.
-    3. After saving all changes, export as **Collection v2.1 JSON**.
-	4. Add the updated JSON file to the correct location in the git branch.
- 	5. Open a pull request for review.
+1. Export the latest OED API collection from the link above, or pull the latest version from GitHub.
+2. Use a personal workspace so as not to affect the live OED collection.
+3. After saving all changes, export as **Collection v2.1 JSON**.
+4. Add the updated JSON file to the correct location in the git branch.
+5. Open a pull request for review.
