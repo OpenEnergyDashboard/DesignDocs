@@ -618,7 +618,7 @@ We began by building on the previous group's implementation. Rather than embeddi
 The graphing functions (`line`, `bar`, `3d`, and `compare`) were updated to retrieve converted readings from these views, eliminating the need to apply conversions on-the-fly during each query.
 
 Several indexes were evaluated to determine their impact on query performance. The testing process, including index definitions and timing results, is documented here:  
-🔗 [Index Testing Spreadsheet](unitVaryTime/OEDFunctionTimings.ods)
+🔗 [Index Testing Spreadsheet](https://github.com/oed-csumb-su25/DesignDocs/blob/update_conversionsVaryTime/unitVaryTime/OEDFunctionTimings.ods)
 
 Based on these results, a composite index was selected for both the hourly and daily views to optimize filtering and ordering:
 
