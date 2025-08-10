@@ -618,7 +618,7 @@ We began by building on the previous group's implementation. Rather than embeddi
 The graphing functions (`line`, `bar`, `3d`, and `compare`) were updated to retrieve converted readings from these views, eliminating the need to apply conversions on-the-fly during each query.
 
 Several indexes were evaluated to determine their impact on query performance. The testing process, including index definitions and timing results, is documented here:  
-🔗 [Index Testing Spreadsheet](https://docs.google.com/spreadsheets/d/1RVpVVMPu7ZK-7zjCAnnlf2Favma2tqBSxdXSHfdFtpw/edit?gid=0#gid=0)
+🔗 [Index Testing Spreadsheet](unitVaryTime/OEDFunctionTimings.ods)
 
 Based on these results, a composite index was selected for both the hourly and daily views to optimize filtering and ordering:
 
@@ -633,11 +633,21 @@ ON meter_hourly_readings_unit (meter_id, graphic_unit_id, lower(time_interval));
 
 During testing of the `meter_hourly_readings_unit_old` view, we discovered that its implementation of time-varying conversions only functioned correctly when each reading aligned perfectly with the duration of the applied conversions. For example, a 1-hour reading could be split by four 15-minute conversions, but the system failed when those conversions were of unequal lengths (e.g., two 15-minute conversions and one 30-minute conversion). This approach also failed when conversions partially overlapped readings or varied in duration.
 
-To address these limitations, a new view—`meter_hourly_readings_unit`—was developed. The logic from the `hourly_readings_unit` view (which stored unconverted hourly readings) was extracted and embedded into a Common Table Expression (CTE) within the new view. This allowed the new view to independently compute time-weighted conversions without relying on `meter_hourly_readings_unit_old`.
+To address these limitations, a new view—`meter_hourly_readings_unit`—was developed. The logic from the `hourly_readings_unit` view (which stored unconverted hourly readings) was extracted and embedded into a Common Table Expression (CTE) within the new view. This allowed the new view to independently compute time-weighted conversions without relying on the old `hourly_readings_unit`.
 
 However, further testing revealed limitations even in this improved approach. Specifically:
 - **Precision Loss:** Since conversions were applied to pre-averaged hourly readings, the results could deviate from what would have been computed using raw readings.
 - **Lack of Extremes:** It was not possible to derive accurate `min` and `max` rates without referencing the underlying raw data.
 
 These findings highlighted the trade-offs between performance and precision and motivated continued refinement of the conversion pipeline.
+
+---
+
+### A Final Attempt
+
+To address this loss of precision, an additional materialized view, `meter_raw_readings_unit`, was created to apply unit conversions directly to the raw readings and store the results.  
+
+A new version of the hourly view, `meter_hourly_readings_unit_v3`, was then implemented. Similar to the daily view, it aggregates the converted raw readings into converted hourly readings. This approach eliminates the need to apply conversions directly at the hourly level, since the raw readings are already converted and the hourly readings become an aggregate of those converted values.  
+
+However, after observing several test cases, it became clear that this method also has limitations—albeit the inverse of the previous approach. When raw readings span across multiple hourly partitions, the hourly aggregates no longer reflect only the conversions that apply within that specific hour. Instead, they also include the effects of conversions applied to portions of the raw readings that lie outside the hour being analyzed.  
 
