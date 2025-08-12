@@ -13,10 +13,10 @@ This doc shows how to deploy postgres17 as OEDs Database docker container.
 ## Testing Postgres 17.5 compared to 15.3(current)
 
 1. Compare boot and init processing time for materialized views
-```
-Results:
-```
+
+    ```
+    Results:
+    ```
 
 2. Confirm that migrating existing OED data is possible
-
 3. Confirm which materialized views and query functions work in 17
