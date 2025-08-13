@@ -31,25 +31,28 @@ Each request includes:
 
 ## How to Use the Collection
 
-1. Run the login request with admin credentials to obtain a temporary admin token (valid for 24 hours).
-2. Copy the returned token and update the `token_val` variable in the collection.
-3. Each request uses this via `token: {{token_val}}` in the header.
-4. Browse the folders to view and send example requests.
-5. Review response data to verify API behavior or troubleshoot issues.
+1. Open the [latest OED API collection](https://documenter.getpostman.com/view/37855775/2sB3BDLXa7) and click **Run in Postman** (upper right corner).
+2. Select run in Postman for Web or for Desktop.
+3. Log in or create a free Postman account.
+4. Import the collection into your workspace.
+5. Send the login request with admin credentials to get a temporary admin token (valid for 24 hours).
+6. Copy the returned token, open the collection's parent folder (**OED**), go to the **Variables** tab, and set the value for `token_val`.
+7. All requests use this value in the header: `token: {{token_val}}`.
+8. Browse folders to view and send example requests.
+9. Check response data to verify API behavior or troubleshoot issues.
 
 ## Adding a New API Endpoint Request
 
 **Access Requirements**: To update the OED collection in Postman, you'll need to be added to the **OED API** workspace. Access can only be granted by current workspace members.
 
-1. Export the latest OED API collection from the link above, or pull the latest version from GitHub.
-2. Use a personal workspace so as not to affect the live OED collection.
-3. Choose the appropriate folder (or create a new one if needed).
-4. Right-click the folder and select **Add Request**.
-5. Name the request after the API endpoint.
-6. Set the HTTP method, URL, and any required headers.
-7. Add a JSON request body (if applicable).
-8. Send the request, then click **Save Response**, and give it a descriptive name.
-9. In the **Documentation** tab, add:
+1. Complete steps 1-6 from **How to Use the Collection**.
+2. Select the appropriate folder, or create a new one if needed.
+3. Right-click the folder and select **Add Request**.
+4. Name the request after the API endpoint.
+5. Set the HTTP method, URL, and any required headers.
+6. Add a JSON request body (if applicable).
+7. Send the request, then click **Save Response** and give it a descriptive name.
+8. In the **Documentation** tab, add:
 
     - The purpose of this request
     - Any query parameters
