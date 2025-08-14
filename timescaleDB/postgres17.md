@@ -3,6 +3,7 @@
 This doc shows how to deploy postgres17 as OEDs Database docker container.
 
 ## Pull & Deploy Docker container
+
 > Recommended to start from a fresh OED install to not corrupt/conflict `postgres-data/`
 
 1. pull the specific docker image using the version tag ```docker pull postgres:17.5```

@@ -1,7 +1,7 @@
 # TimescaleDB Deployment Instructions
 
 This doc shows how to deploy the timescaleDB extension on top of Postgres17 as OEDs Database docker container.
-*The reason for deploying with Postgres 17 was to confirm the latest version of timescale was enabled. Tangentially refer to [postgres17.md](../postgres17/postgres17.md) docs for notes on deployment and upgrade help*
+*The reason for deploying with Postgres 17 was to confirm the latest version of timescale was enabled. Tangentially refer to [postgres17.md](./postgres17.md) docs for notes on deployment and upgrade help*
 
 ## Pull & Deploy Docker container
 
