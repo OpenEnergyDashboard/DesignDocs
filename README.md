@@ -28,6 +28,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 - [addTooltips/addTooltips.md](./addTooltips/addTooltips.md): Information on putting in more tooltips.
 - [website/website.md](./website/website.md): Describes how the OED website data and images are created.
+- [routeDocs/README.ms](routeDocs/README.md): How to create route docs and the latest ones for OED.
 
 ## Historical
 
