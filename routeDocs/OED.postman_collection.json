@@ -1,0 +1,3569 @@
+{
+	"info": {
+		"_postman_id": "aaa3ce7e-0b8d-4a0e-8967-1036a1d173d6",
+		"name": "OED",
+		"description": "This collection contains API requests for OED.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37855775",
+		"_collection_link": "https://oed-team.postman.co/workspace/OED-Team-Workspace~4299146d-d640-4f82-b25a-ee907b8d22ec/collection/37855775-aaa3ce7e-0b8d-4a0e-8967-1036a1d173d6?action=share&source=collection_link&creator=37855775"
+	},
+	"item": [
+		{
+			"name": "conversion_segments",
+			"item": [
+				{
+					"name": "addConversionSegment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 4,\n    \"destinationId\": 1,\n    \"weekPatternsId\": null,\n    \"slope\": 4,\n    \"intercept\": 3.1,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"infinity\",\n    \"note\": \"Inserting time segment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/addConversionSegment",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"addConversionSegment"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nTo add a new conversion segment, it must span all time (−infinity to infinity), and no other segment for that conversion can exist.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| weekPatternsId | integer | no |\n| slope | number | yes |\n| intercept | number | yes |\n| startTime | string | yes |\n| endTime | string | yes |\n| note | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Added Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 4,\n    \"destinationId\": 1,\n    \"weekPatternsId\": null,\n    \"slope\": 4,\n    \"intercept\": 3.1,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"infinity\",\n    \"note\": \"Inserting time segment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/addConversionSegment",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"addConversionSegment"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "37"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"25-8iii7TfVa46lR9j7NJ2nUiiDdhQ\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:20:36 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully added conversion segment"
+						}
+					]
+				},
+				{
+					"name": "edit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": 3,\n        \"slope\": 0.75,\n        \"intercept\": 1.2,\n        \"startTime\": \"2025-03-17T00:00:00.000Z\",\n        \"endTime\": \"2027-03-17T00:00:00.000Z\",\n        \"note\": \"Added weekly pattern\",\n        \"originalStartTime\": \"2025-03-17T00:00:00.000Z\",\n        \"originalEndTime\":  \"2027-03-17T00:00:00.000Z\"\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/edit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"edit"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nEdit a conversion segment.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| weekPatternsId | integer | no |\n| slope | number | yes |\n| intercept | number | yes |\n| startTime | string | yes |\n| endTime | string | yes |\n| note | string | no |\n| originalStartTime | string | yes |\n| originalEndTime | string | yes |\n\n**Note**: This route only supports updates where the new start and/or end time extends into the immediately adjacent segments."
+					},
+					"response": [
+						{
+							"name": "200 OK - Segment Edited",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": 3,\n        \"slope\": 0.75,\n        \"intercept\": 1.2,\n        \"startTime\": \"2025-03-17T00:00:00.000Z\",\n        \"endTime\": \"2027-03-17T00:00:00.000Z\",\n        \"note\": \"Added weekly pattern\",\n        \"originalStartTime\": \"2025-03-17T00:00:00.000Z\",\n        \"originalEndTime\":  \"2027-03-17T00:00:00.000Z\"\n    }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/edit",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"edit"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "38"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"26-jGCwbDJeDEPujuV9BgFCTtm0VsY\""
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 14 Aug 2025 00:48:18 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully edited conversion segment"
+						}
+					]
+				},
+				{
+					"name": "sourceDestination",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/sourceDestination",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"sourceDestination"
+							]
+						},
+						"description": "## Purpose \n\n---\n\nRetrieve all conversion segment objects associated with the source meter id and destination meter id.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Segments",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/sourceDestination",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"sourceDestination"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "711"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2c7-HJlae1LW+lj+9GYePYyVMyJKJUs\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:05:04 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": null,\n        \"slope\": 0.1,\n        \"intercept\": 2,\n        \"startTime\": \"-infinity\",\n        \"endTime\": \"2015-03-17T00:00:00.000Z\",\n        \"note\": \"Note for new segment\"\n    },\n    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": null,\n        \"slope\": 2.1,\n        \"intercept\": 1.5,\n        \"startTime\": \"2015-03-17T00:00:00.000Z\",\n        \"endTime\": \"2021-10-09T00:00:00.000Z\",\n        \"note\": \"Note for new segment\"\n    },\n    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": null,\n        \"slope\": 0.0000273,\n        \"intercept\": 0,\n        \"startTime\": \"2021-10-09T00:00:00.000Z\",\n        \"endTime\": \"2023-05-03T00:00:00.000Z\",\n        \"note\": null\n    },\n    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"weekPatternsId\": null,\n        \"slope\": 0.75,\n        \"intercept\": 1.3,\n        \"startTime\": \"2023-05-03T00:00:00.000Z\",\n        \"endTime\": \"infinity\",\n        \"note\": \"Note for new segment\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "sourceDestinationStartEnd",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"2021-10-09T00:00:00.000Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/sourceDestinationStartEnd",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"sourceDestinationStartEnd"
+							]
+						},
+						"description": "Retrieve a specific conversion segment object.\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| startTime | string | yes |\n| endTime | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"2021-10-09T00:00:00.000Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/sourceDestinationStartEnd",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"sourceDestinationStartEnd"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "173"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"ad-Q2yby5yH8fAy6CqE4nhxctTCr0g\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:02:48 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"weekPatternsId\": null,\n    \"slope\": 2.1,\n    \"intercept\": 1.5,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"2021-10-09T00:00:00.000Z\",\n    \"note\": \"Note for new segment\"\n}"
+						}
+					]
+				},
+				{
+					"name": "deleteEarlier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2015-03-17T00:00:00.000Z\",\n    \"endTime\": \"2021-10-09T00:00:00.000Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/deleteEarlier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"deleteEarlier"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete the specified conversion segment after updating the end time of the previous conversion segment, ensuring the conversion segments span all time.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| startTime | string | yes |\n| endTime | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Segment Deleted",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2015-03-17T00:00:00.000Z\",\n    \"endTime\": \"2021-10-09T00:00:00.000Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/deleteEarlier",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"deleteEarlier"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "48"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"30-xphMXrthWAfAQXKkZ8Y1udpnNG0\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:06:47 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted earlier conversion segment."
+						}
+					]
+				},
+				{
+					"name": "deleteLater",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2025-03-17T00:00:00.000Z\",\n    \"endTime\": \"2027-03-17T00:00:00.000Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/deleteLater",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"deleteLater"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete the specified conversion segment after updating the start time of the following conversion segment, ensuring the conversion segments span all time.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| startTime | string | yes |\n| endTime | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2025-03-17T00:00:00.000Z\",\n    \"endTime\": \"2027-03-17T00:00:00.000Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/deleteLater",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"deleteLater"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "46"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2e-JuOid1FQy0dtCJ2cBmWGE/1KaHw\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:16:22 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted later conversion segment."
+						}
+					]
+				},
+				{
+					"name": "splitEarlier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2025-03-17 0:0:0\",\n    \"endTime\": \"infinity\",\n    \"newWeekPatternsId\": null,\n    \"newSlope\": 0.1,\n    \"newIntercept\": 2.0,\n    \"newNote\": \"Note for new segment\",\n    \"splitTime\": \"2027-03-17 0:0:0\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/splitEarlier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"splitEarlier"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nSplit the specified conversion segment into two. The earlier segment uses the new slope, intercept, pattern, and note.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| startTime | string | yes |\n| endTime | string | yes |\n| newWeekPatternsId | integer | no |\n| newSlope | number | yes |\n| newIntercept | number | yes |\n| newNote | string | no |\n| splitTime | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Segment Split",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"-infinity\",\n    \"endTime\": \"infinity\",\n    \"newWeekPatternsId\": null,\n    \"newSlope\": 2.1,\n    \"newIntercept\": 1.5,\n    \"newNote\": \"Note for new segment\",\n    \"splitTime\": \"2021-10-09 0:0:0\" \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/splitEarlier",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"splitEarlier"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "45"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2d-ST+kUfjRBOsm/skDeZAshaD0loo\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 16:59:30 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully split conversion segment earlier"
+						}
+					]
+				},
+				{
+					"name": "splitLater",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2021-10-09T00:00:00.000Z\",\n    \"endTime\": \"infinity\",\n    \"newWeekPatternsId\": null,\n    \"newSlope\": 0.75,\n    \"newIntercept\": 1.3,\n    \"newNote\": \"Note for new segment\",\n    \"splitTime\": \"2023-05-03 0:0:0\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversionSegments/splitLater",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversionSegments",
+								"splitLater"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nSplit the specified conversion segment into two. The later segment uses the new slope, intercept, pattern, and note.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| startTime | string | yes |\n| endTime | string | yes |\n| newWeekPatternsId | integer | no |\n| newSlope | number | yes |\n| newIntercept | number | yes |\n| newNote | string | no |\n| splitTime | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Segment Split",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3,\n    \"startTime\": \"2021-10-09T00:00:00.000Z\",\n    \"endTime\": \"infinity\",\n    \"newWeekPatternsId\": null,\n    \"newSlope\": 0.75,\n    \"newIntercept\": 1.3,\n    \"newNote\": \"Note for new segment\",\n    \"splitTime\": \"2023-05-03 0:0:0\" \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversionSegments/splitLater",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversionSegments",
+										"splitLater"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "43"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2b-W5unsP7Oaj1CnLUs+FFefPdlG3Q\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:01:23 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully split conversion segment later"
+						}
+					]
+				}
+			],
+			"description": "The **conversion_segments** folder contains API requests for managing time-varying conversion segments in the system. Segments for the same conversion must cover the entire timespan from `-infinity` to `infinity` without gaps or overlaps."
+		},
+		{
+			"name": "day_patterns",
+			"item": [
+				{
+					"name": "/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/days",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"days"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nObtain all day pattern objects.\n\n## Authorization\n\n---\n\nThis request requires admin authentication."
+					},
+					"response": [
+						{
+							"name": "200 OK - Days Retrieved",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/days",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"days"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "198"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "2"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "193"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"c1-EFobBFtaJNl2iPDgdcZlcLdQ+8o\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:26:39 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": 1,\n        \"name\": \"Weekday\",\n        \"note\": \"Represents a typical weekday\"\n    },\n    {\n        \"id\": 2,\n        \"name\": \"Weekend\",\n        \"note\": \"Represents a typical weekend\"\n    },\n    {\n        \"id\": 3,\n        \"name\": \"Holiday\",\n        \"note\": \"Represents a typical holiday\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": ":dayId",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/days/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"days",
+								"1"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nObtain a specific day pattern object.\n\n## Authorization\n\n---\n\nThis request requires admin authentication."
+					},
+					"response": [
+						{
+							"name": "200 OK - Day Retrieved",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/days/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"days",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "63"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"3f-EWiYHMdAHXMBuuxLKfY9ke5KSjY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:27:12 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 1,\n    \"name\": \"Weekday\",\n    \"note\": \"Represents a typical weekday\"\n}"
+						}
+					]
+				},
+				{
+					"name": "addDay",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Holiday\",\n    \"note\": \"Represents a typical holiday\",\n    \"slope\": 1.0,\n    \"intercept\": 1.2,\n    \"segmentNote\": \"Segment inserted to ensure full time coverage.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/days/addDay",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"days",
+								"addDay"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nAdd a new day and the default day segment associated with it.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| name | string | yes |\n| note | string | no |\n| slope | number | yes |\n| intercept | number | yes |\n| segmentNote | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Day Added",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Weekday\",\n    \"note\": \"Represents a typical weekday\",\n    \"slope\": 1.75,\n    \"intercept\": 0.75,\n    \"segmentNote\": \"Segment inserted to ensure full time coverage.\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/days/addDay",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"days",
+										"addDay"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "22"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"16-rF1tV2t6o1G6xV6RbzcaFTLRDsY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:25:39 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully added day"
+						}
+					]
+				},
+				{
+					"name": "edit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 3,\n    \"name\": \"Holiday/Vacation\",\n    \"note\": \"Updated naming for day\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/days/edit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"days",
+								"edit"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nEdit a day pattern.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |\n| name | string | yes |\n| note | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Day Edited",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 3,\n    \"name\": \"Holiday/Vacation\",\n    \"note\": \"Updated naming for day\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/days/edit",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"days",
+										"edit"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "23"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"17-tLSxxVEmL7GBeeTaixoT0ioJScw\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:29:09 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully edited day"
+						}
+					]
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/days/delete",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"days",
+								"delete"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete a day pattern. All day segments associated with it will also be deleted.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Day Deleted",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/days/delete",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"days",
+										"delete"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "24"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"18-zGNC6rVqiDLhFF6FvVQz8x5KDOE\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:29:34 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted day"
+						}
+					]
+				}
+			],
+			"description": "The **day_patterns** folder contains API requests for managing day patterns. A day pattern is a collection of day segments that together cover all 24 hours of a day."
+		},
+		{
+			"name": "day_segments",
+			"item": [
+				{
+					"name": "dayId",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/dayId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"dayId"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nRetrieve all day segment objects associated with a specific day pattern.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| dayId | integer | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Segments",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dayId\": 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/dayId",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"dayId"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "501"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1f5-UFVUVyUN698EDOaVe1Er6Vq9/e4\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:47:09 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": 5,\n        \"dayId\": 1,\n        \"startHour\": 0,\n        \"endHour\": 10,\n        \"slope\": 1.5,\n        \"intercept\": 2.2,\n        \"note\": \"Split Segment - New Values for Earlier Segment\"\n    },\n    {\n        \"id\": 1,\n        \"dayId\": 1,\n        \"startHour\": 10,\n        \"endHour\": 12,\n        \"slope\": -0.1,\n        \"intercept\": 1.2,\n        \"note\": \"Updating slope and intercept\"\n    },\n    {\n        \"id\": 7,\n        \"dayId\": 1,\n        \"startHour\": 12,\n        \"endHour\": 15,\n        \"slope\": 1.1,\n        \"intercept\": 3.1,\n        \"note\": \"Split Later - New Values for Later Segment \"\n    },\n    {\n        \"id\": 6,\n        \"dayId\": 1,\n        \"startHour\": 15,\n        \"endHour\": 24,\n        \"slope\": 1.4,\n        \"intercept\": 2.2,\n        \"note\": \"Split Later - New Values for Later Segment \"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": ":id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"1"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nRetrieve a specific day segment object.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Segment",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "131"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"83-Fl7Vew6S8orml8o7taDBmkxH5UE\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:37:22 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 1,\n    \"dayId\": 1,\n    \"startHour\": 0,\n    \"endHour\": 24,\n    \"slope\": 1.75,\n    \"intercept\": 0.75,\n    \"note\": \"Segment inserted to ensure full time coverage.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "addDaySegment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayId\": 3,\n    \"startHour\": 0,\n    \"endHour\": 24,\n    \"slope\": -3,\n    \"intercept\": 1.75,\n    \"note\": \"New Segment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/addDaySegment",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"addDaySegment"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nTo add a new day segment, it must span all time (0 to 24), and no other segment for that day pattern can exist.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| dayId | integer | yes |\n| startHour | number | yes |\n| endHour | number | yes |\n| slope | number | yes |\n| intercept | number | yes |\n| note | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Added Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dayId\": 3,\n    \"startHour\": 0,\n    \"endHour\": 24,\n    \"slope\": -3,\n    \"intercept\": 1.75,\n    \"note\": \"New Segment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/addDaySegment",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"addDaySegment"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "30"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1e-YX0ZFuM17BJEADrmBQ/kD/e/6yI\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:52:52 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully added day segment"
+						}
+					]
+				},
+				{
+					"name": "edit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 12,\n    \"slope\": -0.1,\n    \"intercept\": 1.2,\n    \"note\": \"Updating slope and intercept\",\n    \"originalStartHour\": 10,\n    \"originalEndHour\": 12\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/edit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"edit"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nEdit a pre-existing day segment object.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |\n| dayId | integer | yes |\n| startHour | number | yes |\n| endHour | number | yes |\n| slope | number | yes |\n| intercept | number | yes |\n| note | string | no |\n| originalStartHour | number | yes |\n| originalEndHour | number | yes |\n\n**Note**: This route only supports updates where the new start and/or end hour extends into the immediately adjacent segments."
+					},
+					"response": [
+						{
+							"name": "200 OK - Segment Edited",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 1,\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 12,\n    \"slope\": -0.1,\n    \"intercept\": 1.2,\n    \"note\": \"Updating slope and intercept\",\n    \"originalStartHour\": 10,\n    \"originalEndHour\": 12\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/edit",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"edit"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "31"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1f-Kw+PmrW31Ujj+OssNyM/Vi+N2LI\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:46:48 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully edited day segment"
+						}
+					]
+				},
+				{
+					"name": "deleteLater",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 12\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/deleteLater",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"deleteLater"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete a day segment after updating the start time of the following day segment to ensure full time coverage.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| dayId | integer | yes |\n| startHour | number | yes |\n| endHour | number | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 12\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/deleteLater",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"deleteLater"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "39"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"27-m8J/Kof7Xx8sWRrdmIfzZRw2cOY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:48:26 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted later day segment."
+						}
+					]
+				},
+				{
+					"name": "deleteEarlier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/deleteEarlier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"deleteEarlier"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete a day segment after updating the end time of the previous time segment to ensure full time coverage.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| dayId | integer | yes |\n| startHour | number | yes |\n| endHour | number | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dayId\": 1,\n    \"startHour\": 10,\n    \"endHour\": 15\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/deleteEarlier",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"deleteEarlier"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "41"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"29-4KZfB4DAhVcHnXKVEZzC3OD7ZhY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:49:37 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted earlier day segment."
+						}
+					]
+				},
+				{
+					"name": "splitEarlier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"newSlope\": 1.5,\n    \"newIntercept\": 2.2,\n    \"newNote\": \"Split Segment - New Values for Earlier Segment\",\n    \"splitTime\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/splitEarlier",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"splitEarlier"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nSplit the specified day segment into two. The earlier segment uses the new slope, intercept, and note.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |\n| newSlope | number | yes |\n| newIntercept | number | yes |\n| newNote | string | no |\n| splitTime | number | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Split Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 1,\n    \"newSlope\": 1.5,\n    \"newIntercept\": 2.2,\n    \"newNote\": \"Split Segment - New Values for Earlier Segment\",\n    \"splitTime\": 10\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/splitEarlier",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"splitEarlier"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "38"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"26-C41vLX/70e6Ah9R2GUGGwcrVHAM\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:38:57 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully split day segment earlier"
+						}
+					]
+				},
+				{
+					"name": "splitLater",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"newSlope\": 1.1,\n    \"newIntercept\": 3.1,\n    \"newNote\": \"Split Later - New Values for Later Segment \",\n    \"splitTime\": 12\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/daySegments/splitLater",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"daySegments",
+								"splitLater"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nSplit the specified day segment into two. The later segment uses the new slope, intercept, and note.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |\n| newSlope | number | yes |\n| newIntercept | number | yes |\n| newNote | string | no |\n| splitTime | number | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Split Segment",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 1,\n    \"newSlope\": 1.1,\n    \"newIntercept\": 3.1,\n    \"newNote\": \"Split Later - New Values for Later Segment \",\n    \"splitTime\": 12\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/daySegments/splitLater",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"daySegments",
+										"splitLater"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "36"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"24-Gyy7Sw25Ws1Q8r7nveTfJL7vzD0\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:40:24 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully split day segment later"
+						}
+					]
+				}
+			],
+			"description": "The **day_segments** folder contains API requests for managing time-varying day segments in the system. Segments for the same conversion must cover the entire timespan from 0 to 24 without gaps or overlaps."
+		},
+		{
+			"name": "week_patterns",
+			"item": [
+				{
+					"name": "/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/weeks/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"weeks",
+								""
+							]
+						},
+						"description": "## Purpose\n\n---\n\nGet all week pattern objects.\n\n## Authorization\n\n---\n\nThis request requires admin authentication."
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Weeks",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/weeks/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"weeks",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "327"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"147-1H8YaUTy37EPjH+ek4CimdsFXdQ\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:33:50 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": 2,\n        \"name\": \"Summer 2025\",\n        \"note\": \"This weekly pattern is for Summer 2025\",\n        \"sunday\": 4,\n        \"monday\": 1,\n        \"tuesday\": 1,\n        \"wednesday\": 1,\n        \"thursday\": 1,\n        \"friday\": 4,\n        \"saturday\": 4\n    },\n    {\n        \"id\": 3,\n        \"name\": \"Spring 2025\",\n        \"note\": \"This weekly pattern is for Summer 2025\",\n        \"sunday\": 4,\n        \"monday\": 3,\n        \"tuesday\": 1,\n        \"wednesday\": 1,\n        \"thursday\": 1,\n        \"friday\": 1,\n        \"saturday\": 4\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": ":id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/weeks/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"weeks",
+								"3"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nReturns a specific week pattern object.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | string | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Retrieved Week",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/weeks/3",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"weeks",
+										"3"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "162"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"a2-bXKZ/3QA6rGgGfFLyQeisiPod4Q\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:34:10 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 3,\n    \"name\": \"Spring 2025\",\n    \"note\": \"This weekly pattern is for Summer 2025\",\n    \"sunday\": 4,\n    \"monday\": 3,\n    \"tuesday\": 1,\n    \"wednesday\": 1,\n    \"thursday\": 1,\n    \"friday\": 1,\n    \"saturday\": 4\n}"
+						}
+					]
+				},
+				{
+					"name": "addWeek",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Summer 2025\",\n    \"note\": \"This weekly pattern is for Summer 2025\",\n    \"sunday\": 4,\n    \"monday\": 1,\n    \"tuesday\": 1,\n    \"wednesday\": 1,\n    \"thursday\": 1,\n    \"friday\": 4,\n    \"saturday\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/weeks/addWeek",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"weeks",
+								"addWeek"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nAdd a new week pattern.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| name | string | yes |\n| note | string | no |\n| sunday | integer | yes |\n| monday | integer | yes |\n| tuesday | integer | yes |\n| wednesday | integer | yes |\n| thursday | integer | yes |\n| friday | integer | yes |\n| saturday | integer | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Week Added",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Summer 2025\",\n    \"note\": \"This weekly pattern is for Summer 2025\",\n    \"sunday\": 4,\n    \"monday\": 1,\n    \"tuesday\": 1,\n    \"wednesday\": 1,\n    \"thursday\": 1,\n    \"friday\": 4,\n    \"saturday\": 4\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/weeks/addWeek",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"weeks",
+										"addWeek"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "26"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1a-+8b9oybgzy9NToCgYdEGmibTlVQ\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:32:48 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully inserted week"
+						}
+					]
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/weeks/delete",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"weeks",
+								"delete"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete a week pattern.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| id | integer | yes |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Deleted Week",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/weeks/delete",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"weeks",
+										"delete"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "25"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"19-q2IOTla5cW251vsWvyX60xQV5QA\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 17:34:37 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "Successfully deleted week"
+						}
+					]
+				}
+			],
+			"description": "The **week_patterns** folder contains API requests for managing week patterns. A week pattern is a collection of day patterns that together cover all 7 days of the week."
+		},
+		{
+			"name": "conversions",
+			"item": [
+				{
+					"name": "/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/conversions/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversions",
+								""
+							]
+						},
+						"description": "## Purpose\n\n---\n\nReturns all conversion objects.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n### Example Response\n\n``` json\n[\n    {\n        \"id\": \"1\",\n        \"type\": \"currency\",\n        \"value\": \"100\",\n        \"timestamp\": \"2023-10-01T12:00:00Z\"\n    },\n    {\n        \"id\": \"2\",\n        \"type\": \"unit\",\n        \"value\": \"50\",\n        \"timestamp\": \"2023-10-01T12:05:00Z\"\n    }\n]\n\n ```"
+					},
+					"response": [
+						{
+							"name": "200 OK - Conversions Retrieved",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/conversions/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversions",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "624"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"270-leP+Gow2w2J03++rZooowiX+Pv4\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 16:50:37 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"sourceId\": 5,\n        \"destinationId\": 3,\n        \"bidirectional\": true,\n        \"note\": \"OED created BTU → m³ gas (average U.S. for 2021 according to U.S. E.I.A)\"\n    },\n    {\n        \"sourceId\": 1,\n        \"destinationId\": 5,\n        \"bidirectional\": true,\n        \"note\": \"OED created kWh → BTU\"\n    },\n    {\n        \"sourceId\": 2,\n        \"destinationId\": 10,\n        \"bidirectional\": true,\n        \"note\": \"OED created liter → gallon\"\n    },\n    {\n        \"sourceId\": 6,\n        \"destinationId\": 8,\n        \"bidirectional\": true,\n        \"note\": \"OED created Celsius → Fahrenheit\"\n    },\n    {\n        \"sourceId\": 7,\n        \"destinationId\": 9,\n        \"bidirectional\": true,\n        \"note\": \"OED created kg → Metric ton\"\n    },\n    {\n        \"sourceId\": 4,\n        \"destinationId\": 1,\n        \"bidirectional\": false,\n        \"note\": \"OED created  for meters Electric_Utility → kWh\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "addConversion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n    \"sourceId\": 1,\n    \"destinationId\": 4,\n    \"bidirectional\": false,\n    \"slope\": 3,\n    \"intercept\": 1.2,\n    \"segmentNote\": \"Default Segment: OED created for meters kWh -> Electric_Utility\",\n    \"note\": \"OED created for meters kWh -> Electric_Utility\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversions/addConversion",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversions",
+								"addConversion"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nAdd a new conversion and the default conversion segment associated with it.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| bidirectional | boolean | yes |\n| note | string | no |\n| weekPatternsId | number | no |\n| slope | number | yes |\n| intercept | number | yes |\n| segmentNote | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Conversion and Segment Added",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{ \n    \"sourceId\": 1,\n    \"destinationId\": 4,\n    \"bidirectional\": false,\n    \"slope\": 3,\n    \"intercept\": 1.2,\n    \"segmentNote\": \"Default Segment: OED created for meters kWh -> Electric_Utility\",\n    \"note\": \"OED created for meters kWh -> Electric_Utility\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversions/addConversion",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversions",
+										"addConversion"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "2"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2-nOO9QiTIwXgNtWtBJezz8kv3SLc\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 16:54:14 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "OK"
+						}
+					]
+				},
+				{
+					"name": "edit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 1,\n    \"destinationId\": 4,\n    \"bidirectional\": false,\n    \"note\": \"Meters kWh -> Electric_Utility\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversions/edit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversions",
+								"edit"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nEdit a conversion.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |\n| bidirectional | boolean | yes |\n| note | string | no |"
+					},
+					"response": [
+						{
+							"name": "200 OK - Conversion Edited",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "token",
+										"value": "{{token_val}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sourceId\": 1,\n    \"destinationId\": 4,\n    \"bidirectional\": false,\n    \"note\": \"Meters kWh -> Electric_Utility\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/conversions/edit",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"conversions",
+										"edit"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "RateLimit-Policy",
+									"value": "200;w=5"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "200"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "199"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "5"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/html; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "0"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk\""
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 09 Aug 2025 16:55:46 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{token_val}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sourceId\": 5,\n    \"destinationId\": 3\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/conversions/delete",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"conversions",
+								"delete"
+							]
+						},
+						"description": "## Purpose\n\n---\n\nDelete a conversion and all conversion segments associated with it.\n\n## Authorization\n\n---\n\nThis request requires admin authentication.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| sourceId | integer | yes |\n| destinationId | integer | yes |"
+					},
+					"response": []
+				}
+			],
+			"description": "The **conversions** folder contains API requests for managing unit conversions. A conversion defines the relationship between two units (source and destination). Each conversion can have one or more associated conversion segments that specify how the conversion varies over time."
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "{{token_val}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"test\",\n    \"password\": \"password\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"login"
+					]
+				},
+				"description": "## Purpose\n\n---\n\nAuthenticates users and returns a JSON Web Token with their user ID.\n\n## Query Params\n\n---\n\n| **Field** | **Type** | **Required** |\n| --- | --- | --- |\n| username | string | yes |\n| password | string | yes |"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token_val",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
