@@ -551,4 +551,103 @@ For detailed instructions on how to reproduce these test results, see the [Test 
 
 - There is also a noticeable performance difference between two different PC's. PC #2 is roughly 2-2.5x faster than PC #1. This can highlight a potential importance of hardware consideration when it comes to deploying a solution in various environments.
 
+## Update August 2025
+
+
+### Preliminary Work
+We began by integrating the CIK table modifications, integration with readings, SQL function updates, and timestamp handling changes as outlined above in **Update May 2025**. Following this, we were able to replicate consistent testing results, specifically for hourly and daily readings with time-varying inputs, by following the [Test Instructions]([url](https://github.com/OpenEnergyDashboard/DesignDocs/blob/main/unitVaryTime/timeVaryingTesting.md)).
+
+Below are the testing results after incorporating the May 2025 changes. These results will serve as a baseline to track progress as the team works to improve database runtime performance.
+
+### Hourly Readings Tests w/ Time Varying
+
+Query: ``select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'hourly', 200, 200);``
+| Timespan | Points of data| Time (ms) PC #1*  | Time (with caching) | Time (ms) PC #2**      | Time (with caching) | Time (ms) PC #3***       | Time (with caching) |
+|----------|---------------|---------------------|---------------------|----------------------|---------------------| ----------------------|---------------------|
+| 1 Day    | 24            | 111.166          | 143.073         | 281.423          | 65.789           | 157.324          | 115.315          |       
+| 7 Days   | 167           | 537.052          | 599.264          | 327.736          | 271.153          | 378.85             | 376.068           |        
+| 1 Month  | 744           | 2466.772         | 2483.517        | 1216.803         | 1202.195         | 1648.254           | 1654.315         |     
+| 3 Months | 2184          | 6976.787         | 8879.787        | 3975.886         | 3940.586         | 4705.968           | 4745.863         |         
+| 6 Months | 4368          | 14382.343       | 15165.883       | 7718.051         | 7814.561         | 9443.269            | 9459.786         |        
+| 1 Year   | 8784          | 28702.139       | 28815.986       | 15432.595        | 15693.478       | 19141.15           | 18947.708         |                  
+| 2 Years  | 17540         | 58456.253       | 57630.675       |                      |                     | 37087.503          | 36964.301         | 
+
+### Daily Readings Tests w/ Time Varying
+
+Query: `select meter_line_readings_unit('{25}', 1, '-infinity', 'infinity', 'daily', 200, 200);`
+
+| Timespan | Points of data | Time (ms) PC #1* | Time(with Caching) | Time (ms) PC #2** | Time(with Caching) | Time (ms) PC #3*** | Time(with Caching) |
+|----------|----------------|-----------|-------------------|----------------------|---------------------|----------------------|---------------------|
+| 6 Months | 182 days       | 48.474  | 76.159         | 13.258             | 20.82             | 36.774             | 34.135            |
+| 1 Year   | 365 days       | 108.081 | 108.288        | 46.332             | 60.429            | 56.004             | 54.74             |
+| 1.5 Years| 547 days       | 105.243 | 112.464        | 82.309             | 75.299            | 79.511             | 76.441            |
+| 2 Years  | 736 days       | 132.841 | 125.611        | 99.994             | 90.001            | 97.683             | 97.414            |
+
+<p>&#42; PC #1: Macbook Pro 2019 2.3 GHz 8-Core Intel Core i9 (9th gen) 32 GB RAM (DDR4)</p>
+<p>** PC #2: Macbook M1 Pro 2021 8-Core Intel 16 GB RAM</p>
+<p>*** PC #3: </p>
+
+### Automatic Query Performance Logging
+
+The following settings enable automatic logging of execution plans for all SQL statements, including those nested within functions or triggers:
+
+LOAD 'auto_explain';
+SET auto_explain.log_min_duration = 0;       -- Log all queries, regardless of duration
+SET auto_explain.log_nested_statements = on; -- Include nested statements in logs
+
+### Added Indices 
+
+Several indices were added to the cik, meters, daily_readings_unit, and hourly_readings_unit tables. The following screenshot shows all added and preexisting indices across the 4 relevant tables:
+![Index](https://github.com/user-attachments/assets/168385c8-4064-45db-a45c-1feefd5ff4aa)
+
+By executing the meter_line_readings_unit function with an hourly step and enabling automatic query performance logging, it was determined that PostgreSQL utilized the following indexes to optimize performance:
+- idx_hourly_readings_unit_meter_time ( This index already exist )
+- idx_hourly_readings_time_interval_gist (``` CREATE INDEX CONCURRENTLY idx_hourly_readings_time_interval_gist ON hourly_readings_unit USING GIST (time_interval); ```)
+- idx_cik_tsrange_overlap (``` CREATE INDEX CONCURRENTLY idx_cik_tsrange_overlap ON cik USING GIST (tsrange(start_time, end_time, '()')); ```)
+- idx_cik_source_dest_time_range (``` CREATE INDEX CONCURRENTLY idx_cik_source_dest_time_range ON cik (source_id, destination_id, start_time, end_time); ```)
+
+Significant improvements in query performance were observed, though results were inconsistent. Further testing across multiple systems is required to validate the effectiveness of these indices.
+
+### Materialized Views
+
+This work was conducted in the following repository/branch:  
+🔗 [OED-backend: `views` branch](https://github.com/oed-csumb-su25/OED-backend/tree/views)
+
+We began by building on the previous group's implementation. Rather than embedding the conversion logic directly within the graphing functions, we refactored it into a materialized view—`meter_hourly_readings_unit_old`. This allowed hourly conversions to be precomputed and stored for improved performance. Additionally, a daily materialized view—`meter_daily_readings_unit`—was created to store daily aggregates of the converted hourly data. Notably, the daily view does not apply conversions directly; instead, it aggregates the already-converted hourly values.
+
+The graphing functions (`line`, `bar`, `3d`, and `compare`) were updated to retrieve converted readings from these views, eliminating the need to apply conversions on-the-fly during each query.
+
+Several indexes were evaluated to determine their impact on query performance. The testing process, including index definitions and timing results, is documented here:  
+🔗 [Index Testing Spreadsheet](https://github.com/oed-csumb-su25/DesignDocs/blob/update_conversionsVaryTime/unitVaryTime/OEDFunctionTimings.ods)
+
+Based on these results, a composite index was selected for both the hourly and daily views to optimize filtering and ordering:
+
+```sql
+CREATE INDEX idx_meter_hourly_ordering 
+ON meter_hourly_readings_unit (meter_id, graphic_unit_id, lower(time_interval));
+```
+
 ---
+
+### A New Approach
+
+During testing of the `meter_hourly_readings_unit_old` view, we discovered that its implementation of time-varying conversions only functioned correctly when each reading aligned perfectly with the duration of the applied conversions. For example, a 1-hour reading could be split by four 15-minute conversions, but the system failed when those conversions were of unequal lengths (e.g., two 15-minute conversions and one 30-minute conversion). This approach also failed when conversions partially overlapped readings or varied in duration.
+
+To address these limitations, a new view—`meter_hourly_readings_unit`—was developed. The logic from the `hourly_readings_unit` view (which stored unconverted hourly readings) was extracted and embedded into a Common Table Expression (CTE) within the new view. This allowed the new view to independently compute time-weighted conversions without relying on the old `hourly_readings_unit`.
+
+However, further testing revealed limitations even in this improved approach. Specifically:
+- **Precision Loss:** Since conversions were applied to pre-averaged hourly readings, the results could deviate from what would have been computed using raw readings.
+- **Lack of Extremes:** It was not possible to derive accurate `min` and `max` rates without referencing the underlying raw data.
+
+These findings highlighted the trade-offs between performance and precision and motivated continued refinement of the conversion pipeline.
+
+---
+
+### A Final Attempt
+
+To address this loss of precision, an additional materialized view, `meter_raw_readings_unit`, was created to apply unit conversions directly to the raw readings and store the results.  
+
+A new version of the hourly view, `meter_hourly_readings_unit_v3`, was then implemented. Similar to the daily view, it aggregates the converted raw readings into converted hourly readings. This approach eliminates the need to apply conversions directly at the hourly level, since the raw readings are already converted and the hourly readings become an aggregate of those converted values.  
+
+However, after observing several test cases, it became clear that this method also has limitations—albeit the inverse of the previous approach. When raw readings span across multiple hourly partitions, the hourly aggregates no longer reflect only the conversions that apply within that specific hour. Instead, they also include the effects of conversions applied to portions of the raw readings that lie outside the hour being analyzed.  
+
