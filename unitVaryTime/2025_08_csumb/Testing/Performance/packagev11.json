@@ -1,0 +1,22 @@
+{
+	"name": "open-energy-dashboard",
+	"version": "1.0.0",
+	"private": false,
+	"license": "MPL-2.0",
+	"repository": "https://github.com/OpenEnergyDashboard/OED",
+	"scripts": {
+		"start": "node ./src/bin/www",
+		"...",
+		"createCikTest_v7": "node ./src/server/tmp/uploads/createCikTest_v7.js",
+		"createCikTest_v6": "node ./src/server/tmp/uploads/createCikTest_v6.js",
+		"createCikTest_v5": "node ./src/server/tmp/uploads/createCikTest_v5.js",
+		"createCikTest_v4": "node ./src/server/tmp/uploads/createCikTest_v4.js",
+		"runCikTests": "node ./src/server/tmp/uploads/runCikTestsFromFile.js",
+		"runCikTests_v6": "node ./src/server/tmp/uploads/runCikTestsFromFile_v6.js",
+		"runCikTests_v7": "node ./src/server/tmp/uploads/runCikTestsFromFile_v7.js",
+		"createCikTest_v8": "node ./src/server/tmp/uploads/createCikTest_v8.js",
+		"createCikTest_v9": "node ./src/server/tmp/uploads/createCikTest_v9.js",
+		"createCikTest_v11": "node ./src/server/tmp/uploads/createCikTest_v11.js"
+	},
+	...,
+}
