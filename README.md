@@ -19,6 +19,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [uiTesting/uiTesting.md](./uiTesting/UITesting.md): Doing UI testing on OED.
 - [latestChartlink/latestChartlink.md](./latestChartlink/latestChartlink.md): Documents extending chart links to support moving to current time to get latest readings.
 - [UIEval/S22UIEval.md](./UIEval/S22UIEval.md): A UI eval of OED with suggestions from Spring 2022.
+- [preferredUnits/preferredUnits.md](./preferredUnits/preferredUnits.md): Design for preferred units.
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
