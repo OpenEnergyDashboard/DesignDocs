@@ -294,6 +294,91 @@ Some possible software of interest for doing this follows. It is not an exhausti
 
 - [ical-ts](https://github.com/filecage/ical-ts): TS compliant but no license, unsure if really used, done by one person mostly in 2023.
 
+### 251103 Update for applying RRULE to cik_vary
+
+The creation of cik_vary needs to be updated for patterns. The code to deal with conversion segments that have a slope/intercept (no pattern) was added in PR 1532 to the timeVary branch of OED. The envisioned changes follow.
+
+``timeVaryingPathConversion()`` in src/server/services/graph/timeVaryingPathConversion.js handles the conversion segments. It needs logic to deal with conversion segments with patterns. For now, OED will create new segments so a given conversion segment in the current code will be split into multiple segments based upon the pattern specified in the original conversion segment. This means OED will need to store a lot more segments for the pattern and these may create more new entries in cik_vary when combined with other segments along a path. Currently the code stores all the cik_vary items and then puts them in the DB. The hope is that the total number will still be low enough so this is possible in the code. For an example that pushes the sizes involved to be a maximum:
+
+- 5 day segments in each day.
+- For 7 days per week there are 5 x 7 = 35 segments/week.
+- In a year there are about 35 x 365 = 12.8k segments/year.
+- You need a slope, intercept, start date/time & end date/time for each segment entry. Say this takes 50 bytes (exact size unclear).
+- Assume the pattern spans 20 years then you have 12.8k segments/year x 20 years x 50 bytes/segment = 12.2 MB.
+
+How large the total cik_vary will be is uncertain but (hopefully) most paths are not likely to have multiple time-varying patterns so the total number of cik_vary and size should be similar. If this is true then the max size is low tens of MB and that should be doable on an OED server. Given this process is not done often and the next step of calculating all the reading views takes time/memory, it is hoped patterns will not substantially change resource usage. This could change if view refreshing is better optimized. This issue will be revisited if concerns are found during implementation or in the future.
+
+- If OED wants to avoid this size because it is too large and/or to optimize memory then the algorithm should be modifiable to generate patterns on the fly to get the next item rather than in advance. For now, that has not been investigated.
+
+In the following, the modifications needed have comments with "NEW" with "NEW - start"/"NEW - end" surrounding code with multiple new lines. The code has not been tested and is really pseudocode.
+
+The modified code for ``timeVaryingPathConversion()`` is:
+
+```js
+for (let i = 0; i < path.length - 1; ++i) {
+	const sourceId = path[i].id;
+	const destinationId = path[i + 1].id;
+	//segments are sorted by start_time in getBySourceDestination
+	let segments = await ConversionSegment.getBySourceDestination(sourceId, destinationId, conn);
+	// NEW - start
+	// Tell if the conversion direction is okay (false) or must be reversed (true). Assumed false unless found otherwise in next step.
+	let reversed = false;
+	// NEW - end
+	// Did not find the conversion segments. Since conversion should exist, it must be the other way around and bidirectional.
+	if (!segments || segments.length === 0) {
+		// Check if reverse conversion exists and is bidirectional
+		const reverseConversion = await Conversion.getBySourceDestination(destinationId, sourceId, conn);
+		// This should never happen. It should have been in the table one way or the other.
+		if (!reverseConversion || !reverseConversion.bidirectional) {
+			throw Error(`No bidirectional conversion found between ${sourceId} and ${destinationId}`);
+		}
+		// Fetch reverse segments and invert them
+		const reverseSegments = await ConversionSegment.getBySourceDestination(destinationId, sourceId, conn);
+		// This is also really weird that it exist and yet no segments found.
+		if (!reverseSegments || reverseSegments.length === 0) {
+			throw Error(`No conversion segments found for reverse direction between ${destinationId} and ${sourceId}`);
+		}
+		reversed = true; // NEW
+	}
+	// NEW - start
+	if (segments.week_patterns_id is null) {
+		// The segment does not have a pattern so can use the segments found above for slope/intercept.
+		if (reversed) {
+			//  Reversed so invert segments already found.
+			// The next change is not strictly need but it makes the code cleaner by only calling the function once and getting
+			// the values via name. The commented out code is just to show the current version.
+			// segments = reverseSegments.map(seg => ({
+			// 	...seg,
+			// 	slope: invertConversion(seg.slope, seg.intercept)[0],
+			// 	intercept: invertConversion(seg.slope, seg.intercept)[1]
+			// }));
+			const { convertedSlope, convertedIntercept } = invertConversion(seg.slope, seg.intercept)
+			segments = reverseSegments.map(seg => ({
+				...seg,
+				slope: convertedSlope,
+				intercept: convertedIntercept
+			}));
+		}
+		// It may be possible to avoid this push by directly putting segments into edgeSegments. Given there should not be
+		// too many without a pattern it probably is not too important.
+		edgeSegments.push(segments);
+	} else {
+		// The segment has a pattern.
+		// Here are the steps needed:
+		// 1. Use the pattern for this segment to create an RRULE.
+		// 2. Use an RRULE generator to create all the needed conversions from segments.start_time to segments.end_time.
+		//   2.b. If reversed is true then invert the slope/intercept for each conversion using invertConversion().
+		// 3. Each segment is added to edgeSegments with the start_time, end_time, slope & intercept.
+		// It can be done one at a time or all at once. If possible, this should be done without another copy as patterns can
+		// generate a lot of items so fewer copies is better.
+		// Note the next step assumes the segments/conversions are sorted by start_time order for each entry in edgeSegments. It does not matter
+		// how these are generated but they must be sorted in the end so manually sort the ones created by RRULE if needed. This may be needed
+		// if each day segment is generated by its own RRULE so all the segments have to be merged together. If this is done
+		// the the values across segments will be fine as they are processed in the sorted order of time.
+		// NEW - end
+	}
+```
+
 ### Duplication
 
 There may be some value to users to allow them to duplicate a day or week to simplify changes. This would take a little effort and given that setting up a day or week is not too hard it will not be done initially. It could be added later.
@@ -650,4 +735,3 @@ To address this loss of precision, an additional materialized view, `meter_raw_r
 A new version of the hourly view, `meter_hourly_readings_unit_v3`, was then implemented. Similar to the daily view, it aggregates the converted raw readings into converted hourly readings. This approach eliminates the need to apply conversions directly at the hourly level, since the raw readings are already converted and the hourly readings become an aggregate of those converted values.  
 
 However, after observing several test cases, it became clear that this method also has limitations—albeit the inverse of the previous approach. When raw readings span across multiple hourly partitions, the hourly aggregates no longer reflect only the conversions that apply within that specific hour. Instead, they also include the effects of conversions applied to portions of the raw readings that lie outside the hour being analyzed.  
-
