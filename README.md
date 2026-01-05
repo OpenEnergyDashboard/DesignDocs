@@ -7,7 +7,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 ## Active
 
 - [testing/testing.md](./testing/testing.md): Documents how the testing data was generated into CSV files and gives the tests desired.
-- [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
+- [siteUpdate/siteUpdate.md](./siteUpdate/siteUpdate.md): Documents ideas on how OED will regularly update OED software, how to notify sites & simplify site updates.
 - [parameterOptimization.md](./parameterOptimization/parameterOptimization.md): Proposal to adjust parameters.
 - [weather/weather.md](./weather/weather.md): Documents ideas on using weather data to normalize usage.
 - [postgresQueryOptimization.md](./postgresQueryOptimization/postgresQueryOptimization.md): how to analyze time spent on OED queries and the results of doing this.
@@ -35,6 +35,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 
 All of these are in this archive/ directory
 
+- [mergeMeterGroup.md](./MergeMeterGroup/mergeMeterGroup.md): Proposal to fuse the meter and group menus on graphic pages.
 - [simplifyOptions/fewerOptions.md](./archive/simplifyOptions/fewerOptions.md): Move many of the current options for users into a modal popup.
 - [3DGraphic/3DGraphic.md](./archive/3DGraphic/3DGraphic.md): A new 3D graphic to show usage.
 - [automatedTestData.md](./archive/automatedTestData.md): How to generate mathematical test data and use it in the CI testing.
