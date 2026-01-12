@@ -167,6 +167,30 @@ Since OED exposes third-party packages (like Plotly) to users
 
 This is a proposal that is open for discussion.
 
+## Operational Process for OED Maintainers
+
+This section describes the concrete steps OED maintainers should follow to keep update notifications accurate and consistent.
+
+### When a new OED release is published
+1. Update the version metadata file (e.g., `latestVersion.json`) with:
+   - `latest_version`
+   - `obsolete_after`
+   - `support_window` (or the policy used)
+2. If checksums are used, generate and publish SHA-256 checksums for the release artifacts (optional / recommended).
+
+### What happens on admin login
+1. When an admin logs in, OED fetches the metadata file from GitHub Pages.
+2. OED compares:
+   - the local OED version
+   - the latest available version
+   - whether the local version is within the supported window
+3. OED shows an admin-only banner based on the comparison result.
+
+### How support status is determined
+- Supported: within the support window
+- Warning: past the support window but not obsolete yet
+- Obsolete: beyond the obsolete threshold (upgrade strongly recommended)
+
 ## Research Sources
 
 Some information found from basic researching how open-source web apps notify users:
