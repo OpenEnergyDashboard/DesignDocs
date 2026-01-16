@@ -114,6 +114,28 @@ See the sections on patterns for day and week for items. The database needs tabl
 
 See section on Cik for the new table needed to do those implementation steps.
 
+## January 2026 DB Update
+
+A lot of progress has been made in the last 1-2 years. Here is a summary:
+
+- For efficiency reasons, the readings view have been changed so they:
+  - They depend on both the meter unit (as before) and the graphic unit. OED reading graphics go from a meter and, therefore, a meter unit to a graphic unit. Thus, the views now directly store the values needed for hourly and daily views. Timing has found that hourly and daily reading data requests are normally in the 20-30 ms time range.
+  - The meter hourly table is always calculated first. Then the 24 hours in a day are combined to form the meter daily table. Next, the group hourly table is formed by combining the needed meters/meter units for each meter in a group. The group daily table is formed by combing the daily meter values in a similar way to the group hourly table. This is done rather than summing the group hourly view since there are almost always fewer meters in a group than hours in a day.
+- meter_hourly_readings_unit uses a CTE name base_hourly to process the original (raw) meter data. The reasons are detailed below in this document.
+- All functions to return readings to the user were updated. Note the original conversion that did not vary by time are represented by a start time of -infinity and and end time of +infinity.
+  - The meter line readings for raw (meter level) readings do not use the views for reasons given below in this document. The process the original readings and then convert to the needed graphic unit. Using the readings table and doing the conversions on-the-fly is more expensive at the time of request than the hourly and daily that use the views. This is believed to be okay since raw is less commonly used and it is limited to 1440 points at this time. Timing found it to be acceptable.
+- Many other minor to modest changes were made but not discussed here.
+
+There are some outstanding items to still address:
+
+- Using hourly and daily views means the computation occurs in advance and then the graphic reading functions access those values. This pushes the complex and costly computation to the update of the views which only happens periodically. It also expanded the needed DB storage but that was deemed okay. However, with more views that are each larger and with update logic being more expensive, the CPU time and elapsed time to do this has grown significantly. While this is a background DB task, its resource usage is significantly greater than desired. The view updates (refresh) currently do all values in the view table. In reality, only a small number of the readings typically change between refreshing. For example, if you refresh every hour then only the new readings for that hour would typically change. These are the ideas for trying to optimize the views:
+  - [timescaleDB.md](../timescaleDB/timescaleDB.md) discusses and attempt to use the timescaleDB system that can be used with Postgres. It is supposed to only update needed items within a view so it should be significantly faster. However, it has issue with our generate_series and a couple of other features used. This work made some progress but more research/testing is needed to see if this is viable.
+  - [view.md in limiting refreshing section](../views/views.md#limiting-refreshing) discusses earier thought on manually doing this. The basic idea is OED would tract what had changed in readings and only update the needed view values. This has not been investigated to see if it can be done because using a standard package would be more desirable.
+  - The options above and any other ideas need to be looked into to find a viable solution and then it needs to be implemented.
+- The results have been manually tested and appear to be correct. However, systematic testing is needed. @huss has a spreadsheet that can, for some cases, calculate the expected graphic reading values. This needs to be completed, the testing in src/server/test/web/ for readings and described in the [testing document](../testing/testing.md) need to be used as the basis for creating similar tests for time-varying readings. There are a lot of details to work out in doing this. This is actually testing the route but that indirectly tests the model and DB code. The goal is to do one of each type of test to show it works. OED will then document all the needed tests and others can systematically implement them.
+
+issue with view time to create
+
 ## UI for time-varying conversions
 
 As is the current case, all pages for conversions will be restricted to admins.
