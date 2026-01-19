@@ -1,6 +1,147 @@
 # Documentation on how website data is created
 
-**The ongoing migration (in summer 2024) to the website to a responsive design and other changes means this directions are not up-to-date with those changes. An update to this document is planned.**
+## Items for website update
+
+### Deploying site
+
+Starting in the summer of 2024 the website was converted to use the [Feeling Responsive](https://github.com/Phlow/feeling-responsive) Jekyll template. Unfortunately, automatic deployment on GitHub has not been worked out (see below). Thus, the site is created on a local machine and the the static site is deployed to GitHub. There are two important branches in the site repository:
+
+- The branch used to develop and test the site locally. This might be ``main`` or a branch you are using for a new version. It contains all the files to build via Jekyll. Commits to this branch updates how to build the site but does not change what site visitors see.
+- The branch used to deploy OED. This is normally ``gh-pages``. This only has the static ``_site`` files for serving up the pages. Commits to this branch changes what site visitors see.
+
+The steps are:
+
+- edit _config.yml
+  - There are two places with the comment ``fix for live site`` that may need to be updated to comment out the test location and uncomment the live site location.
+  - The first defines the location of the site and, after editing, should look like:
+
+```yaml
+url: 'https://openenergydashboard.org'
+baseurl: ''
+# url: 'https://<testing GitHub Name/ID>.github.io'
+# baseurl: '/OpenEnergyDashboard.github.io'
+```
+
+and
+
+```yaml
+urlimg: 'https://openenergydashboard.org/images/'
+# urlimg: 'https://<testing GitHub Name/ID>.github.io/OpenEnergyDashboard.github.io/images/'
+```
+- By default, Jekyll changes the url to localhost:4000 when running locally (serve) so need to override. In terminal where build locally for Jekyll
+  - bundle exec jekyll build
+    - It is a good idea to look at _site/<some page file(s)> to verify all went well. Note links point to GitHub pages and not local.
+- What follows assumes you are in a Linux terminal. You can probably do with Windows but directions are not included.
+- Make a copy of the static site files in directory above the cloned repo.
+  - mv _site ..
+- Go to the deployment branch that is actually served on GitHub.
+  - Change to the gh-pages branch.
+    - Be careful you are on the GitHub deployment branch and don’t remove the original files.
+      - ls should only show served up files and not the others
+- Get rid of old files.
+  - Not a bad idea to do ``ls -d *`` to see what about to delete
+  - ``rm -r *``
+    - Note this is a recursive delete so it removes a lot of files. If you make a mistake you can discard the changes in git to put it back.
+    - not a bad idea to check with ``ls -a`` to see if missed anything that should have removed. You will still have the ``.git`` and ``.github`` directories.
+- Move the copy of the static site files from above into this location so can commit for deployment
+  - ``mv ../_site/* .``
+  - Again, good idea to look in web browser to be sure all is okay.
+- Commit and push changes via git.
+- Remove the temporary sites directory
+  - ``rmdir ../_site``
+- probably want to switch back to other branch if do any work.
+- Go to the live site at [https://openenergydashboard.org](https://openenergydashboard.org}) and see if it work.
+- If you don’t see what you expect, you can go to the GitHub website repo, Actions to check out the build status and click to see any issues. Since it is not building the pages this is very fast to deploy.
+- Be careful to edit the non-deployment branch if you want the changes to stay for the next copy.
+
+### Initial site setup
+
+This was done initially and should be fine unless the method of deployment is changed (such as automatic GitHub deployment).
+
+- On GitHub, in Repo, go to Settings (only first time)
+  - General
+    - Default branch, switch to: gh-pages
+  - Pages
+    - Build and deployment, Source
+      - GitHub Actions
+        - Static HTML/By GitHub Actions/Deploy static files in a repository without a build: click to configure
+          - In editor that appears make no changes and click to Commit changes...
+- If you go to the actions tab then it should have started a deployment. After it finished successfully the site should be live.
+
+TODO for testing
+
+### Using Jekyll locally
+
+The normal way to run Jekyll locally is with
+
+```bash
+bundle exec jekyll serve --config _config.yml,_config_dev.yml
+```
+
+This changes some of the configuration for local development, builds and serves the pages. Changes should automatically update and a web browser reload should see them. One exception is changes to a _config file requires a restart of Jekyll. Any errors will show up in the terminal. You can shut down with ``^c``.
+
+One needs a Jekyll development environment to build/serve the pages. While it can run on most OSes, to date it has been done on Ubuntu in WSL as Linux is needed for OED code development.
+
+One needs ruby and the recommended bundler for this to work. Attempts were made to use prepackaged version but they all had issue (maybe can work). In the end, a full ruby install was done with ``sudo apt-get -o APT::Install-Suggests="true" install ruby-full``. It may have been more than needed, does lots of stuff but it did work.
+
+Here are some pages that might help with setting up Jekyll but most have not yet been used.
+
+- [GitHub Jekyll overview](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll#installing-jekyll) and [GitHub info on Jekyll setup](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/testing-your-github-pages-site-locally-with-jekyll?platform=windows).
+- [Official Windows install](https://jekyllrb.com/docs/installation/windows/)
+- [Jekyll Docker versions](https://hub.docker.com/r/jekyll/jekyll/tags) but using Docker did not work out.
+
+### Creating a new version of documentation for new OED version
+
+TODO
+
+### GtHub deployment issues
+
+Several attempts were made to make this work. The basic issue is that the github-pages gem needs versions of Ruby and other gems that are earlier than what Feeling Responsive wants. Here are some info pages that were found but a final solution was not.
+
+- [GitHub pages version dependencies](https://pages.github.com/versions/)
+- [How to run Jekyll versions with GitHub pages](https://www.moncefbelyamani.com/making-github-pages-work-with-latest-jekyll/) but was not done
+
+### Overall site
+
+- Check that the OED running site for images/video is named “OED Demo Site”.
+- Make sure you log out as admin so it looks as a normal user would see unless doing an admin page.
+- Unless you want to show the dropdown menus, click off of them.
+- Remember to hover over values for many graphs.
+- Looking at the current image can help in making the new one. The HTML has the file names that make it easier to name the new screenshots.
+- When you want a box around an item, use the border color of 0000FF in web colors. The second, light blue box, is color 3399FF in web colors.
+
+### Update all pages as needed
+
+- If done correctly, all PRs and issues for this milestone are listed in the milestone so you can figure out what needs updating.
+- Don’t forget that features.html on the main website also has OED images of many features.
+- Sometimes changes impact the developer pages.
+- Compare & map values change when re-graph so need to check values in text
+
+### HTML is valid
+
+Go to [https://validator.w3.org/](https://validator.w3.org/) and enter URL. Seems must do one page at a time.
+
+### check CSS if valid
+
+[https://jigsaw.w3.org/css-validator/](https://jigsaw.w3.org/css-validator/)
+
+Did the only page of css/main.css and no issues found.
+
+### Check links are valid
+
+Go to [https://validator.w3.org/checklink], enter web address, check summary only, set the depth of linked documents recursion to 10 to check all the linked pages. (Note tried checking Hide redirects but it did not help.) It takes a little while but it finds and checks them all.
+
+- Cannot check email links so get at least one warning on each page for contact
+- Complains about MPL link on footer of each page but it does seem fine.
+- [https://www.learn-js.org/](https://www.learn-js.org/) generally gives an error but the link seems fine.
+- [https://help.github.com/](https://help.github.com/) and  [https://docs.github.com/get-started/quickstart/fork-a-repo](https://docs.github.com/get-started/quickstart/fork-a-repo) gives redirect warning but want the redirect since selecting language automatically.
+- [https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform](https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform) gives warning on not checked to to robot exclusion but okay.
+- Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "<http://mozilla.org/MPL/2.0/>" -e "<https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform>" -e "<https://www.learn-js.org/>" -e "<https://help.github.com/>" -e "<https://docs.github.com/get-started/quickstart/fork-a-repo"”> for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
+- All okay with warning noted above as of 210807.
+
+### Check accessibility
+
+Not yet done/figured out.
 
 ## Creating the CSV data readings files
 
@@ -268,53 +409,3 @@ The next time you can drag the web browser window to be the placement you want i
 ### Doing videos
 
 You can record and do the usual OBS functions. After it is done, do File->Remux Recordings to convert to mp4. The default and preferred .mkv may not easily play in web browsers.
-
-## Debugging locally
-
-Unless you have Jekyll installed, you cannot see the formatting done by GitHub on your local machine. You need to push the changes to GitHub to see.
-
-You can add ```<link rel="stylesheet" href="../../css/main.css"> <!-- DEBUG - REMOVE -->``` to the top of a page (right below the Jekyll front matter separated by "---") on any help page. You can change the relative path if the file is in another directory. This will load in the CSS file so it will look closer to GitHub. Just remember to delete before committing. Searching for "DEBUG" or "REMOVE" will make this easy.
-
-## Items for website update
-
-### Overall site
-
-- Check that the site is named “OED Demo Site”.
-- Make sure you log out as admin so it looks as a normal user would see unless doing an admin page.
-- Unless you want to show the dropdown menus, click off of them.
-- Remember to hover over values for many graphs.
-- Looking at the current image can help in making the new one. The HTML has the file names that make it easier to name the new screenshots.
-- When you want a box around an item, use the border color of 0000FF in web colors. The second, light blue box, is color 3399FF in web colors.
-
-### Update all pages as needed
-
-- If done correctly, all PRs and issues for this milestone are listed in the milestone so you can figure out what needs updating.
-- Don’t forget that features.html on the main website also has OED images of many features.
-- Sometimes changes impact the developer pages.
-- Compare & map values change when re-graph so need to check values in text
-
-### HTML is valid
-
-Go to [https://validator.w3.org/](https://validator.w3.org/) and enter URL. Seems must do one page at a time.
-
-### check CSS if valid
-
-[https://jigsaw.w3.org/css-validator/](https://jigsaw.w3.org/css-validator/)
-
-Did the only page of css/main.css and no issues found.
-
-### Check links are valid
-
-Go to [https://validator.w3.org/checklink], enter web address, check summary only, set the depth of linked documents recursion to 10 to check all the linked pages. (Note tried checking Hide redirects but it did not help.) It takes a little while but it finds and checks them all.
-
-- Cannot check email links so get at least one warning on each page for contact
-- Complains about MPL link on footer of each page but it does seem fine.
-- [https://www.learn-js.org/](https://www.learn-js.org/) generally gives an error but the link seems fine.
-- [https://help.github.com/](https://help.github.com/) and  [https://docs.github.com/get-started/quickstart/fork-a-repo](https://docs.github.com/get-started/quickstart/fork-a-repo) gives redirect warning but want the redirect since selecting language automatically.
-- [https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform](https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform) gives warning on not checked to to robot exclusion but okay.
-- Can save the result as html and then do “grep -e Line -A 2 foo.html” to see all lines with issues plus the two following to get the message or “grep -e Line foo.html | grep -v -e "mailto:" -e "<http://mozilla.org/MPL/2.0/>" -e "<https://docs.google.com/forms/d/e/1FAIpQLSc2zdF2PqJ14FljfQIyQn_X70xDhnpv-zCda1wU0xIOQ5mp_w/viewform>" -e "<https://www.learn-js.org/>" -e "<https://help.github.com/>" -e "<https://docs.github.com/get-started/quickstart/fork-a-repo"”> for just the ones without the msgs noted above. This may not be perfect but it appears to get everything.
-- All okay with warning noted above as of 210807.
-
-### Check accessibility
-
-Not yet done/figured out.
