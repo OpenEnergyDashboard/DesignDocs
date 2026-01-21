@@ -88,6 +88,7 @@ Published URL example: https://openenergydashboard.github.io/DesignDocs/update-m
 
 JSON format (sample):
 
+```json
 {
   "latest_version": "0.3.0",
   "obsolete_after": "0.2.0",
