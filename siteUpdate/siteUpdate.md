@@ -172,7 +172,6 @@ How to add to GitHub
 
 This approach is OS-independent and allows GitHub to serve the checksum file directly.
 
-
 ### Long-Term Improvement: Easier Upgrades
 
 To reduce manual steps, OED can explore a future script:
@@ -199,9 +198,12 @@ This is a proposal that is open for discussion.
 
 ## Operational Process for OED Maintainers
 
+
 This section describes the concrete steps OED maintainers should follow to keep update notifications accurate and consistent.
 
 ### When a new OED release is published
+
+
 1. Update the version metadata file: DesignDocs/docs/update-metadata/latestVersion.json
 2. set: 
    - `latest_version`
@@ -214,6 +216,7 @@ This section describes the concrete steps OED maintainers should follow to keep 
 4. Commit and publish the updated JSON file so GitHub Pages reflects the new version
 
 ### What happens on admin login
+
 1. When an admin logs in, OED fetches the metadata file from GitHub Pages.
 2. OED compares:
    - the local OED version
@@ -222,6 +225,7 @@ This section describes the concrete steps OED maintainers should follow to keep 
 3. OED shows an admin-only banner based on the comparison result.
 
 ### How support status is determined
+
 - Supported: within the support window
 - Warning: past the support window but not obsolete yet
 - Obsolete: beyond the obsolete threshold (upgrade strongly recommended)
