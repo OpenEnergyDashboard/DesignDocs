@@ -2,7 +2,7 @@
 
 ## Introduction
 
-So far this proposal presents maintainable update-notification and patch-management approach for OED, based on research on how other open-source systems notify users about updates. The goal is to suggest a solution that fits OED’s existing architecture and avoids major changes such as servers, or intrusive tracking.
+This proposal presents a maintainable update-notification and patch-management approach for OED based on research on how other open-source systems notify users about updates. The goal is to suggest a solution that fits OED’s existing architecture and avoids major changes such as servers, or intrusive tracking.
 
 **At this point it is a draft and further updates are expected.**
 
@@ -75,11 +75,11 @@ For major upgrades, OED might:
 Since OED does not communicate with any server, here is a non-invasive solution:
 
 #### Step 1: Host Version Metadata Publicly (GitHub Pages)
+
 The version metadata file should be stored in a predictable location that can be served via GitHub Pages.
 
-Recommended repository and path: DesignDocs/docs/update-metadata/latestVersion.json
-
-Published URL example: https://openenergydashboard.github.io/DesignDocs/update-metadata/latestVersion.json
+**Proposed repository path:** `update-metadata/latestVersion.json`  
+**Proposed public URL:** `https://openenergydashboard.github.io/update-metadata/latestVersion.json`
 
 - Requires no backend
 - No tracking
@@ -98,10 +98,10 @@ JSON format (sample):
   "sha256_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/download/v0.3.0/SHA256SUMS.txt"
 }
 
-#### Step 2:  Check Only When an Admin Logs In
 
-- OED performs this fetch: GET https://openenergydashboard.github.io/DesignDocs/update-metadata/latestVersion.json
-  - The exact location might be better in a specified directory for this purpose.
+#### Step 2: Check Only When an Admin Logs In
+
+- OED performs this fetch: `GET https://openenergydashboard.github.io/update-metadata/latestVersion.json`
 
 #### Step 3: Compare Versions
 
@@ -204,14 +204,21 @@ This section describes the concrete steps OED maintainers should follow to keep 
 
 ### When a new OED release is published
 
+1. Update the version metadata file: update-metadata/latestVersion.json
+2. Set the metadata fields in `latestVersion.json` as shown below:
 
-1. Update the version metadata file: DesignDocs/docs/update-metadata/latestVersion.json
-2. set: 
-   - `latest_version`
-   - `obsolete_after`
-   - `support_window` (or the policy used)
-   - release_url
-   - sha256_url (if used)
+```json
+{
+  "latest_version": "0.3.0",
+  "minimum_supported_version": "0.2.0",
+  "support_window_months": 12,
+  "last_updated_utc": "2026-01-20T00:00:00Z",
+  "release_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/tag/v0.3.0",
+  "sha256_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/download/v0.3.0/SHA256SUMS.txt",
+  "security_update": true,
+  "severity": "medium"
+}
+```
      
 3. Generate SHA-256 checksums and upload SHA256SUMS.txt to the GitHub Release (optional but recommended)
 4. Commit and publish the updated JSON file so GitHub Pages reflects the new version
