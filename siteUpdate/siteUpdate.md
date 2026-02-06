@@ -173,6 +173,17 @@ How to add to GitHub
 
 This approach is OS-independent and allows GitHub to serve the checksum file directly.
 
+#### Optional: Automate SHA-256 checksums with GitHub Actions
+
+Instead of generating checksums manually, OED can automate checksum generation during release.
+
+- Use a GitHub Actions workflow triggered on release (or tag)
+- Generate `SHA256SUMS.txt` for the release artifacts
+- Upload `SHA256SUMS.txt` as a Release asset
+- Optionally paste the checksum contents into the GitHub Release notes
+
+This reduces human error and ensures every release consistently includes checksums.
+
 ### Long-Term Improvement: Easier Upgrades
 
 To reduce manual steps, OED can explore a future script:
