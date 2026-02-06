@@ -2,7 +2,7 @@
 
 ## Introduction
 
-So far this proposal presents maintainable update-notification and patch-management approach for OED, based on research on how other open-source systems notify users about updates. The goal is to suggest a solution that fits OED’s existing architecture and avoids major changes such as servers, or intrusive tracking.
+This proposal presents a maintainable update-notification and patch-management approach for OED based on research on how other open-source systems notify users about updates. The goal is to suggest a solution that fits OED’s existing architecture and avoids major changes such as servers, or intrusive tracking.
 
 **At this point it is a draft and further updates are expected.**
 
@@ -76,21 +76,32 @@ Since OED does not communicate with any server, here is a non-invasive solution:
 
 #### Step 1: Host Version Metadata Publicly (GitHub Pages)
 
-Example file → latestVersion.json:
-{
-  "latest\_version": "3.7.0",
-  "obsolete\_after": "3.4.0",
-  "support\_window": "12 months"
-}
+The version metadata file should be stored in a predictable location that can be served via GitHub Pages.
+
+**Proposed repository path:** `update-metadata/latestVersion.json`  
+**Proposed public URL:** `https://openenergydashboard.github.io/update-metadata/latestVersion.json`
 
 - Requires no backend
 - No tracking
 - Fits open-source norms
+- Allows public access
 
-#### Step 2:  Check Only When an Admin Logs In
+JSON format (sample):
 
-- OED performs this fetch:  GET https://oed-project.github.io/latestVersion.json
-  - The exact location might be better in a specified directory for this purpose.
+```json
+{
+  "latest_version": "0.3.0",
+  "obsolete_after": "0.2.0",
+  "support_window_months": 12,
+  "last_updated_utc": "2026-01-20T00:00:00Z",
+  "release_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/tag/v0.3.0",
+  "sha256_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/download/v0.3.0/SHA256SUMS.txt"
+}
+
+
+#### Step 2: Check Only When an Admin Logs In
+
+- OED performs this fetch: `GET https://openenergydashboard.github.io/update-metadata/latestVersion.json`
 
 #### Step 3: Compare Versions
 
@@ -104,16 +115,18 @@ OED checks:
 
 Examples:
 
-- If outdated:  “New OED version 3.7.0 is available.”
-- If obsolete: “Your OED version is no longer supported. Please upgrade soon.”
-  - Specifying the current version in all messages might be be better even though it is in the OED footer.
-  - The best and minimum upgrade would also be helpful.
-  - OED should probably tell if this is a security update and the severity involved.
-- No messages on the login page
-- No information leaked to regular users
-- Avoids advertising security issues
+- If outdated:
+  New OED version 0.3.0 is available.
 
-A nicer (maybe future) system would store information in the OED DB about the latest, time of last notification of admin where the site could set the frequency of reminders and allow for dismissal of banner.
+- If obsolete:
+  Your OED version is no longer supported. Please upgrade soon.
+
+Additional improvements:
+- Show current version
+- Show minimum upgrade target
+- Indicate security-related updates when applicable
+
+No messages appear on the login page and no information is exposed to non-admin users.
 
 ### Version Support Policy
 
@@ -143,6 +156,34 @@ Because many sites choose not to configure an outgoing email server (SMTP), OED 
 - Sites can verify downloads without needing new infrastructure
 - Fits GitHub’s security model
 
+How to generate SHA-256 checksums
+macOS / Linux
+shasum -a 256 <filename>
+For all release files: shasum -a 256 * > SHA256SUMS.txt
+
+Windows (PowerShell)
+Get-FileHash <filename> -Algorithm SHA256
+For multiple files: Get-FileHash * -Algorithm SHA256 | Format-Table -AutoSize > SHA256SUMS.txt
+
+How to add to GitHub
+	- Create or edit a GitHub Release for the version tag (e.g., v0.3.0)
+	- Upload SHA256SUMS.txt as a release asset
+	- Copy the asset download URL
+	- Add the URL to latestVersion.json under sha256_url
+
+This approach is OS-independent and allows GitHub to serve the checksum file directly.
+
+#### Optional: Automate SHA-256 checksums with GitHub Actions
+
+Instead of generating checksums manually, OED can automate checksum generation during release.
+
+- Use a GitHub Actions workflow triggered on release (or tag)
+- Generate `SHA256SUMS.txt` for the release artifacts
+- Upload `SHA256SUMS.txt` as a Release asset
+- Optionally paste the checksum contents into the GitHub Release notes
+
+This reduces human error and ensures every release consistently includes checksums.
+
 ### Long-Term Improvement: Easier Upgrades
 
 To reduce manual steps, OED can explore a future script:
@@ -166,6 +207,47 @@ Since OED exposes third-party packages (like Plotly) to users
 - Update packages during minor releases, not just majors
 
 This is a proposal that is open for discussion.
+
+## Operational Process for OED Maintainers
+
+
+This section describes the concrete steps OED maintainers should follow to keep update notifications accurate and consistent.
+
+### When a new OED release is published
+
+1. Update the version metadata file: update-metadata/latestVersion.json
+2. Set the metadata fields in `latestVersion.json` as shown below:
+
+```json
+{
+  "latest_version": "0.3.0",
+  "minimum_supported_version": "0.2.0",
+  "support_window_months": 12,
+  "last_updated_utc": "2026-01-20T00:00:00Z",
+  "release_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/tag/v0.3.0",
+  "sha256_url": "https://github.com/OpenEnergyDashboard/OpenEnergyDashboard/releases/download/v0.3.0/SHA256SUMS.txt",
+  "security_update": true,
+  "severity": "medium"
+}
+```
+     
+3. Generate SHA-256 checksums and upload SHA256SUMS.txt to the GitHub Release (optional but recommended)
+4. Commit and publish the updated JSON file so GitHub Pages reflects the new version
+
+### What happens on admin login
+
+1. When an admin logs in, OED fetches the metadata file from GitHub Pages.
+2. OED compares:
+   - the local OED version
+   - the latest available version
+   - whether the local version is within the supported window
+3. OED shows an admin-only banner based on the comparison result.
+
+### How support status is determined
+
+- Supported: within the support window
+- Warning: past the support window but not obsolete yet
+- Obsolete: beyond the obsolete threshold (upgrade strongly recommended)
 
 ## Research Sources
 
