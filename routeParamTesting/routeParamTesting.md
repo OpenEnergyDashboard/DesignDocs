@@ -11,11 +11,42 @@ The current code does a reasonable job in testing values but it is not complete.
 
 [issue 1497](https://github.com/OpenEnergyDashboard/OED/issues/1497) covers this work.
 
-## Current status
+## Current Status (Updated February 2026)
 
-A developer has worked (and might still be working) to create a route parameter testing methodology and used it to test the units route. This is a similar idea to the OED testing of getting graphic data from readings or systematic UI testing. The code may already be in as a pull request or merged when people do this work so please check with the project to find the best place to start.
+Main implementation has been merged via [PR #1528](https://github.com/OpenEnergyDashboard/OED/pull/1528), resolving [issue #1497](https://github.com/OpenEnergyDashboard/OED/issues/1497). All major OED routes now have comprehensive parameter validation tests with room for improvement identified.
 
-This code will need review to determine how it should be expanded and applied to other routes.
+### What Was Implemented
+
+**Testing Framework** (`src/server/test/util/validationHelpers.js`):
+- `testInvalidField()`, `validateString()`, `validateInt()`, `validateBool()`, `validateToken()`
+- `validateNoExtraFields()` - prevents parameter injection attacks
+- `validateMinMaxRelation()` - enforces min ≤ max relationships
+
+**Validation Constants** (`src/server/util/validationConstants.js`):
+- Centralized limits (e.g., `STRING_GENERAL_MAX_LENGTH: 1000`, `TOKEN_MAX_LENGTH: 2000`)
+- Use these constants in both route validation and tests
+
+**Test Coverage**: 20+ test files in `src/server/test/routes/*ParamsTest.js` covering:
+- Core resources (units, meters, groups, maps)
+- Data routes (readings, comparisons, baseline, CSV)
+- Auth routes (login, users, verification, 2FA)
+- System routes (preferences, logs, conversions)
+
+**Security Testing**: All tests include validation for SQL injection, XSS, path traversal, DoS prevention, parameter injection, and type confusion.
+
+### Future Work
+
+Several enhancements identified during implementation:
+- [#1572 - Test Generalization and Helper Functions](https://github.com/OpenEnergyDashboard/OED/issues/1572)
+- [#1573 - HTTP Status Code Audit and Standardization](https://github.com/OpenEnergyDashboard/OED/issues/1573)
+- [#1574 - Make unit route tests consistent with other tests](https://github.com/OpenEnergyDashboard/OED/issues/1574)
+- [#1575 - Verify route tests check all parameters and possibilities](https://github.com/OpenEnergyDashboard/OED/issues/1575)
+
+This is an ongoing effort to strengthen OED's security and improve overall code quality through enhanced testing practices.
+
+## Historical Context
+
+The sections below document the original requirements and approach for this work.
 
 ## Details of changes needed
 
