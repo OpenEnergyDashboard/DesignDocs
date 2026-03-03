@@ -57,6 +57,7 @@ Note that for most chart links, OED uses a fixed UTC time zone so everyone using
 1. A meter being displayed has a different time zone than the web browser creating the chart link.
 
     a. If the meter time zone is earlier in time then its shift from UTC is smaller (if negative then a larger negative value). Assuming the meter has up-to-data readings, the time associated with the latest reading will be earlier in time than the current time for the web browser. Note this same issue happens if the meter does not have readings to the current time even if there is no difference in the time zone.
+
     b. If the meter time zone is later in time then its shift from UTC is larger (if negative then a smaller negative value). Assuming the meter has up-to-data readings, the time associated with the latest reading will be later in time than the current time for the web browser.
 
 In both these cases, there is the question of what the chart link should do. In case 1.a. it may lead to having more readings when used later and in case 1.b. it may lead to having a shorter time range for displaying readings. OED is okay with case 1.a. since readings are regularly added anyway. For case 1.b., OED would like the chart link to show the larger time range when used. Note different meters may have different time zones so OED would use the meter with the latest time if it is later than the current time in the web browser time zone.
