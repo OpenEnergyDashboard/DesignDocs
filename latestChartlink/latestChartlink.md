@@ -99,9 +99,13 @@ Creating a chart link:
 The following values are used in this example where dates are not included to make it easier.
 
 a. Web browser current time: 08:00-05:00.
+
 b. Web browser current time sliced to UTC: 08:00+00:00.
+
 c. Server start time which is in the chart link: 03:00+00:00.
+
 d. Slider start time which is in the chart link: 04:00+00:00.
+
 e. Slider end time which is in the chart link: 06:00+00:00.
 
 Here is a table of examples:
