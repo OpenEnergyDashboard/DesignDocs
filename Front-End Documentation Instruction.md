@@ -4,8 +4,7 @@ Overall Goal: Create a page for admins of OED to create holiday exceptions
 
 What we did: 
 
-- Went through OED design documents specifically   
-  - Wef  
+- Went through OED design documents   
 - Drew up a design of what the page should look like, these are very rough, and I will explain them in detail for what they are supposed to be.   
 - Figure A.   
 - ![][image1]
@@ -48,8 +47,6 @@ Design:
 - There is going to be a text field to add context 
 
 There will need to be a database either created or updated to include holidays 
-
-- jhjhj
 
 Look at other pages; they should all be calling, translating format messages, OED translates automatically.
 
