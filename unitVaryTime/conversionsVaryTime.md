@@ -449,6 +449,8 @@ These need to be worked out. The current reading tests will be a good start.
 
 ### Exceptions for conversion patterns
 
+This [document](./Front-End%20Documentation%20Instruction.md) is from a spring 2026 team that started to implement the holiday system.
+
 Assuming the plan to use ical RRULE to create patterned conversions is used, the exceptions for holidays could be added via EXDATE. The question is how to do that. This has not been completely worked out. However, basic research found that there is free software to determine holiday dates for locations around the world. These are specified here as a starting point for future efforts.
 
 - [date-holidays](https://github.com/commenthol/date-holidays): npm package with lots of downloads, ISC license. Lots of contributors. Works worldwide. Returns holidays as array of JSON objects. Can also check if a date is a holiday. This may be the most promising.

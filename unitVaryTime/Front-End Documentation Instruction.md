@@ -1,5 +1,7 @@
 Front End Documentation
 
+Note: This is the raw information from a team in spring 2026. Some of the thoughts/ideas differ from current plans. Thus, anyone working on this should connect with OED to know the latest ideas. Also, the location of the front-end code discussed is not known at this time.
+
 Overall Goal: Create a page for admins of OED to create holiday exceptions
 
 What we did: 
