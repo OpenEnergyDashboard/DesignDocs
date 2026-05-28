@@ -24,7 +24,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
 - [timescaleDB/timescaleDB.md](./timescaleDB/timescaleDB.md): Information on efforts to investigate TimescaleDB usage in OED.
-- [infisicalIntegration/INFISICAL_INTEGRATION.md](./infisicalIntegration/INFISICAL_INTEGRATION.md): Instructions for how to utilize Infisical secrets management to store database passwords.
+- [infisicalIntegration/INFISICAL_INTEGRATION.md](./infisicalIntegration/infisicalIntegration.md): Instructions for how to utilize Infisical secrets management to store database passwords.
 
 ## Information
 
