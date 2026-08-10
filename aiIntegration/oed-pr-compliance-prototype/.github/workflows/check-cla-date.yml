@@ -1,0 +1,42 @@
+name: CLA Date Verification
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify-cla-date:
+    name: Verify CLA signing date
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the trusted base branch, not the contributor's PR branch.
+      # This is important because pull_request_target can access repository secrets.
+      - name: Check out trusted base branch code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install the Google Sheets API client used by scripts/check-cla-date.js.
+      - name: Install Google Sheets client
+        run: npm install googleapis
+
+      # Check that the manual date entered in the CLA form is close to
+      # the automatic Google Form timestamp for the same GitHub username.
+      - name: Verify CLA signing date
+        run: node scripts/check-cla-date.js
+        env:
+          GITHUB_LOGIN: ${{ github.event.pull_request.user.login }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          CLA_SHEET_ID: ${{ secrets.CLA_SHEET_ID }}
+          CLA_RANGE: "Form Responses 1!A:Z"
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
