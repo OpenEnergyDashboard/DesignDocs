@@ -1,6 +1,7 @@
 # OED AI Policy Comparison
 
-Converted from the original three-tab Excel workbook into a single Markdown document.
+Converted from the original three-tab workbook into a single Markdown document.
+Google Sheets: https://docs.google.com/spreadsheets/d/1XF7leNgV0ftwLTxSF8yHJUb8IIJxx806YyQnTnyd3NE/edit?usp=sharing
 
 ## Comparison Table
 
@@ -159,7 +160,7 @@ Research Findings - OED AI Policy Comparison<br>Data and policy information curr
 
 ### Relevance
 
-| Finding                                              | Count | Total reviewed | Percentage | Scope |
-|------------------------------------------------------| --- | --- | --- | --- |
-| Relevant projects require human review               | 11 | 11 | 100.0% | High-Med relevance |
-| Relevant projects require contributor accountability | 12 | 12 | 100.0% | High-Med relevance |
+| Finding | Count | Total reviewed | Percentage | Scope |
+| --- | --- | --- | --- | --- |
+| Relevent projects require human review | 11 | 12 | 92.0% | High-Med relevance |
+| Relevent projects require contributor accountability | 12 | 12 | 100.0% | High-Med relevance |
