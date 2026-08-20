@@ -457,6 +457,22 @@ These need to be worked out. The current reading tests will be a good start.
 
 Work has continued this summer. A team has been implementing a UI for holidays and integrated it with the backend done earlier for holidays. This includes working with an external server to get holidays for any region in the world. That team should be posting updates about that work in the near future.
 
+#### 260814 Holiday administration status and remaining work
+
+The summer 2026 team implemented the holiday administration workflow. The Base Holidays page uses the `date-holidays` npm package on the OED server to import dated holidays for a selected location and year. A Holiday Rate connects one saved Base Holiday to a Day Pattern, Holiday Rates can be collected into a Holiday Rate Group, and a Week Pattern can optionally reference one of those groups.
+
+The current implementation saves this configuration, but it does not yet apply holiday exceptions to time-varying conversions. That work is tracked in issue #1681 and is expected to be completed in a separate follow-up PR. (To my understanding) The server will need to find the holidays that occur within a Conversion Segment, exclude those full days from the normal weekly RRule, insert replacement segments from the associated holiday Day Patterns, and ensure that the final conversion ranges remain sorted without gaps or overlaps. (see below for details)
+
+Part of the current design will probably need to be reworked during or before that integration. Base Holidays are currently stored as specific dated occurrences, such as US-CA: Thanksgiving 2026, while the RRule design expects a holiday to be resolved across every year covered by a Conversion Segment. Future work must decide whether Base Holidays should become reusable holiday definitions or whether administrators must import and configure every applicable year.
+
+Review also identified several administration-page improvements. The Base Holidays page should eventually preview holidays before saving, separate importing from viewing existing location/year selections, and treat a saved location and year as a manageable item. Other deferred improvements include location names (instead of region), imported-year history, deletion after dependency checks, duplicate validation, consistent location filtering, and deciding whether imported holiday names should follow the selected OED language.
+
+The current holiday administration PR documents a more complete list of known limitations and smaller cleanup items. The team turnover document contains implementation details and suggested starting points for future work.
+
+- Holiday administration PR: [PR 1697](https://github.com/OpenEnergyDashboard/OED/pull/1697)
+- [Team turnover doc](./summer2026HolidayTurnover.md)
+- RRule follow-up: [OED issue #1681](https://github.com/OpenEnergyDashboard/OED/issues/1681)
+
 #### Applying holiday exceptions to RRule
 
 Once holidays are stored in OED, they need to override the normal pattern to use the desired conversion instead. This outlines the current thinking (as of 260724) on how this will be done.
