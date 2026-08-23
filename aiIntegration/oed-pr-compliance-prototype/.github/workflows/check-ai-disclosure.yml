@@ -1,0 +1,26 @@
+name: Check AI Disclosure
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-ai-disclosure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check PR body for AI disclosure
+        run: node scripts/check-ai-disclosure.js
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}

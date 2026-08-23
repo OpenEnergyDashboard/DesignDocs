@@ -25,6 +25,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
 - [timescaleDB/timescaleDB.md](./timescaleDB/timescaleDB.md): Information on efforts to investigate TimescaleDB usage in OED.
 - [infisicalIntegration/infisicalIntegration.md](./infisicalIntegration/infisicalIntegration.md): Instructions for how to utilize Infisical secrets management to store database passwords.
+- [aiIntegration/aiWorkflowCompliance.md](./aiIntegration/aiWorkflowCompliance.md): Documents OED AI usage guidance, issue-tracking recommendations, and the pull request compliance prototype.
 
 ## Information
 
