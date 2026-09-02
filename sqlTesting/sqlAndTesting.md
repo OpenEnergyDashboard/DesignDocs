@@ -99,7 +99,7 @@ At least as of 260728, one needs to manually update the views (hypertables in TS
 
 The expected values for line are:
 
-Since this is only for 5 days, graphing on the web page will show raw data. If you want to see daily, you can set the meter frequency reading below 5 min (5 days x 24 hours/day* 60 min/hour / 1440 max readings = 5 min/reading) such as 00:04:00. ??Unsure why get hourly here since too many points expected (60 min/hour / 4 min/readings *24 hour/day* 5 day = 1800 readings)???? It is also fine to use the direct DB queries to see the value for these graphing functions.
+Since this is only for 5 days, graphing on the web page will show raw data. If you want to see daily, you can set the meter frequency reading below 5 min (5 days x 24 hours/day x 60 min/hour / 1440 max readings = 5 min/reading) such as 00:04:00. ??Unsure why get hourly here since too many points expected (60 min/hour / 4 min/readings x 24 hour/day x 5 day = 1800 readings)???? It is also fine to use the direct DB queries to see the value for these graphing functions.
 
 - quantity
   - hourly
@@ -134,7 +134,6 @@ Since this is only for 5 days, graphing on the web page will show raw data. If y
       - 3 (24 / 24 x 3)
     - 2021-06-02 00:00:00 to 2021-06-02 12:00:00
       - 7.58333333 ((21 x (4 / 12) x 3 + 21 (8 / 12) x 5) / 12)
-      - ???This and other ones are splitting at the conversion and not honoring the original reading time.
     - 2021-06-02 12:00:00 to 2021-06-03 00:00:00
       - 11.25 ((27 / 12) x 5)
     - 2021-06-03 00:00:00 to 2021-06-04 00:00:00
@@ -179,16 +178,13 @@ Since this is only for 5 days, graphing on the web page will show raw data. If y
     - 2021-06-02 00:00:00 to 2021-06-03 00:00:00
       - 560 ((360 x 4 + 600 x 20) / 24)
       - Explanation: Ave of flows for day weighted by hours that it applies.
-      - ???This and other ones are splitting at the conversion and not honoring the original reading time.
     - 2021-06-03 00:00:00 to 2021-06-03 09:00:00
       - 806.25
       - Explanation: Same as hourly over same time range since flow and those points spans the full reading.
     - 2021-06-03 09:00:00 to 2021-06-03 21:00:00
       - 1,031.25 ((937.5 x 9 + 1,312.5 x 3) / 12)
-      - ???This and other ones are splitting at the conversion and not honoring the original reading time.
-    - 2021-06-03 21:00:00 to 2021-06-04 04:00:00
-      - 1,578.75 ((1,443.75 x 3 + 1680 x 4) / 7)
-      - ???This and other ones are splitting at the conversion and not honoring the original reading time. IMpacts next point too,
+    - 2021-06-03 21:00:00 to 2021-06-04 00:00:00
+      - 1,443.75
     - 96: 2021-06-04 00:00:00 to 2021-06-05 00:00:00
       - 1680
     - 120: 2021-06-05 00:00:00 to 2021-06-06 00:00:00
@@ -209,7 +205,7 @@ The expected values for 1 day bars are (tested by looking at graphic). All value
   - June 4: 1680 x 24 = 40,320
   - June 5: 2700 x 24 = 64,800
 
-To test map, create the Happy Place map per the directions on the developer docs for test data. Set the gps of this meter to 20,20. On the map set it to the desired number of days (<=5). Expect results (it is per day):
+To test map, create the Happy Place map per the directions on the developer docs for test data. Set the gps of these meters to 20,20. On the map set it to the desired number of days (<=5). Expect results (it is per day):
 
 - quantity
   - 1 day (June 5): 1080
@@ -228,7 +224,7 @@ To test map, create the Happy Place map per the directions on the developer docs
   - 4 day  (June 2-5): (64,800 + 40,320 + 23,962.5 + 13,440) / 4 = 35,630.625
   - 5 day  (June 1-5): (64,800 + 40,320 + 23,962.5 + 13,440 + 4,320) / 5 = 29,368.5
 
-To teat 3D, you need to set the date range on the graphic to 2021-06-01 to 2021-06-06. The values should follow the line hourly. Make sure the meter reading freq. is less than 1 hour so it will allow it to graph.
+To teat 3D, you need to set the date range on the graphic to 2021-06-01 to 2021-06-06. The values should follow the line hourly. Make sure the meter reading freq. is less than 1 hour so it will allow it to graph (00:15:00 is fine).
 
 ```sql
 -- Quantity
@@ -258,6 +254,9 @@ SELECT * FROM readings where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Wa
 select * FROM CIK_VARY WHERE SOURCE_ID = ( SELECT UNIT_ID FROM METERS WHERE NAME = 'Water Gallon' ) and DESTINATION_ID = ( SELECT ID FROM UNITS WHERE NAME = 'gallon' );
 SELECT * FROM meter_hourly_readings_unit_cagg where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Water Gallon' ) and graphic_unit_id = ( SELECT ID FROM UNITS WHERE NAME = 'gallon' ) order by bucket;
 SELECT * FROM meter_daily_readings_unit_cagg where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Water Gallon' ) and graphic_unit_id = ( SELECT ID FROM UNITS WHERE NAME = 'gallon' ) order by bucket;
+-- Because cannot yet get the ids automatically, these get them to use next.
+SELECT array_agg(ID) FROM METERS WHERE NAME = 'Water Gallon';
+SELECT ID FROM UNITS WHERE NAME = 'gallon';
 SELECT * FROM meter_line_readings_unit (
     -- If you want by a meter_id value use {#}
     meter_ids => '{11}',
@@ -276,6 +275,9 @@ SELECT * FROM readings where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Wa
 select * FROM CIK_VARY WHERE SOURCE_ID = ( SELECT UNIT_ID FROM METERS WHERE NAME = 'Water Gallon flow 1-5 per minute' ) and DESTINATION_ID = ( SELECT ID FROM UNITS WHERE NAME = 'gallon per minute' );
 SELECT * FROM meter_hourly_readings_unit_cagg where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Water Gallon flow 1-5 per minute' ) and graphic_unit_id = ( SELECT ID FROM UNITS WHERE NAME = 'gallon per minute' ) order by bucket;
 SELECT * FROM meter_daily_readings_unit_cagg where meter_id = ( SELECT ID FROM METERS WHERE NAME = 'Water Gallon flow 1-5 per minute' ) and graphic_unit_id = ( SELECT ID FROM UNITS WHERE NAME = 'gallon per minute' ) order by bucket;
+-- Because cannot yet get the ids automatically, these get them to use next.
+SELECT array_agg(ID) FROM METERS WHERE NAME = 'Water Gallon flow 1-5 per minute';
+SELECT ID FROM UNITS WHERE NAME = 'gallon per minute';
 SELECT * FROM meter_line_readings_unit (
     -- If you want by a meter_id value use {#}
     meter_ids => '{17}',
