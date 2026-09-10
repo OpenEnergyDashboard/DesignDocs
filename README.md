@@ -25,6 +25,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
 - [timescaleDB/timescaleDB.md](./timescaleDB/timescaleDB.md): Information on efforts to investigate TimescaleDB usage in OED.
 - [infisicalIntegration/infisicalIntegration.md](./infisicalIntegration/infisicalIntegration.md): Instructions for how to utilize Infisical secrets management to store database passwords.
+- [dataAcquisition/dataAcquisition.md](./dataAcquisition/dataAcquisition.md): Discusses the design and plan to generalize how OED acquires data from external systems.
 
 ## Information
 
