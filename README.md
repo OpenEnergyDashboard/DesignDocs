@@ -23,7 +23,7 @@ Note OED is transitioning to mostly public design documents. The private DevDocs
 - [MQTT.md](./MQTT.md): Looking into integrating for meter data acquisition.
 - [baseline/baseline.md](./baseline/baseline.md): Add the ability for an admin to add baselines to meters and for users to display on a graphic.
 - [enhancementToGithubAction.md](./githubAction/enhancementToGithubAction.md): securing GitHub action information.
-- [timescaleDB/timescaleDB.md](./timescaleDB/timescaleDB.md): Information on efforts to investigate TimescaleDB usage in OED.
+- [timescaleDB/Handover.md](./timescaleDB/Handover.md): Information on migration to TimescaleDB in OED and possible improvement opportunities.
 - [infisicalIntegration/infisicalIntegration.md](./infisicalIntegration/infisicalIntegration.md): Instructions for how to utilize Infisical secrets management to store database passwords.
 - [dataAcquisition/dataAcquisition.md](./dataAcquisition/dataAcquisition.md): Discusses the design and plan to generalize how OED acquires data from external systems.
 
