@@ -151,11 +151,15 @@ The DB will be changed to support these changes (see above).
 
 #### Current data acquisition software
 
-All systems will need to be modified to use the new JSON instead of the current URL. Using common functions for similar functionality is desirable.
+All systems will need to be modified to use the new JSON instead of the current URL. Using common functions for similar functionality is desirable. Part of this is to make sure the current configuration values that exist will now be meter based rather than more global.
 
 #### Testing
 
 OED will want to modify the meter tests and add ones for data acquisition sites. The tests will be thought through once an implementation is at least somewhat set.
+
+### Rate limiting
+
+The Metasys software includes rate limiting on requests. The eGauge data acquisition also makes axios requests. It should use similar rate limit ideas and testing. The entire OED code base should be checked to see about other possible uses and if they need rate limiting. This may mean that standardized methods are created to support doing rate limits on requests including if the values are admin controllable.
 
 ### Security
 
